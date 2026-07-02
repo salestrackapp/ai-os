@@ -1,4 +1,5 @@
 import { MfaEnroll } from "@/components/MfaEnroll";
+import { ChangePassword } from "@/components/ChangePassword";
 
 export default function ConfigPage() {
   return (
@@ -6,6 +7,11 @@ export default function ConfigPage() {
       <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">A Fortaleza · Domínio 1</p>
       <h1 className="font-serif text-4xl font-semibold mb-8">Configurações &amp; Segurança</h1>
       <div className="card p-8">
+        <h2 className="font-serif text-2xl font-semibold mb-2">Senha de acesso</h2>
+        <p className="text-sm text-muted mb-6">Defina uma nova senha para sua conta. Mínimo de 10 caracteres.</p>
+        <ChangePassword />
+      </div>
+      <div className="card p-8 mt-5">
         <h2 className="font-serif text-2xl font-semibold mb-2">Autenticação em dois fatores (MFA)</h2>
         <p className="text-sm text-muted mb-6">Obrigatória para administradores Salestrack. Use um app autenticador (Google Authenticator, 1Password, Authy).</p>
         <MfaEnroll />

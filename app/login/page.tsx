@@ -33,6 +33,16 @@ function LoginForm() {
     setMsg(error ? error.message : "Link mágico enviado — verifique seu e-mail.");
   }
 
+  async function forgotPassword() {
+    if (!email) return setMsg("Informe o e-mail para recuperar a senha.");
+    setLoading(true); setMsg(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${location.origin}/reset`,
+    });
+    setLoading(false);
+    setMsg(error ? error.message : "Se o e-mail existir, enviamos um link para redefinir a senha.");
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="card w-full max-w-md p-9">
@@ -54,6 +64,9 @@ function LoginForm() {
           </button>
           <button type="button" onClick={magicLink} className="btn-ghost w-full justify-center" disabled={loading}>
             Receber link mágico por e-mail
+          </button>
+          <button type="button" onClick={forgotPassword} className="w-full text-center text-xs text-muted2 hover:text-gold transition-colors" disabled={loading}>
+            Esqueci minha senha
           </button>
         </form>
         <p className="mt-8 text-[11px] text-muted2 text-center">MFA obrigatório para administradores Salestrack — configure em Configurações após o primeiro acesso.</p>
