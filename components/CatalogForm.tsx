@@ -1,4 +1,5 @@
 import { BRAND_LABELS, KIND_LABELS, type CatalogItem } from "@/lib/types";
+import { FrentesInput } from "@/components/FrentesInput";
 
 export function CatalogForm({ item, action, title }: {
   item?: CatalogItem;
@@ -48,6 +49,14 @@ export function CatalogForm({ item, action, title }: {
             <label className="label">Custo (R$)</label>
             <input className="input font-mono" name="cost" defaultValue={item?.cost ?? ""} placeholder="0,00" />
           </div>
+        </div>
+        <div>
+          <label className="label">Frentes (consumidas pelo gerador de propostas na F2)</label>
+          <FrentesInput defaultValue={item?.frentes ?? []} />
+        </div>
+        <div>
+          <label className="label">Notas internas</label>
+          <textarea className="input" name="internal_notes" rows={2} defaultValue={item?.internal_notes ?? ""} placeholder="Visível só para a equipe Salestrack" />
         </div>
         <div className="flex gap-8 pt-2">
           <label className="flex items-center gap-2 text-sm text-muted">

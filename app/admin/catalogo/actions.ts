@@ -9,6 +9,7 @@ function parseItem(formData: FormData) {
     const v = String(formData.get(k) ?? "").replace(",", ".").trim();
     return v === "" ? null : Number(v);
   };
+  const frentes = formData.getAll("frentes").map(String).map((s) => s.trim()).filter(Boolean);
   return {
     kind: String(formData.get("kind")),
     brand: String(formData.get("brand")),
@@ -19,6 +20,8 @@ function parseItem(formData: FormData) {
     cost: num("cost"),
     active: formData.get("active") === "on",
     needs_review: formData.get("needs_review") === "on",
+    frentes,
+    internal_notes: String(formData.get("internal_notes") ?? "") || null,
   };
 }
 
@@ -47,5 +50,38 @@ export async function deleteItem(id: string) {
   const { error } = await supabase.from("catalog_items").delete().eq("id", id);
   if (error) throw new Error(error.message);
   await audit("catalog.delete", "catalog_items", id);
+  revalidatePath("/admin/catalogo");
+}
+
+export async function duplicateItem(id: string) {
+  const supabase = await createClient();
+  const { data: it } = await supabase.from("catalog_items").select("*").eq("id", id).single();
+  if (!it) return;
+  const copy = {
+    kind: it.kind, brand: it.brand, name: `${it.name} (cópia)`, description: it.description,
+    unit: it.unit, price: it.price, cost: it.cost, active: it.active,
+    needs_review: true, frentes: it.frentes ?? [], internal_notes: it.internal_notes,
+  };
+  const { data, error } = await supabase.from("catalog_items").insert(copy).select("id").single();
+  if (error) throw new Error(error.message);
+  await audit("catalog.duplicate", "catalog_items", data.id, { from: id });
+  revalidatePath("/admin/catalogo");
+}
+
+export async function bulkSetActive(ids: string[], active: boolean) {
+  if (!ids.length) return;
+  const supabase = await createClient();
+  const { error } = await supabase.from("catalog_items").update({ active }).in("id", ids);
+  if (error) throw new Error(error.message);
+  await audit("catalog.bulk_active", "catalog_items", undefined, { ids, active });
+  revalidatePath("/admin/catalogo");
+}
+
+export async function bulkMarkReviewed(ids: string[]) {
+  if (!ids.length) return;
+  const supabase = await createClient();
+  const { error } = await supabase.from("catalog_items").update({ needs_review: false }).in("id", ids);
+  if (error) throw new Error(error.message);
+  await audit("catalog.bulk_reviewed", "catalog_items", undefined, { ids });
   revalidatePath("/admin/catalogo");
 }
