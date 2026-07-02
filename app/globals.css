@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --font-serif: "Cormorant Garamond"; --font-sans: "DM Sans"; --font-mono: "DM Mono"; }
+
+:root { color-scheme: dark; }
+body { @apply bg-navy text-cream font-sans antialiased; }
+
+.card { @apply bg-navy2 border border-line rounded-xl; }
+.btn { @apply inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm border transition-colors; }
+.btn-gold { @apply btn border-goldline text-gold bg-[rgba(200,155,60,.14)] hover:bg-[rgba(200,155,60,.24)]; }
+.btn-ghost { @apply btn border-line text-muted hover:text-cream hover:border-goldline; }
+.input { @apply w-full rounded-lg bg-navy3 border border-line px-3 py-2 text-sm text-cream placeholder:text-muted2 focus:outline-none focus:border-goldline; }
+.label { @apply block text-[11px] uppercase tracking-[.18em] text-muted2 mb-1.5; }
+.badge { @apply inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border; }
+.badge-gold { @apply badge text-gold border-goldline bg-[rgba(200,155,60,.14)]; }
+.badge-teal { @apply badge text-teal border-[rgba(63,169,142,.3)] bg-[rgba(63,169,142,.12)]; }
+.badge-muted { @apply badge text-muted border-line; }
+.th { @apply text-left text-[11px] uppercase tracking-[.16em] text-muted2 font-normal px-4 py-3 border-b border-line; }
+.td { @apply px-4 py-3 border-b border-line text-sm; }
