@@ -25,18 +25,37 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
+  const redir = (to: string, params?: Record<string, string>) => {
+    const url = request.nextUrl.clone(); url.pathname = to; url.search = "";
+    if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    return NextResponse.redirect(url);
+  };
 
-  if (path.startsWith("/admin") && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", path);
-    return NextResponse.redirect(url);
+  if (path.startsWith("/admin") && !user) return redir("/login", { next: path });
+  if (path === "/login" && user) return redir("/admin");
+
+  // Enforcement de MFA para administradores Salestrack
+  if (path.startsWith("/admin") && user) {
+    const { data: mem } = await supabase
+      .from("memberships")
+      .select("role, organizations!inner(is_salestrack)")
+      .eq("user_id", user.id).eq("role", "salestrack_admin")
+      .eq("organizations.is_salestrack", true).limit(1);
+    const isAdmin = !!mem?.length;
+    if (isAdmin) {
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const current = aal?.currentLevel, next = aal?.nextLevel;
+      if (current !== "aal2") {
+        if (next === "aal2") {
+          // tem fator cadastrado, mas sessão só AAL1 → desafio TOTP
+          return redir("/login/mfa");
+        }
+        // sem fator: obriga a cadastrar em Configurações (permite só essa rota)
+        if (path !== "/admin/configuracoes") return redir("/admin/configuracoes", { mfa: "required" });
+      }
+    }
   }
-  if (path === "/login" && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin";
-    return NextResponse.redirect(url);
-  }
+
   return response;
 }
 
