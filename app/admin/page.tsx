@@ -14,11 +14,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const { brand } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: allDeals }, { count: reviewCount }, { data: acts }, { data: logs }] = await Promise.all([
+  const [{ data: allDeals }, { count: reviewCount }, { data: acts }, { data: logs }, { data: openTasks }] = await Promise.all([
     supabase.from("deals").select("*"),
     supabase.from("catalog_items").select("*", { count: "exact", head: true }).eq("needs_review", true),
     supabase.from("activities").select("id, kind, payload, created_at, ref_table, ref_id, actor_id").order("created_at", { ascending: false }).limit(15),
     supabase.from("audit_logs").select("id, action, resource, resource_id, created_at, actor_id").order("created_at", { ascending: false }).limit(15),
+    supabase.from("tasks").select("id, title, due_date, deal_id").eq("done", false).not("due_date", "is", null).order("due_date"),
   ]);
 
   const deals = ((allDeals as Deal[]) ?? []).filter((d) => !brand || d.brand === brand);
@@ -62,20 +63,37 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     { name: "Salestrack", valor: brandTotals["salestrack"] ?? 0, qtd: deals.filter((d) => dealBrandValues(d).some((a) => a.brand === "salestrack")).length },
   ];
 
-  // 3 Ações do Dia
-  type Acao = { text: string; href: string };
+  // Tarefas com prazo
+  const dealTitleAll: Record<string, string> = Object.fromEntries(((allDeals as Deal[]) ?? []).map((d) => [d.id, d.title]));
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const in14Str = new Date(Date.now() + 14 * 86_400_000).toISOString().slice(0, 10);
+  const taskHref = (t: { deal_id: string | null }) => t.deal_id ? `/admin/crm/${t.deal_id}` : "/admin/tarefas";
+  const taskLabel = (t: { title: string; deal_id: string | null }) => `${t.title}${t.deal_id ? ` — ${dealTitleAll[t.deal_id] ?? "deal"}` : ""}`;
+  const tasksDue = (openTasks ?? []).filter((t) => t.due_date && t.due_date <= todayStr);
+  const tasksUpcoming = (openTasks ?? []).filter((t) => t.due_date && t.due_date > todayStr && t.due_date <= in14Str);
+
+  // Ações do Dia: tarefas vencidas/hoje primeiro, depois heurísticas
+  type Acao = { text: string; href: string; tag: string };
   const acoes: Acao[] = [];
+  for (const t of tasksDue) acoes.push({ text: taskLabel(t), href: taskHref(t), tag: t.due_date! < todayStr ? "vencida" : "hoje" });
   for (const d of deals) {
-    if (acoes.length >= 1) break;
-    if (d.score >= 20 && (d.stage === "sinal" || d.stage === "qualificado")) acoes.push({ text: `Abordar ${d.title}`, href: `/admin/crm/${d.id}` });
+    if (d.score >= 20 && (d.stage === "sinal" || d.stage === "qualificado")) { acoes.push({ text: `Abordar ${d.title}`, href: `/admin/crm/${d.id}`, tag: "sinal" }); break; }
   }
   for (const d of deals) {
-    if (acoes.length >= 2) break;
     const days = daysSince(d.last_activity_at);
-    if (days !== null && days >= STAGNATION_DAYS && ["diagnostico", "proposta", "fechamento"].includes(d.stage))
-      acoes.push({ text: `Retomar ${d.title} — ${days} dias parado`, href: `/admin/crm/${d.id}` });
+    if (days !== null && days >= STAGNATION_DAYS && ["diagnostico", "proposta", "fechamento"].includes(d.stage)) { acoes.push({ text: `Retomar ${d.title} — ${days} dias parado`, href: `/admin/crm/${d.id}`, tag: "estagnado" }); break; }
   }
-  if (acoes.length < 3 && (reviewCount ?? 0) > 0) acoes.push({ text: `Revisar preços: ${reviewCount} itens pendentes`, href: "/admin/catalogo" });
+  if ((reviewCount ?? 0) > 0) acoes.push({ text: `Revisar preços: ${reviewCount} itens pendentes`, href: "/admin/catalogo", tag: "catálogo" });
+
+  // Próximas tarefas e ações (14 dias): tarefas futuras + fechamentos previstos
+  type Prox = { text: string; href: string; date: string; tag: string };
+  const proximas: Prox[] = [];
+  for (const t of tasksUpcoming) proximas.push({ text: taskLabel(t), href: taskHref(t), date: t.due_date!, tag: "tarefa" });
+  for (const d of deals) {
+    if (d.expected_close && d.expected_close > todayStr && d.expected_close <= in14Str && !CLOSED.includes(d.stage))
+      proximas.push({ text: `Fechamento previsto — ${d.title}`, href: `/admin/crm/${d.id}`, date: d.expected_close, tag: "deal" });
+  }
+  proximas.sort((a, b) => a.date.localeCompare(b.date));
 
   // Feed mesclado
   const RELEVANT = ["deal.create", "deal.lost", "deal.convert_client", "org.create", "catalog.update", "catalog.create", "contact.create"];
@@ -124,20 +142,41 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         ))}
       </div>
 
-      {/* 3 Ações do Dia */}
-      <div className="card p-6 mb-5 border-goldline bg-[rgba(200,155,60,.05)]">
-        <p className="text-[11px] uppercase tracking-[.24em] text-gold mb-3">3 Ações do Dia</p>
-        {acoes.length === 0 ? <p className="text-sm text-muted">Nada urgente — pipeline saudável. 🎯</p> : (
-          <ul className="space-y-2">
-            {acoes.map((a, i) => (
-              <li key={i}>
-                <Link href={a.href} className="flex items-center gap-3 text-sm text-cream hover:text-gold">
-                  <span className="badge-gold shrink-0">{i + 1}</span>{a.text} <span className="text-muted2">→</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+      {/* Ações do Dia + Próximas */}
+      <div className="grid md:grid-cols-2 gap-5 mb-5">
+        <div className="card p-6 border-goldline bg-[rgba(200,155,60,.05)]">
+          <p className="text-[11px] uppercase tracking-[.24em] text-gold mb-3">Ações do Dia</p>
+          {acoes.length === 0 ? <p className="text-sm text-muted">Nada urgente — pipeline saudável. 🎯</p> : (
+            <ul className="space-y-2">
+              {acoes.map((a, i) => (
+                <li key={i}>
+                  <Link href={a.href} className="flex items-center gap-2 text-sm text-cream hover:text-gold">
+                    <span className={`shrink-0 ${a.tag === "vencida" ? "badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-red-400 border-red-500/40 bg-red-500/10" : a.tag === "hoje" ? "badge-teal" : "badge-muted"}`}>{a.tag}</span>
+                    <span className="flex-1">{a.text}</span><span className="text-muted2">→</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card p-6">
+          <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-3">Próximas tarefas e ações · 14 dias</p>
+          {proximas.length === 0 ? <p className="text-sm text-muted2">Nada agendado para os próximos 14 dias.</p> : (
+            <ul className="space-y-2">
+              {proximas.slice(0, 8).map((p, i) => (
+                <li key={i}>
+                  <Link href={p.href} className="flex items-center gap-2 text-sm text-muted hover:text-gold">
+                    <span className="text-[11px] text-muted2 w-14 shrink-0 font-mono">{new Date(p.date + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>
+                    <span className={`shrink-0 ${p.tag === "deal" ? "badge-gold" : "badge-muted"}`}>{p.tag}</span>
+                    <span className="flex-1 text-cream">{p.text}</span>
+                  </Link>
+                </li>
+              ))}
+              {proximas.length > 8 && <li className="text-xs text-muted2 pl-1">+{proximas.length - 8} mais…</li>}
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Análise por marca: separada × integrada */}
