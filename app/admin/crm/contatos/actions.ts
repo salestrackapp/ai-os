@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
+import { syncContactToMailerLite } from "@/lib/mailerlite";
 
 function parse(formData: FormData) {
   return {
@@ -21,6 +22,7 @@ export async function createContact(formData: FormData) {
   const { data, error } = await supabase.from("contacts").insert(c).select("id").single();
   if (error) throw new Error(error.message);
   await audit("contact.create", "contacts", data.id, c);
+  await syncContactToMailerLite({ email: c.email, name: c.name });
   revalidatePath("/admin/crm/contatos");
 }
 
@@ -30,6 +32,7 @@ export async function updateContact(id: string, formData: FormData) {
   const { error } = await supabase.from("contacts").update(c).eq("id", id);
   if (error) throw new Error(error.message);
   await audit("contact.update", "contacts", id, c);
+  await syncContactToMailerLite({ email: c.email, name: c.name });
   revalidatePath("/admin/crm/contatos");
 }
 

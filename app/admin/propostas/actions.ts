@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
 import { notifyAdmin, sendToContact } from "@/lib/whatsapp";
+import { sendEmail } from "@/lib/email";
 import { DEAL_STAGES } from "@/lib/types";
 
 export type ProposalPayload = {
@@ -86,9 +87,18 @@ export async function sendProposal(id: string) {
     await supabase.from("activities").insert({ org_id: deal?.org_id ?? null, kind: "proposta", ref_table: "deals", ref_id: prop.deal_id, payload: { event: "proposta_enviada", proposal_id: id } });
   }
 
-  // Notificações WhatsApp (modo degradado se sem envs)
+  // Notificações WhatsApp + e-mail (modo degradado se sem envs)
   const link = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/p/${token ?? ""}`;
   await notifyAdmin(`📄 Proposta enviada: "${prop.title}"${prop.client_name ? ` para ${prop.client_name}` : ""}. Link: ${link}`);
+  if (prop.client_email) {
+    await sendEmail({
+      to: prop.client_email,
+      subject: `Sua proposta está pronta — ${prop.title}`,
+      title: "Sua proposta está pronta",
+      bodyHtml: `<p>Olá${prop.client_name ? `, <b>${prop.client_name}</b>` : ""}!</p><p>Preparamos a proposta <b>${prop.title}</b> para você. Acesse pelo botão abaixo para ler os detalhes, o escopo de entregas e decidir online.</p>`,
+      cta: { label: "Abrir proposta", url: link },
+    });
+  }
   if (prop.deal_id) {
     const { data: deal } = await supabase.from("deals").select("contact_id, org_id").eq("id", prop.deal_id).single();
     if (deal?.contact_id) {
@@ -107,6 +117,10 @@ export async function resendNotification(id: string) {
   if (!prop) return;
   const link = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/p/${prop.access_token ?? ""}`;
   await notifyAdmin(`🔁 Reenvio — proposta "${prop.title}": ${link}`);
+  const { data: full } = await supabase.from("proposals").select("client_email, client_name").eq("id", id).single();
+  if (full?.client_email) {
+    await sendEmail({ to: full.client_email, subject: `Retomando: sua proposta — ${prop.title}`, title: "Sua proposta continua disponível", bodyHtml: `<p>Olá${full.client_name ? `, <b>${full.client_name}</b>` : ""}! Sua proposta <b>${prop.title}</b> segue disponível para leitura e decisão.</p>`, cta: { label: "Abrir proposta", url: link } });
+  }
   if (prop.deal_id) {
     const { data: deal } = await supabase.from("deals").select("contact_id, org_id").eq("id", prop.deal_id).single();
     if (deal?.contact_id) {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Papa from "papaparse";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
+import { syncContactToMailerLite } from "@/lib/mailerlite";
 import { CrmNav } from "@/components/crm/CrmNav";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,7 @@ async function importCsv(formData: FormData) {
     // Contato: dedupe por e-mail (atualiza se já existe)
     let contactId: string | null = null;
     if (email) {
+      await syncContactToMailerLite({ email, name: fullName, company });
       const { data: found } = await supabase.from("contacts").select("id").eq("email", email).limit(1);
       if (found && found.length) {
         contactId = found[0].id;

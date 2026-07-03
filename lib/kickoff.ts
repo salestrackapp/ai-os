@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
 import { notifyAdmin } from "@/lib/whatsapp";
 import { stripeConfigured, startBillingStripe } from "@/lib/stripe";
+import { asaasConfigured, startBillingAsaas } from "@/lib/asaas";
 import { brl, type ProposalItem } from "@/lib/types";
 
 type Step = { step: string; done: boolean; at: string | null; note?: string };
@@ -90,7 +91,17 @@ export async function runKickoff(contractId: string): Promise<{ ok: boolean; che
     const { data: existingInv } = await sb.from("invoices").select("id").eq("contract_id", contractId).limit(1);
     if (existingInv && existingInv.length) return "já emitido";
 
-    if (stripeConfigured() && contract.org_id) {
+    // provider: PAYMENT_PROVIDER (asaas|stripe|manual); default = asaas se configurado, senão stripe, senão manual
+    const provider = process.env.PAYMENT_PROVIDER ?? (asaasConfigured() ? "asaas" : stripeConfigured() ? "stripe" : "manual");
+
+    if (provider === "asaas" && asaasConfigured() && contract.org_id) {
+      const r = await startBillingAsaas({ orgName: org?.name ?? "Cliente", email: proposal?.client_email, cpfCnpj: org?.cnpj, contractId, total, installments: inst, monthlyFee: monthly });
+      for (const p of r.payments) await sb.from("invoices").insert({ org_id: contract.org_id, contract_id: contractId, kind: "implantacao", installment_n: p.installmentN, installments_total: inst, amount: p.amount, status: "aberta", due_date: p.dueDate, stripe_invoice_id: p.asaasId, hosted_url: p.invoiceUrl });
+      if (r.subscription) await sb.from("subscriptions").insert({ org_id: contract.org_id, contract_id: contractId, plan: "professional", monthly_amount: r.subscription.amount, status: "ativa", stripe_subscription_id: r.subscription.asaasId });
+      return `ASAAS: ${r.payments.length} cobranças + assinatura`;
+    }
+
+    if (provider === "stripe" && stripeConfigured() && contract.org_id) {
       const r = await startBillingStripe({ orgName: org?.name ?? "Cliente", email: proposal?.client_email, existingCustomerId: org?.stripe_customer_id, total, installments: inst, monthlyFee: monthly });
       if (r.customerId && !org?.stripe_customer_id) await sb.from("organizations").update({ stripe_customer_id: r.customerId }).eq("id", contract.org_id);
       for (const iv of r.invoices) await sb.from("invoices").insert({ org_id: contract.org_id, contract_id: contractId, kind: "implantacao", installment_n: iv.installmentN, installments_total: inst, amount: iv.amount, status: "aberta", due_date: iv.dueDate, stripe_invoice_id: iv.stripeId, hosted_url: iv.hostedUrl });

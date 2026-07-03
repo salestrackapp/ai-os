@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { audit } from "@/lib/audit";
 import { notifyAdmin } from "@/lib/whatsapp";
+import { sendEmail } from "@/lib/email";
 import { contractHtml } from "@/lib/contract-html";
 import { docusignConfigured, sendEnvelope } from "@/lib/docusign";
 import { runKickoff } from "@/lib/kickoff";
@@ -18,7 +19,7 @@ export async function generateContractFromProposal(proposalId: string) {
   if (proposal.status !== "aprovada") throw new Error("Só é possível gerar contrato de proposta aprovada.");
   const { data: org } = proposal.org_id ? await supabase.from("organizations").select("id, name, cnpj").eq("id", proposal.org_id).single() : { data: null };
 
-  const html = contractHtml({
+  const html = await contractHtml({
     title: proposal.title, org: { name: org?.name ?? proposal.client_name ?? "Cliente", cnpj: org?.cnpj },
     signerName: proposal.client_name, frentes: proposal.frentes, items: (proposal.items as ProposalItem[]) ?? [],
     installments: proposal.installments, monthlyFee: proposal.monthly_platform_fee, validUntil: proposal.valid_until,
@@ -77,6 +78,9 @@ export async function registerManualSignature(contractId: string, formData: Form
   await supabase.from("contract_events").insert({ contract_id: contractId, kind: "assinado", payload: { manual: true, hash } });
   await audit("contract.signed", "contracts", contractId, { manual: true, hash }, c.org_id ?? undefined);
   await notifyAdmin(`✅ Contrato assinado (manual): ${signerName}. Iniciando kickoff…`);
+  if (signerEmail) {
+    await sendEmail({ to: signerEmail, subject: "Contrato assinado — bem-vindo ao programa", title: "Contrato assinado ✓", bodyHtml: `<p>Olá, <b>${signerName ?? ""}</b>!</p><p>Seu contrato foi registrado com sucesso e o programa entrou em <b>onboarding</b>. Em breve entraremos em contato com os próximos passos do kickoff.</p>` });
+  }
 
   await runKickoff(contractId);
   revalidatePath(`/admin/contratos/${contractId}`);

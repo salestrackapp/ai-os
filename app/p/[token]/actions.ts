@@ -2,6 +2,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
 import { notifyAdmin } from "@/lib/whatsapp";
+import { emailAdmin } from "@/lib/email";
 import { proposalHash } from "@/lib/proposal-hash";
 import type { ProposalItem, TimelinePhase } from "@/lib/types";
 
@@ -43,6 +44,7 @@ export async function approveProposal(token: string, input: { name: string; role
     await sb.from("activities").insert({ org_id: prop.org_id, kind: "proposta", ref_table: "deals", ref_id: prop.deal_id, payload: { event: "proposta_aprovada", by: name } });
   }
   await notifyAdmin(`✅ Proposta "${prop.title}" APROVADA por ${name} (${role}).`);
+  await emailAdmin(`✅ Proposta aprovada — ${prop.title}`, "Proposta aprovada", `<p><b>${prop.title}</b> foi aprovada por <b>${name}</b> (${role}).</p><p>Próximo passo: gerar o contrato no painel.</p>`);
   return { ok: true };
 }
 
@@ -54,6 +56,7 @@ export async function requestAdjust(token: string, input: { note: string }) {
   await sb.from("proposal_events").insert({ proposal_id: prop.id, kind: "adjust_requested", payload: { note } });
   await auditService("proposal.adjust_requested", "proposals", prop.id, { note });
   await notifyAdmin(`✏️ Ajuste solicitado na proposta "${prop.title}": ${note}`);
+  await emailAdmin(`✏️ Ajuste solicitado — ${prop.title}`, "Ajuste solicitado", `<p>O cliente pediu ajuste em <b>${prop.title}</b>:</p><p>“${note}”</p>`);
   return { ok: true };
 }
 
@@ -66,5 +69,6 @@ export async function refuseProposal(token: string, input: { note: string }) {
   await auditService("proposal.refused", "proposals", prop.id, { note });
   if (prop.deal_id) await sb.from("deals").update({ stage: "perdido", lost_reason: `Proposta recusada: ${note}` }).eq("id", prop.deal_id);
   await notifyAdmin(`❌ Proposta "${prop.title}" recusada: ${note}`);
+  await emailAdmin(`❌ Proposta recusada — ${prop.title}`, "Proposta recusada", `<p><b>${prop.title}</b> foi recusada.</p><p>Motivo: “${note}”</p>`);
   return { ok: true };
 }

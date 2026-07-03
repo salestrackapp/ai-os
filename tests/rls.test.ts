@@ -151,6 +151,17 @@ describe("Propostas · acesso público só via service role", () => {
   });
 });
 
+describe("Configurações da aplicação", () => {
+  it("cliente NÃO lê app_settings (admin-only)", async () => {
+    const { data } = await userA.from("app_settings").select("*");
+    expect(data ?? []).toHaveLength(0);
+  });
+  it("anônimo NÃO lê app_settings", async () => {
+    const { data } = await anon.from("app_settings").select("*");
+    expect(data ?? []).toHaveLength(0);
+  });
+});
+
 describe("Contratos & Billing · isolamento por tenant", () => {
   for (const table of ["contracts", "invoices", "subscriptions"]) {
     it(`cliente A NÃO lê ${table} da org B`, async () => {

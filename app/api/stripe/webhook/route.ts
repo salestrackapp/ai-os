@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
 import { notifyAdmin } from "@/lib/whatsapp";
+import { emailAdmin } from "@/lib/email";
 import { brl } from "@/lib/types";
 
 function validStripeSig(raw: string, header: string | null): boolean {
@@ -33,7 +34,9 @@ export async function POST(req: NextRequest) {
     let orgName = "cliente";
     if (inv?.org_id) { const { data: o } = await sb.from("organizations").select("name").eq("id", inv.org_id).single(); orgName = o?.name ?? orgName; }
     await auditService("invoice.payment_failed", "invoices", String(obj.id), obj, inv?.org_id ?? undefined);
-    await notifyAdmin(`⚠️ Fatura em atraso: ${orgName} · ${brl(inv?.amount ?? (Number(obj.amount_due) || 0) / 100)}`);
+    const valorAtraso = brl(inv?.amount ?? (Number(obj.amount_due) || 0) / 100);
+    await notifyAdmin(`⚠️ Fatura em atraso: ${orgName} · ${valorAtraso}`);
+    await emailAdmin(`⚠️ Fatura em atraso — ${orgName}`, "Fatura em atraso", `<p><b>${orgName}</b> está com fatura em atraso no valor de <b>${valorAtraso}</b> (Stripe).</p>`);
   } else if (type === "customer.subscription.updated" || type === "customer.subscription.deleted") {
     const status = type === "customer.subscription.deleted" ? "cancelada" : (obj.status === "active" ? "ativa" : String(obj.status ?? "ativa"));
     await sb.from("subscriptions").update({ status }).eq("stripe_subscription_id", String(obj.id));
