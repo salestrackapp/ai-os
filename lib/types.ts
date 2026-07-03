@@ -5,13 +5,23 @@ export type CatalogItem = {
   active: boolean; needs_review: boolean; created_at: string;
   frentes: string[] | null; internal_notes: string | null;
 };
+export type BrandAlloc = { brand: string; value: number };
 export type Deal = {
   id: string; title: string; stage: string; icp: number | null; score: number;
   value_estimated: number | null; brand: string; org_id: string | null;
   contact_id: string | null; created_at: string;
   last_activity_at: string | null; next_step: string | null; expected_close: string | null;
-  signals: string[] | null; lost_reason: string | null;
+  signals: string[] | null; lost_reason: string | null; brand_split: BrandAlloc[] | null;
 };
+export type Task = {
+  id: string; org_id: string | null; deal_id: string | null; title: string;
+  done: boolean; due_date: string | null; created_at: string; completed_at: string | null;
+};
+/** Alocação por marca de um deal: usa brand_split se houver; senão, marca única com o valor total. */
+export function dealBrandValues(d: Deal): BrandAlloc[] {
+  if (d.brand_split && d.brand_split.length > 0) return d.brand_split.filter((a) => a && a.brand);
+  return [{ brand: d.brand, value: d.value_estimated ?? 0 }];
+}
 export type SignalDefinition = {
   id: string; label: string; weight: number; active: boolean; sort: number;
 };

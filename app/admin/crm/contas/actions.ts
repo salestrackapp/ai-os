@@ -45,6 +45,23 @@ export async function updateOrg(id: string, formData: FormData) {
   revalidatePath(`/admin/crm/contas/${id}`);
 }
 
+export async function addContactToOrg(orgId: string, formData: FormData) {
+  const supabase = await createClient();
+  const c = {
+    name: String(formData.get("name") ?? "").trim(),
+    email: String(formData.get("email") ?? "").trim() || null,
+    phone: String(formData.get("phone") ?? "").trim() || null,
+    role: String(formData.get("role") ?? "").trim() || null,
+    org_id: orgId,
+    opt_in_whatsapp: formData.get("opt_in_whatsapp") === "on",
+  };
+  if (!c.name) throw new Error("Nome do contato é obrigatório.");
+  const { data, error } = await supabase.from("contacts").insert(c).select("id").single();
+  if (error) throw new Error(error.message);
+  await audit("contact.create", "contacts", data.id, c, orgId);
+  revalidatePath(`/admin/crm/contas/${orgId}`);
+}
+
 export async function deleteOrg(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("organizations").delete().eq("id", id);

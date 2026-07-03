@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { emailMap } from "@/lib/supabase/admin";
 import { DashboardCharts } from "@/components/DashboardCharts";
 import {
-  DEAL_STAGES, STAGE_LABELS, STAGE_PROB, brl, daysSince, STAGNATION_DAYS, type Deal,
+  DEAL_STAGES, STAGE_LABELS, STAGE_PROB, BRAND_LABELS, brl, daysSince, dealBrandValues, STAGNATION_DAYS, type Deal,
 } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -50,8 +50,17 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     icp: n === 0 ? "s/ICP" : `ICP ${n}`,
     valor: deals.filter((d) => (d.icp ?? 0) === n).reduce((a, d) => a + (d.value_estimated ?? 0), 0),
   }));
-  const mk = (b: string) => { const ds = deals.filter((d) => d.brand === b); return { valor: ds.reduce((a, d) => a + (d.value_estimated ?? 0), 0), qtd: ds.length }; };
-  const split = [{ name: "André Kachan", ...mk("andre_kachan") }, { name: "Salestrack", ...mk("salestrack") }];
+  // Multi-marca: análise SEPARADA (por alocação de marca) e INTEGRADA (total)
+  const brandTotals: Record<string, number> = {};
+  for (const d of active) for (const a of dealBrandValues(d)) brandTotals[a.brand] = (brandTotals[a.brand] ?? 0) + (a.value || 0);
+  const integrated = Object.values(brandTotals).reduce((s, v) => s + v, 0);
+  const brandRows = ["andre_kachan", "salestrack", "ai_os"]
+    .map((b) => ({ brand: b, label: BRAND_LABELS[b], valor: brandTotals[b] ?? 0 }))
+    .filter((r) => r.valor > 0);
+  const split = [
+    { name: "André Kachan", valor: brandTotals["andre_kachan"] ?? 0, qtd: deals.filter((d) => dealBrandValues(d).some((a) => a.brand === "andre_kachan")).length },
+    { name: "Salestrack", valor: brandTotals["salestrack"] ?? 0, qtd: deals.filter((d) => dealBrandValues(d).some((a) => a.brand === "salestrack")).length },
+  ];
 
   // 3 Ações do Dia
   type Acao = { text: string; href: string };
@@ -128,6 +137,31 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      {/* Análise por marca: separada × integrada */}
+      <div className="card p-6 mb-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="label">Pipeline por marca — separado × integrado</p>
+          <p className="text-sm text-muted">Integrado (total): <span className="text-gold font-mono">{brl(integrated)}</span></p>
+        </div>
+        {brandRows.length === 0 ? <p className="text-sm text-muted2">Sem valores alocados no pipeline ativo.</p> : (
+          <div className="space-y-2">
+            {brandRows.map((r) => {
+              const pct = integrated ? Math.round((r.valor / integrated) * 100) : 0;
+              return (
+                <div key={r.brand} className="flex items-center gap-3">
+                  <span className="w-32 text-sm text-muted">{r.label}</span>
+                  <div className="flex-1 h-2 rounded-full bg-navy3 overflow-hidden">
+                    <div className="h-full bg-gold" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="w-28 text-right font-mono text-sm text-cream">{brl(r.valor)}</span>
+                  <span className="w-10 text-right text-xs text-muted2">{pct}%</span>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 

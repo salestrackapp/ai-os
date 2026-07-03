@@ -2,10 +2,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  STAGE_LABELS, DEAL_STAGES, BRAND_LABELS, brl, daysSince,
-  type Deal, type SignalDefinition, type Contact,
+  STAGE_LABELS, DEAL_STAGES, BRAND_LABELS, brl, daysSince, dealBrandValues,
+  type Deal, type SignalDefinition, type Contact, type Organization, type Task,
 } from "@/lib/types";
 import { updateDeal, setDealSignals, addNote, markLost, convertToClient, linkContact } from "@/app/admin/crm/actions";
+import { BrandSplitEditor } from "@/components/crm/BrandSplitEditor";
+import { DealTasks } from "@/components/crm/DealTasks";
 
 type Activity = { id: string; kind: string; payload: Record<string, unknown> | null; created_at: string };
 
@@ -17,8 +19,9 @@ function actText(a: Activity): string {
   return JSON.stringify(p);
 }
 
-export function DealDetail({ deal, signalDefs, activities, contacts }: {
+export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks }: {
   deal: Deal; signalDefs: SignalDefinition[]; activities: Activity[]; contacts: Contact[];
+  orgs: Organization[]; tasks: Task[];
 }) {
   const [signals, setSignals] = useState<string[]>(deal.signals ?? []);
   const [score, setScore] = useState<number>(deal.score);
@@ -65,6 +68,11 @@ export function DealDetail({ deal, signalDefs, activities, contacts }: {
                 <select className="input" name="icp" defaultValue={deal.icp ?? ""}>
                   <option value="">—</option><option>1</option><option>2</option><option>3</option>
                 </select></div>
+              <div><label className="label">Conta</label>
+                <select className="input" name="org_id" defaultValue={deal.org_id ?? ""}>
+                  <option value="">— nenhuma —</option>
+                  {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+                </select></div>
               <div><label className="label">Valor estimado</label>
                 <input className="input font-mono" name="value" defaultValue={deal.value_estimated ?? ""} placeholder="R$" /></div>
               <div><label className="label">Fechamento previsto</label>
@@ -75,6 +83,12 @@ export function DealDetail({ deal, signalDefs, activities, contacts }: {
             <button className="btn-gold">Salvar alterações</button>
           </form>
         </div>
+
+        {/* Composição por marca (multi-marca) */}
+        <BrandSplitEditor dealId={deal.id} initial={deal.brand_split && deal.brand_split.length ? deal.brand_split : dealBrandValues(deal)} />
+
+        {/* Tarefas */}
+        <DealTasks dealId={deal.id} tasks={tasks} />
 
         {/* Protocolo de sinais */}
         <div className="card p-6">

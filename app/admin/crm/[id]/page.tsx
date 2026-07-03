@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CrmNav } from "@/components/crm/CrmNav";
 import { DealDetail } from "@/components/crm/DealDetail";
-import type { Deal, SignalDefinition, Contact } from "@/lib/types";
+import type { Deal, SignalDefinition, Contact, Organization, Task } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +13,12 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const { data: deal } = await supabase.from("deals").select("*").eq("id", id).single();
   if (!deal) notFound();
 
-  const [{ data: signalDefs }, { data: activities }, { data: contacts }] = await Promise.all([
+  const [{ data: signalDefs }, { data: activities }, { data: contacts }, { data: orgs }, { data: tasks }] = await Promise.all([
     supabase.from("signal_definitions").select("*").eq("active", true).order("sort"),
     supabase.from("activities").select("id, kind, payload, created_at").eq("ref_table", "deals").eq("ref_id", id).order("created_at", { ascending: false }),
     supabase.from("contacts").select("*").order("name"),
+    supabase.from("organizations").select("*").eq("is_salestrack", false).order("name"),
+    supabase.from("tasks").select("*").eq("deal_id", id).order("done").order("due_date", { nullsFirst: false }).order("created_at", { ascending: false }),
   ]);
 
   const d = deal as Deal;
@@ -37,6 +39,8 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         signalDefs={(signalDefs as SignalDefinition[]) ?? []}
         activities={(activities as { id: string; kind: string; payload: Record<string, unknown> | null; created_at: string }[]) ?? []}
         contacts={list}
+        orgs={(orgs as Organization[]) ?? []}
+        tasks={(tasks as Task[]) ?? []}
       />
     </div>
   );

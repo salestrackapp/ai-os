@@ -61,6 +61,8 @@ export async function createDeal(formData: FormData) {
     brand: String(formData.get("brand") ?? "andre_kachan"),
     score: formData.get("score") ? Number(formData.get("score")) : 0,
     value_estimated: formData.get("value") ? Number(String(formData.get("value")).replace(/[^\d.,]/g, "").replace(",", ".")) || null : null,
+    org_id: String(formData.get("org_id") ?? "").trim() || null,
+    contact_id: String(formData.get("contact_id") ?? "").trim() || null,
     stage: "sinal",
   };
   const { data, error } = await supabase.from("deals").insert(deal).select("id").single();
@@ -80,10 +82,27 @@ export async function updateDeal(id: string, formData: FormData) {
     value_estimated: formData.get("value") ? Number(String(formData.get("value")).replace(/[^\d.,]/g, "").replace(",", ".")) || null : null,
     expected_close: val("expected_close"),
     next_step: val("next_step"),
+    org_id: formData.has("org_id") ? (val("org_id")) : undefined,
+    contact_id: formData.has("contact_id") ? (val("contact_id")) : undefined,
   };
   const { error } = await supabase.from("deals").update(patch).eq("id", id);
   if (error) throw new Error(error.message);
   await audit("deal.update", "deals", id, patch);
+  revalidatePath(`/admin/crm/${id}`);
+  revalidatePath("/admin/crm");
+}
+
+/** Salva a alocação por marca (multi-marca), recalcula value_estimated = soma e marca primária. */
+export async function setBrandSplit(id: string, allocs: { brand: string; value: number }[]) {
+  const supabase = await createClient();
+  const clean = (allocs ?? []).filter((a) => a && a.brand && Number(a.value) > 0)
+    .map((a) => ({ brand: a.brand, value: Number(a.value) }));
+  const total = clean.reduce((s, a) => s + a.value, 0);
+  const patch: Record<string, unknown> = { brand_split: clean };
+  if (clean.length > 0) { patch.value_estimated = total; patch.brand = clean[0].brand; }
+  const { error } = await supabase.from("deals").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
+  await audit("deal.brand_split", "deals", id, { allocs: clean, total });
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
 }

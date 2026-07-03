@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
@@ -7,8 +7,11 @@ import {
 } from "@dnd-kit/core";
 import { DEAL_STAGES, STAGE_LABELS, BRAND_LABELS, brl, daysSince, STAGNATION_DAYS, type Deal } from "@/lib/types";
 import { moveDealToStage, markLost } from "@/app/admin/crm/actions";
+import { createTask } from "@/app/admin/tarefas/actions";
 
-function CardInner({ d, overlay = false }: { d: Deal; overlay?: boolean }) {
+type TaskCount = { open: number; total: number };
+
+function CardInner({ d, overlay = false, tc }: { d: Deal; overlay?: boolean; tc?: TaskCount }) {
   const days = daysSince(d.last_activity_at);
   const stagnant = days !== null && days >= STAGNATION_DAYS && d.stage !== "cliente";
   return (
@@ -18,6 +21,7 @@ function CardInner({ d, overlay = false }: { d: Deal; overlay?: boolean }) {
         {d.icp && <span className="badge-muted">ICP {d.icp}</span>}
         <span className={d.score >= 20 ? "badge-teal" : "badge-muted"}>score {d.score}</span>
         {stagnant && <span className="badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-amber-400 border-amber-500/40 bg-amber-500/10">estagnado</span>}
+        {tc && tc.open > 0 && <span className="badge-muted">✓ {tc.open} tarefa(s)</span>}
       </div>
       <p className="mt-2 text-[11px] text-muted2">{BRAND_LABELS[d.brand] ?? d.brand} · {brl(d.value_estimated)}</p>
       {d.next_step && <p className="mt-1 text-[11px] text-muted truncate">→ {d.next_step}</p>}
@@ -26,19 +30,36 @@ function CardInner({ d, overlay = false }: { d: Deal; overlay?: boolean }) {
   );
 }
 
-function DraggableCard({ d }: { d: Deal }) {
+function DraggableCard({ d, tc }: { d: Deal; tc?: TaskCount }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: d.id });
+  const [adding, setAdding] = useState(false);
+  const [title, setTitle] = useState("");
+  const [pending, start] = useTransition();
+  function add() {
+    const t = title.trim(); if (!t) return;
+    start(async () => { await createTask({ title: t, deal_id: d.id }); setTitle(""); setAdding(false); });
+  }
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes}
-      className={`cursor-grab active:cursor-grabbing ${isDragging ? "opacity-30" : ""}`}>
-      <Link href={`/admin/crm/${d.id}`} onClick={(e) => e.stopPropagation()} className="block">
-        <CardInner d={d} />
-      </Link>
+    <div className={isDragging ? "opacity-30" : ""}>
+      <div ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing">
+        <Link href={`/admin/crm/${d.id}`} onClick={(e) => e.stopPropagation()} className="block">
+          <CardInner d={d} tc={tc} />
+        </Link>
+      </div>
+      {adding ? (
+        <div className="mt-1 flex gap-1">
+          <input autoFocus className="input !py-1 !text-xs" value={title} onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") add(); if (e.key === "Escape") setAdding(false); }} placeholder="Tarefa…" />
+          <button className="text-gold text-xs px-1" disabled={pending} onClick={add}>ok</button>
+        </div>
+      ) : (
+        <button className="mt-1 text-[10px] text-muted2 hover:text-gold" onClick={() => setAdding(true)}>+ tarefa</button>
+      )}
     </div>
   );
 }
 
-function Column({ id, label, deals }: { id: string; label: string; deals: Deal[] }) {
+function Column({ id, label, deals, taskCounts }: { id: string; label: string; deals: Deal[]; taskCounts: Record<string, TaskCount> }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   const sum = deals.reduce((a, d) => a + (d.value_estimated ?? 0), 0);
   return (
@@ -48,14 +69,14 @@ function Column({ id, label, deals }: { id: string; label: string; deals: Deal[]
         <p className="text-[10px] text-muted2 font-mono">{brl(sum)}</p>
       </div>
       <div className="space-y-2 min-h-12">
-        {deals.map((d) => <DraggableCard key={d.id} d={d} />)}
+        {deals.map((d) => <DraggableCard key={d.id} d={d} tc={taskCounts[d.id]} />)}
         {deals.length === 0 && <p className="text-xs text-muted2 px-1 pb-1">—</p>}
       </div>
     </div>
   );
 }
 
-export function KanbanBoard({ initial }: { initial: Deal[] }) {
+export function KanbanBoard({ initial, taskCounts = {} }: { initial: Deal[]; taskCounts?: Record<string, TaskCount> }) {
   const [deals, setDeals] = useState<Deal[]>(initial);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [lostFor, setLostFor] = useState<string | null>(null);
@@ -122,7 +143,7 @@ export function KanbanBoard({ initial }: { initial: Deal[] }) {
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-6 gap-3 items-start">
-        {DEAL_STAGES.map((s) => <Column key={s} id={s} label={STAGE_LABELS[s]} deals={byStage[s]} />)}
+        {DEAL_STAGES.map((s) => <Column key={s} id={s} label={STAGE_LABELS[s]} deals={byStage[s]} taskCounts={taskCounts} />)}
       </div>
 
       {/* zona de perda */}

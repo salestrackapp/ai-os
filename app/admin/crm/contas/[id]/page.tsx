@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CrmNav } from "@/components/crm/CrmNav";
 import { ORG_PLAN_LABELS, ORG_STATUS_LABELS, STAGE_LABELS, brl, type Organization, type Deal, type Contact } from "@/lib/types";
-import { updateOrg, deleteOrg } from "../actions";
+import { updateOrg, deleteOrg, addContactToOrg } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -57,12 +57,28 @@ export default async function ContaDetail({ params }: { params: Promise<{ id: st
         <div className="space-y-5">
           <div className="card p-6">
             <h3 className="font-serif text-xl font-semibold mb-3">Contatos ({(contacts ?? []).length})</h3>
-            <div className="space-y-2">
+            <div className="space-y-2 mb-4">
               {(contacts as Contact[] | null)?.map((c) => (
-                <div key={c.id} className="text-sm"><p className="text-cream">{c.name}</p>{c.email && <p className="text-[11px] text-muted2">{c.email}</p>}</div>
+                <div key={c.id} className="text-sm flex items-center justify-between gap-2">
+                  <div><p className="text-cream">{c.name}{c.role && <span className="text-muted2 text-xs"> · {c.role}</span>}</p>{c.email && <p className="text-[11px] text-muted2">{c.email}</p>}</div>
+                  {c.opt_in_whatsapp && <span className="badge-teal shrink-0">wpp</span>}
+                </div>
               ))}
-              {(!contacts || contacts.length === 0) && <p className="text-sm text-muted2">Sem contatos. Cadastre em Contatos.</p>}
+              {(!contacts || contacts.length === 0) && <p className="text-sm text-muted2">Sem contatos ainda.</p>}
             </div>
+            <details className="border-t border-line pt-3">
+              <summary className="cursor-pointer text-sm text-gold">+ Adicionar contato à conta</summary>
+              <form action={addContactToOrg.bind(null, id)} className="mt-3 space-y-2">
+                <input className="input" name="name" placeholder="Nome" required />
+                <input className="input" name="email" type="email" placeholder="E-mail" />
+                <div className="grid grid-cols-2 gap-2">
+                  <input className="input font-mono" name="phone" placeholder="Telefone" />
+                  <input className="input" name="role" placeholder="Cargo" />
+                </div>
+                <label className="flex items-center gap-2 text-xs text-muted"><input type="checkbox" name="opt_in_whatsapp" className="accent-[#C89B3C]" /> Opt-in WhatsApp</label>
+                <button className="btn-gold w-full justify-center">Adicionar contato</button>
+              </form>
+            </details>
           </div>
           <form action={deleteOrg.bind(null, id)} className="card p-6">
             <button className="btn-ghost w-full justify-center text-xs !text-muted2 hover:!text-cream">Excluir conta (auditado)</button>
