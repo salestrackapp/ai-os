@@ -51,6 +51,9 @@ beforeAll(async () => {
   await admin.from("projects").insert({ org_id: orgB, name: "SEGREDO-B" });
   const { data: propB } = await admin.from("proposals").insert({ org_id: orgB, title: "SEGREDO-B", items: [] }).select("id").single();
   await admin.from("proposal_events").insert({ proposal_id: propB!.id, kind: "viewed" });
+  await admin.from("contracts").insert({ org_id: orgB, proposal_id: propB!.id, status: "minuta" });
+  await admin.from("invoices").insert({ org_id: orgB, amount: 1000, status: "aberta", kind: "implantacao" });
+  await admin.from("subscriptions").insert({ org_id: orgB, plan: "professional", monthly_amount: 4500, status: "ativa" });
   await admin.from("activities").insert({ org_id: orgB, kind: "sistema", payload: { secret: "B" } });
   await admin.from("client_ai_stack").insert({
     org_id: orgB,
@@ -68,7 +71,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Limpeza
-  for (const t of ["activities","proposals","projects","sessions","client_ai_stack","memberships"]) {
+  for (const t of ["contracts","invoices","subscriptions","activities","proposals","projects","sessions","client_ai_stack","memberships"]) {
     await admin.from(t).delete().in("org_id", [orgA, orgB]);
   }
   await admin.from("organizations").delete().in("id", [orgA, orgB]);
@@ -146,4 +149,17 @@ describe("Propostas · acesso público só via service role", () => {
     const { data } = await userA.from("proposal_events").select("*");
     expect(data ?? []).toHaveLength(0);
   });
+});
+
+describe("Contratos & Billing · isolamento por tenant", () => {
+  for (const table of ["contracts", "invoices", "subscriptions"]) {
+    it(`cliente A NÃO lê ${table} da org B`, async () => {
+      const { data } = await userA.from(table).select("*").eq("org_id", orgB);
+      expect(data ?? [], `vazamento em ${table}`).toHaveLength(0);
+    });
+    it(`anônimo NÃO lê ${table}`, async () => {
+      const { data } = await anon.from(table).select("*");
+      expect(data ?? []).toHaveLength(0);
+    });
+  }
 });

@@ -92,6 +92,31 @@ export function proposalTotals(items: ProposalItem[]): { byBrand: Record<string,
   return { byBrand, total };
 }
 
+export type Contract = {
+  id: string; org_id: string | null; proposal_id: string | null; status: string;
+  docusign_envelope_id: string | null; signed_pdf_url: string | null; content_hash: string | null;
+  signed_at: string | null; created_at: string; content_html: string | null; sent_at: string | null;
+  signer_name: string | null; signer_email: string | null; signed_manually: boolean;
+};
+export const CONTRACT_STATUS_LABELS: Record<string, string> = {
+  minuta: "Minuta", enviado: "Enviado", assinado: "Assinado", cancelado: "Cancelado",
+};
+export function contractStatusBadge(s: string): string {
+  if (s === "assinado") return "badge-teal";
+  if (s === "cancelado") return "badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-red-400 border-red-500/40 bg-red-500/10";
+  if (s === "enviado") return "badge-gold";
+  return "badge-muted";
+}
+export type Invoice = {
+  id: string; org_id: string; stripe_invoice_id: string | null; amount: number | null; status: string | null;
+  due_date: string | null; paid_at: string | null; kind: string; installment_n: number | null;
+  installments_total: number | null; contract_id: string | null; hosted_url: string | null;
+};
+export type Subscription = {
+  id: string; org_id: string; stripe_subscription_id: string | null; plan: string; monthly_amount: number | null;
+  addons: unknown; status: string; started_at: string; contract_id: string | null;
+};
+
 export const FRENTE_SUGGESTIONS = [
   "Comercial","Marketing","Financeiro","Operações","RH","Jurídico","Atendimento","Diretoria",
 ];
