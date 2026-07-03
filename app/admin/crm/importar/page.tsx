@@ -32,11 +32,10 @@ async function importCsv(formData: FormData) {
     const { data: existing } = await supabase.from("organizations")
       .select("id").eq("is_salestrack", false).ilike("name", company).limit(1);
     if (existing && existing.length) { orgCache.set(key, existing[0].id); return existing[0].id; }
-    const slug = key.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 36) + "-" + Math.random().toString(36).slice(2, 8);
-    const { data: created } = await supabase.from("organizations")
-      .insert({ name: company, status: "prospect" }).select("id").single();
-    if (!created) return null;
-    await supabase.from("organizations").update({ slug }).eq("id", created.id);
+    const slug = (key.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 36) || "org") + "-" + Math.random().toString(36).slice(2, 8);
+    const { data: created, error: cErr } = await supabase.from("organizations")
+      .insert({ name: company, slug, status: "prospect" }).select("id").single();
+    if (cErr || !created) return null;
     orgCache.set(key, created.id); stats.orgsNew++;
     return created.id;
   }

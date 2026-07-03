@@ -128,13 +128,13 @@ export async function convertToClient(id: string, formData: FormData) {
   if (!orgId) {
     const name = String(formData.get("org_name") ?? "").trim() || deal?.title || "Nova organização";
     const cnpj = String(formData.get("cnpj") ?? "").trim() || null;
-    const slug = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
-      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) + "-" + id.slice(0, 6);
+    const base = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+    const slug = (base || "org") + "-" + Math.random().toString(36).slice(2, 8);
     const { data: org, error } = await supabase.from("organizations")
-      .insert({ name, cnpj, status: "onboarding", plan: "professional" }).select("id").single();
+      .insert({ name, slug, cnpj, status: "onboarding", plan: "professional" }).select("id").single();
     if (error) throw new Error(error.message);
     orgId = org.id;
-    await supabase.from("organizations").update({ slug }).eq("id", orgId);
     await audit("org.create", "organizations", orgId, { name, cnpj, from_deal: id });
   }
   await supabase.from("deals").update({ stage: "cliente", org_id: orgId }).eq("id", id);
