@@ -22,7 +22,7 @@ const TENANT_TABLES = [
 ];
 
 let admin: SupabaseClient;
-let userA: SupabaseClient, userB: SupabaseClient;
+let userA: SupabaseClient, userB: SupabaseClient, anon: SupabaseClient;
 let orgA: string, orgB: string;
 let uidA: string, uidB: string;
 
@@ -49,7 +49,8 @@ beforeAll(async () => {
   // 3. Dado sensível em cada tabela tenant da Org B (o que A NÃO pode ver)
   await admin.from("sessions").insert({ org_id: orgB, type: "sessao_estrategica", title: "SEGREDO-B" });
   await admin.from("projects").insert({ org_id: orgB, name: "SEGREDO-B" });
-  await admin.from("proposals").insert({ org_id: orgB, title: "SEGREDO-B", items: [] });
+  const { data: propB } = await admin.from("proposals").insert({ org_id: orgB, title: "SEGREDO-B", items: [] }).select("id").single();
+  await admin.from("proposal_events").insert({ proposal_id: propB!.id, kind: "viewed" });
   await admin.from("activities").insert({ org_id: orgB, kind: "sistema", payload: { secret: "B" } });
   await admin.from("client_ai_stack").insert({
     org_id: orgB,
@@ -61,6 +62,8 @@ beforeAll(async () => {
   userB = createClient(URL, ANON, { auth: { persistSession: false } });
   await userA.auth.signInWithPassword({ email: uA.data.user!.email!, password: PASS });
   await userB.auth.signInWithPassword({ email: uB.data.user!.email!, password: PASS });
+  // cliente ANÔNIMO (sem login) — só a página pública via service role deve ler
+  anon = createClient(URL, ANON, { auth: { persistSession: false } });
 }, 60_000);
 
 afterAll(async () => {
@@ -126,6 +129,21 @@ describe("Catálogos globais", () => {
   });
   it("cliente NÃO lê receitas não publicadas", async () => {
     const { data } = await userA.from("playbook_recipes").select("*").eq("published", false);
+    expect(data ?? []).toHaveLength(0);
+  });
+});
+
+describe("Propostas · acesso público só via service role", () => {
+  it("anônimo (sem login) NÃO lê proposals diretamente", async () => {
+    const { data } = await anon.from("proposals").select("*");
+    expect(data ?? []).toHaveLength(0);
+  });
+  it("anônimo NÃO lê proposal_events diretamente", async () => {
+    const { data } = await anon.from("proposal_events").select("*");
+    expect(data ?? []).toHaveLength(0);
+  });
+  it("cliente autenticado de outra org NÃO lê proposal_events (admin-only)", async () => {
+    const { data } = await userA.from("proposal_events").select("*");
     expect(data ?? []).toHaveLength(0);
   });
 });
