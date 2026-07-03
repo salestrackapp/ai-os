@@ -1,6 +1,7 @@
 import "server-only";
 import crypto from "node:crypto";
 import { BRAND_LABELS, proposalTotals } from "@/lib/types";
+import { deliverablesOf } from "@/lib/service-desc";
 import type { ProposalDoc } from "@/components/proposals/ProposalDocument";
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
@@ -9,7 +10,7 @@ const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&
 export function proposalHtml(p: ProposalDoc): string {
   const items = p.items ?? [];
   const { byBrand, total } = proposalTotals(items);
-  const rows = items.map((it) => `<tr><td>${esc(it.name)}</td><td>${esc(BRAND_LABELS[it.brand] ?? it.brand)}</td><td>${it.qty}</td><td>${it.price}</td></tr>`).join("");
+  const rows = items.map((it) => `<tr><td>${esc(it.name)}</td><td>${esc(BRAND_LABELS[it.brand] ?? it.brand)}</td><td>${it.qty}</td><td>${it.price}</td><td>${esc(deliverablesOf(it.description).join("|"))}</td></tr>`).join("");
   const phases = (p.timeline ?? []).map((f) => `<li>${f.n}. ${esc(f.titulo)} (${f.meses}m): ${esc(f.descricao)}</li>`).join("");
   const frentes = (p.frentes ?? []).map((f) => `<span>${esc(f)}</span>`).join("");
   return [

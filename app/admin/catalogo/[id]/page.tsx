@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { emailMap } from "@/lib/supabase/admin";
 import { CatalogForm } from "@/components/CatalogForm";
+import { ServiceDescription } from "@/components/ServiceDescription";
 import { updateItem, deleteItem } from "../actions";
 import type { CatalogItem } from "@/lib/types";
 
@@ -37,6 +38,10 @@ export default async function EditarItem({ params }: { params: Promise<{ id: str
     <div>
       <CatalogForm item={item as CatalogItem} action={update} title="Editar item" />
       <div className="max-w-2xl mt-4 space-y-4">
+        <div className="card p-6">
+          <p className="label mb-3">Prévia da descrição</p>
+          <ServiceDescription text={(item as CatalogItem).description} />
+        </div>
         <form action={remove}>
           <button className="btn-ghost text-xs !text-muted2 hover:!text-cream">Excluir item (registrado em auditoria)</button>
         </form>

@@ -44,7 +44,7 @@ export function ProposalBuilder({ catalog, deals, orgs, proposal, initialDealId 
   ), [catalog, pickQ, pickBrand]);
 
   function addItem(c: CatalogItem) {
-    setItems((xs) => [...xs, { catalog_item_id: c.id, name: c.name, qty: 1, price: c.price ?? 0, brand: c.brand }]);
+    setItems((xs) => [...xs, { catalog_item_id: c.id, name: c.name, qty: 1, price: c.price ?? 0, brand: c.brand, description: c.description ?? null }]);
   }
   const setItem = (i: number, patch: Partial<ProposalItem>) => setItems((xs) => xs.map((x, j) => j === i ? { ...x, ...patch } : x));
   const rmItem = (i: number) => setItems((xs) => xs.filter((_, j) => j !== i));

@@ -1,4 +1,5 @@
 import { brl, BRAND_LABELS, proposalTotals, type ProposalItem, type TimelinePhase } from "@/lib/types";
+import { deliverablesOf } from "@/lib/service-desc";
 
 export type ProposalDoc = {
   title: string; client_name?: string | null; valid_until?: string | null;
@@ -74,6 +75,30 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
           <div className="card p-5"><p className="label">Subtotal Salestrack AI</p><p className="font-serif text-2xl text-teal">{brl(st)}</p><p className="text-xs text-muted2">Execução técnica</p></div>
           <div className="card p-5 border-goldline"><p className="label">Investimento total</p><p className="font-serif text-2xl text-cream">{brl(total + aios)}</p>{inst > 1 && <p className="text-xs text-muted2">{inst}× de {brl(parcela)}</p>}</div>
         </div>
+
+        {/* Escopo e entregas por item */}
+        {items.some((it) => deliverablesOf(it.description).length > 0) && (
+          <div className="mt-8">
+            <p className="text-[11px] uppercase tracking-[.2em] text-gold mb-4">Escopo e entregas</p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {items.map((it, i) => {
+                const entregas = deliverablesOf(it.description);
+                if (entregas.length === 0) return null;
+                return (
+                  <div key={i} className="card p-5">
+                    <p className="font-serif text-lg font-semibold mb-1">{it.name}</p>
+                    <p className="text-[11px] uppercase tracking-[.14em] text-muted2 mb-3">{BRAND_LABELS[it.brand] ?? it.brand}{it.qty > 1 ? ` · ${it.qty}×` : ""}</p>
+                    <ul className="space-y-1.5">
+                      {entregas.map((e, j) => (
+                        <li key={j} className="flex gap-2 text-sm text-muted"><span className="text-gold shrink-0">✓</span><span>{e}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </Section>
 
       {/* Timeline horizontal */}

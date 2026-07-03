@@ -60,7 +60,7 @@ export const MEMBERSHIP_ROLES: Record<string,string> = {
   salestrack_admin: "Admin Salestrack", sponsor: "Sponsor", gestor_frente: "Gestor de frente",
   colaborador: "Colaborador", financeiro: "Financeiro",
 };
-export type ProposalItem = { catalog_item_id?: string | null; name: string; qty: number; price: number; brand: string };
+export type ProposalItem = { catalog_item_id?: string | null; name: string; qty: number; price: number; brand: string; description?: string | null };
 export type TimelinePhase = { n: number; titulo: string; meses: number; descricao: string };
 export type Proposal = {
   id: string; org_id: string | null; deal_id: string | null; version: number; status: string;
