@@ -1,5 +1,6 @@
 import { BRAND_LABELS, KIND_LABELS, type CatalogItem } from "@/lib/types";
 import { FrentesInput } from "@/components/FrentesInput";
+import { ServiceContentEditor } from "@/components/ServiceContentEditor";
 
 export function CatalogForm({ item, action, title }: {
   item?: CatalogItem;
@@ -15,9 +16,9 @@ export function CatalogForm({ item, action, title }: {
           <label className="label">Nome</label>
           <input className="input" name="name" defaultValue={item?.name} required />
         </div>
-        <div>
-          <label className="label">Descrição</label>
-          <textarea className="input" name="description" rows={2} defaultValue={item?.description ?? ""} />
+        <div className="border-y border-line py-5">
+          <p className="text-[11px] uppercase tracking-[.2em] text-gold mb-3">Conteúdo do serviço</p>
+          <ServiceContentEditor defaultValue={item?.description ?? ""} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
