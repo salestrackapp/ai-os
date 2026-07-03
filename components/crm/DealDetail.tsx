@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  STAGE_LABELS, DEAL_STAGES, BRAND_LABELS, brl, daysSince, dealBrandValues,
+  STAGE_LABELS, DEAL_STAGES, BRAND_LABELS, PROPOSAL_STATUS_LABELS, proposalStatusBadge, brl, daysSince, dealBrandValues,
   type Deal, type SignalDefinition, type Contact, type Organization, type Task,
 } from "@/lib/types";
 import { updateDeal, setDealSignals, addNote, markLost, convertToClient, linkContact } from "@/app/admin/crm/actions";
@@ -19,9 +19,11 @@ function actText(a: Activity): string {
   return JSON.stringify(p);
 }
 
-export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks }: {
+type PropLite = { id: string; title: string; version: number; status: string };
+
+export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks, proposals }: {
   deal: Deal; signalDefs: SignalDefinition[]; activities: Activity[]; contacts: Contact[];
-  orgs: Organization[]; tasks: Task[];
+  orgs: Organization[]; tasks: Task[]; proposals: PropLite[];
 }) {
   const [signals, setSignals] = useState<string[]>(deal.signals ?? []);
   const [score, setScore] = useState<number>(deal.score);
@@ -163,10 +165,26 @@ export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks
           </div>
         </div>
 
+        {/* Propostas vinculadas */}
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-serif text-xl font-semibold">Propostas</h3>
+            <a href={`/admin/propostas/nova?deal=${deal.id}`} className="text-gold text-sm hover:underline">+ Gerar</a>
+          </div>
+          <div className="space-y-2">
+            {proposals.map((p) => (
+              <Link key={p.id} href={`/admin/propostas/${p.id}`} className="flex items-center justify-between gap-2 bg-navy3 border border-line rounded-lg px-3 py-2 hover:border-goldline">
+                <span className="text-sm text-cream truncate">{p.title} <span className="text-muted2 text-xs">v{p.version}</span></span>
+                <span className={`${proposalStatusBadge(p.status)} shrink-0`}>{PROPOSAL_STATUS_LABELS[p.status] ?? p.status}</span>
+              </Link>
+            ))}
+            {proposals.length === 0 && <p className="text-sm text-muted2">Nenhuma proposta ainda.</p>}
+          </div>
+        </div>
+
         {/* Ações */}
         <div className="card p-6 space-y-3">
           <h3 className="font-serif text-xl font-semibold">Ações</h3>
-          <a href={`/admin/propostas/nova?deal=${deal.id}`} className="btn-gold w-full justify-center">Gerar proposta</a>
           {deal.stage !== "cliente" && (
             <form action={convertToClient.bind(null, deal.id)} className="space-y-2">
               {!deal.org_id && (

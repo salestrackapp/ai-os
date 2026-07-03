@@ -13,12 +13,13 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const { data: deal } = await supabase.from("deals").select("*").eq("id", id).single();
   if (!deal) notFound();
 
-  const [{ data: signalDefs }, { data: activities }, { data: contacts }, { data: orgs }, { data: tasks }] = await Promise.all([
+  const [{ data: signalDefs }, { data: activities }, { data: contacts }, { data: orgs }, { data: tasks }, { data: proposals }] = await Promise.all([
     supabase.from("signal_definitions").select("*").eq("active", true).order("sort"),
     supabase.from("activities").select("id, kind, payload, created_at").eq("ref_table", "deals").eq("ref_id", id).order("created_at", { ascending: false }),
     supabase.from("contacts").select("*").order("name"),
     supabase.from("organizations").select("*").eq("is_salestrack", false).order("name"),
     supabase.from("tasks").select("*").eq("deal_id", id).order("done").order("due_date", { nullsFirst: false }).order("created_at", { ascending: false }),
+    supabase.from("proposals").select("id, title, version, status").eq("deal_id", id).order("version", { ascending: false }),
   ]);
 
   const d = deal as Deal;
@@ -41,6 +42,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         contacts={list}
         orgs={(orgs as Organization[]) ?? []}
         tasks={(tasks as Task[]) ?? []}
+        proposals={(proposals as { id: string; title: string; version: number; status: string }[]) ?? []}
       />
     </div>
   );

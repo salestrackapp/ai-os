@@ -5,13 +5,14 @@ import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   useDraggable, useDroppable, closestCorners, type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
-import { DEAL_STAGES, STAGE_LABELS, BRAND_LABELS, brl, daysSince, STAGNATION_DAYS, type Deal } from "@/lib/types";
+import { DEAL_STAGES, STAGE_LABELS, BRAND_LABELS, PROPOSAL_STATUS_LABELS, proposalStatusBadge, brl, daysSince, STAGNATION_DAYS, type Deal } from "@/lib/types";
 import { moveDealToStage, markLost } from "@/app/admin/crm/actions";
 import { createTask } from "@/app/admin/tarefas/actions";
 
 type TaskCount = { open: number; total: number };
+type PropInfo = { status: string; count: number };
 
-function CardInner({ d, overlay = false, tc }: { d: Deal; overlay?: boolean; tc?: TaskCount }) {
+function CardInner({ d, overlay = false, tc, prop }: { d: Deal; overlay?: boolean; tc?: TaskCount; prop?: PropInfo }) {
   const days = daysSince(d.last_activity_at);
   const stagnant = days !== null && days >= STAGNATION_DAYS && d.stage !== "cliente";
   return (
@@ -22,6 +23,7 @@ function CardInner({ d, overlay = false, tc }: { d: Deal; overlay?: boolean; tc?
         <span className={d.score >= 20 ? "badge-teal" : "badge-muted"}>score {d.score}</span>
         {stagnant && <span className="badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-amber-400 border-amber-500/40 bg-amber-500/10">estagnado</span>}
         {tc && tc.open > 0 && <span className="badge-muted">✓ {tc.open} tarefa(s)</span>}
+        {prop && <span className={proposalStatusBadge(prop.status)}>📄 {PROPOSAL_STATUS_LABELS[prop.status] ?? prop.status}{prop.count > 1 ? ` (${prop.count})` : ""}</span>}
       </div>
       <p className="mt-2 text-[11px] text-muted2">{BRAND_LABELS[d.brand] ?? d.brand} · {brl(d.value_estimated)}</p>
       {d.next_step && <p className="mt-1 text-[11px] text-muted truncate">→ {d.next_step}</p>}
@@ -30,7 +32,7 @@ function CardInner({ d, overlay = false, tc }: { d: Deal; overlay?: boolean; tc?
   );
 }
 
-function DraggableCard({ d, tc }: { d: Deal; tc?: TaskCount }) {
+function DraggableCard({ d, tc, prop }: { d: Deal; tc?: TaskCount; prop?: PropInfo }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: d.id });
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
@@ -43,7 +45,7 @@ function DraggableCard({ d, tc }: { d: Deal; tc?: TaskCount }) {
     <div className={isDragging ? "opacity-30" : ""}>
       <div ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing">
         <Link href={`/admin/crm/${d.id}`} onClick={(e) => e.stopPropagation()} className="block">
-          <CardInner d={d} tc={tc} />
+          <CardInner d={d} tc={tc} prop={prop} />
         </Link>
       </div>
       {adding ? (
@@ -59,7 +61,7 @@ function DraggableCard({ d, tc }: { d: Deal; tc?: TaskCount }) {
   );
 }
 
-function Column({ id, label, deals, taskCounts }: { id: string; label: string; deals: Deal[]; taskCounts: Record<string, TaskCount> }) {
+function Column({ id, label, deals, taskCounts, proposals }: { id: string; label: string; deals: Deal[]; taskCounts: Record<string, TaskCount>; proposals: Record<string, PropInfo> }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   const sum = deals.reduce((a, d) => a + (d.value_estimated ?? 0), 0);
   return (
@@ -69,14 +71,14 @@ function Column({ id, label, deals, taskCounts }: { id: string; label: string; d
         <p className="text-[10px] text-muted2 font-mono">{brl(sum)}</p>
       </div>
       <div className="space-y-2 min-h-12">
-        {deals.map((d) => <DraggableCard key={d.id} d={d} tc={taskCounts[d.id]} />)}
+        {deals.map((d) => <DraggableCard key={d.id} d={d} tc={taskCounts[d.id]} prop={proposals[d.id]} />)}
         {deals.length === 0 && <p className="text-xs text-muted2 px-1 pb-1">—</p>}
       </div>
     </div>
   );
 }
 
-export function KanbanBoard({ initial, taskCounts = {} }: { initial: Deal[]; taskCounts?: Record<string, TaskCount> }) {
+export function KanbanBoard({ initial, taskCounts = {}, proposals = {} }: { initial: Deal[]; taskCounts?: Record<string, TaskCount>; proposals?: Record<string, PropInfo> }) {
   const [deals, setDeals] = useState<Deal[]>(initial);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [lostFor, setLostFor] = useState<string | null>(null);
@@ -143,7 +145,7 @@ export function KanbanBoard({ initial, taskCounts = {} }: { initial: Deal[]; tas
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-6 gap-3 items-start">
-        {DEAL_STAGES.map((s) => <Column key={s} id={s} label={STAGE_LABELS[s]} deals={byStage[s]} taskCounts={taskCounts} />)}
+        {DEAL_STAGES.map((s) => <Column key={s} id={s} label={STAGE_LABELS[s]} deals={byStage[s]} taskCounts={taskCounts} proposals={proposals} />)}
       </div>
 
       {/* zona de perda */}
