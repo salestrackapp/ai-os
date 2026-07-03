@@ -13,6 +13,11 @@ export default async function PropostasPage({ searchParams }: { searchParams: Pr
   let proposals = (data as Proposal[]) ?? [];
   if (q) proposals = proposals.filter((p) => p.title.toLowerCase().includes(q.toLowerCase()) || (p.client_name ?? "").toLowerCase().includes(q.toLowerCase()));
 
+  // nomes das contas
+  const orgIds = [...new Set(proposals.map((p) => p.org_id).filter(Boolean))] as string[];
+  const { data: orgs } = orgIds.length ? await supabase.from("organizations").select("id, name").in("id", orgIds) : { data: [] as { id: string; name: string }[] };
+  const orgName: Record<string, string> = Object.fromEntries((orgs ?? []).map((o) => [o.id, o.name]));
+
   // última leitura por proposta
   const ids = proposals.map((p) => p.id);
   const { data: evs } = ids.length ? await supabase.from("proposal_events").select("proposal_id, created_at").in("proposal_id", ids).in("kind", ["viewed", "section_read"]).order("created_at", { ascending: false }) : { data: [] as { proposal_id: string; created_at: string }[] };
@@ -39,7 +44,7 @@ export default async function PropostasPage({ searchParams }: { searchParams: Pr
       <div className="card overflow-x-auto">
         <table className="w-full">
           <thead><tr>
-            <th className="th">Proposta</th><th className="th">Cliente</th><th className="th">Versão</th>
+            <th className="th">Proposta</th><th className="th">Conta</th><th className="th">Cliente</th><th className="th">Versão</th>
             <th className="th">Status</th><th className="th text-right">Total</th><th className="th">Última leitura</th><th className="th"></th>
           </tr></thead>
           <tbody>
@@ -49,6 +54,7 @@ export default async function PropostasPage({ searchParams }: { searchParams: Pr
               return (
                 <tr key={p.id} className="hover:bg-navy3/50">
                   <td className="td"><p className="text-cream">{p.title}</p><p className="text-xs text-muted2">{new Date(p.created_at).toLocaleDateString("pt-BR")}</p></td>
+                  <td className="td text-muted">{p.org_id ? (orgName[p.org_id] ?? "—") : "—"}</td>
                   <td className="td text-muted">{p.client_name ?? "—"}</td>
                   <td className="td font-mono">v{p.version}</td>
                   <td className="td"><span className={proposalStatusBadge(p.status)}>{PROPOSAL_STATUS_LABELS[p.status] ?? p.status}</span></td>
@@ -58,7 +64,7 @@ export default async function PropostasPage({ searchParams }: { searchParams: Pr
                 </tr>
               );
             })}
-            {proposals.length === 0 && <tr><td className="td text-muted2" colSpan={7}>Nenhuma proposta{status ? " neste status" : ""}. Crie a primeira.</td></tr>}
+            {proposals.length === 0 && <tr><td className="td text-muted2" colSpan={8}>Nenhuma proposta{status ? " neste status" : ""}. Crie a primeira.</td></tr>}
           </tbody>
         </table>
       </div>

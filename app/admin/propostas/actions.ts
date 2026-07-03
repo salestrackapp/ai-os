@@ -7,7 +7,7 @@ import { notifyAdmin, sendToContact } from "@/lib/whatsapp";
 import { DEAL_STAGES } from "@/lib/types";
 
 export type ProposalPayload = {
-  title: string; deal_id?: string | null; client_name?: string | null; client_email?: string | null;
+  title: string; deal_id?: string | null; org_id?: string | null; client_name?: string | null; client_email?: string | null;
   valid_until?: string | null; frentes?: string[]; items?: unknown[]; timeline?: unknown[];
   platform_plan_md?: string | null; monthly_platform_fee?: number | null; installments?: number | null;
   roi_note?: string | null; conditions_md?: string | null;
@@ -40,7 +40,8 @@ async function orgOfDeal(dealId: string | null): Promise<string | null> {
 
 export async function createProposal(p: ProposalPayload) {
   const supabase = await createClient();
-  const row = { ...normalize(p), org_id: await orgOfDeal(p.deal_id ?? null), version: 1, status: "rascunho" };
+  const org_id = p.org_id || (await orgOfDeal(p.deal_id ?? null));
+  const row = { ...normalize(p), org_id, version: 1, status: "rascunho" };
   const { data, error } = await supabase.from("proposals").insert(row).select("id").single();
   if (error) throw new Error(error.message);
   await audit("proposal.create", "proposals", data.id, { title: row.title });
@@ -52,7 +53,8 @@ export async function updateProposal(id: string, p: ProposalPayload) {
   const supabase = await createClient();
   const { data: cur } = await supabase.from("proposals").select("status").eq("id", id).single();
   if (cur?.status !== "rascunho") throw new Error("Apenas propostas em rascunho podem ser editadas.");
-  const { error } = await supabase.from("proposals").update(normalize(p)).eq("id", id);
+  const org_id = p.org_id || (await orgOfDeal(p.deal_id ?? null));
+  const { error } = await supabase.from("proposals").update({ ...normalize(p), org_id }).eq("id", id);
   if (error) throw new Error(error.message);
   await audit("proposal.update", "proposals", id, { title: p.title });
   revalidatePath(`/admin/propostas/${id}`);

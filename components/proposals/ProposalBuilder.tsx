@@ -9,14 +9,16 @@ import { createProposal, updateProposal, sendProposal } from "@/app/admin/propos
 
 const DEFAULT_CONDITIONS = "O programa opera sobre plataforma de IA corporativa contratada pelo cliente — recomendação primária: Claude Team ou Enterprise.";
 
-type DealLite = { id: string; title: string };
+type DealLite = { id: string; title: string; org_id?: string | null };
+type OrgLite = { id: string; name: string };
 
-export function ProposalBuilder({ catalog, deals, proposal, initialDealId }: {
-  catalog: CatalogItem[]; deals: DealLite[]; proposal?: Proposal; initialDealId?: string;
+export function ProposalBuilder({ catalog, deals, orgs, proposal, initialDealId }: {
+  catalog: CatalogItem[]; deals: DealLite[]; orgs: OrgLite[]; proposal?: Proposal; initialDealId?: string;
 }) {
   const [tab, setTab] = useState<"form" | "preview">("form");
   const [title, setTitle] = useState(proposal?.title ?? "");
   const [dealId, setDealId] = useState(proposal?.deal_id ?? initialDealId ?? "");
+  const [orgId, setOrgId] = useState(proposal?.org_id ?? deals.find((d) => d.id === (proposal?.deal_id ?? initialDealId))?.org_id ?? "");
   const [clientName, setClientName] = useState(proposal?.client_name ?? "");
   const [clientEmail, setClientEmail] = useState(proposal?.client_email ?? "");
   const [validUntil, setValidUntil] = useState(proposal?.valid_until ?? "");
@@ -55,7 +57,7 @@ export function ProposalBuilder({ catalog, deals, proposal, initialDealId }: {
 
   function payload() {
     return {
-      title, deal_id: dealId || null, client_name: clientName, client_email: clientEmail, valid_until: validUntil || null,
+      title, deal_id: dealId || null, org_id: orgId || null, client_name: clientName, client_email: clientEmail, valid_until: validUntil || null,
       frentes, items, timeline, platform_plan_md: platMd, monthly_platform_fee: num(monthly),
       installments: Number(installments) || 1, roi_note: roi, conditions_md: conditions,
     };
@@ -97,8 +99,16 @@ export function ProposalBuilder({ catalog, deals, proposal, initialDealId }: {
               <div><label className="label">Título</label><input className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Programa de IA — Cliente" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="label">Deal</label>
-                  <select className="input" value={dealId} onChange={(e) => setDealId(e.target.value)}>
+                  <select className="input" value={dealId} onChange={(e) => {
+                    const v = e.target.value; setDealId(v);
+                    const org = deals.find((d) => d.id === v)?.org_id;
+                    if (org) setOrgId(org); // herda a conta do deal
+                  }}>
                     <option value="">— nenhum —</option>{deals.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
+                  </select></div>
+                <div><label className="label">Conta</label>
+                  <select className="input" value={orgId} onChange={(e) => setOrgId(e.target.value)}>
+                    <option value="">— nenhuma —</option>{orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                   </select></div>
                 <div><label className="label">Validade</label><input className="input" type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} /></div>
                 <div><label className="label">Cliente</label><input className="input" value={clientName} onChange={(e) => setClientName(e.target.value)} /></div>

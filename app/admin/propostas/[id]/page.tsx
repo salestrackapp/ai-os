@@ -24,15 +24,16 @@ export default async function PropostaPage({ params }: { params: Promise<{ id: s
 
   // rascunho → edição no builder
   if (p.status === "rascunho") {
-    const [{ data: catalog }, { data: deals }] = await Promise.all([
+    const [{ data: catalog }, { data: deals }, { data: orgs }] = await Promise.all([
       supabase.from("catalog_items").select("*").eq("active", true).order("name"),
-      supabase.from("deals").select("id, title").order("created_at", { ascending: false }),
+      supabase.from("deals").select("id, title, org_id").order("created_at", { ascending: false }),
+      supabase.from("organizations").select("id, name").eq("is_salestrack", false).order("name"),
     ]);
     return (
       <div>
         <div className="flex items-center gap-3 mb-6"><Link href="/admin/propostas" className="text-muted2 hover:text-gold text-sm">← Propostas</Link></div>
         <h1 className="font-serif text-4xl font-semibold mb-6">{p.title} <span className="text-muted2 text-2xl">· rascunho v{p.version}</span></h1>
-        <ProposalBuilder catalog={(catalog as CatalogItem[]) ?? []} deals={(deals as { id: string; title: string }[]) ?? []} proposal={p} />
+        <ProposalBuilder catalog={(catalog as CatalogItem[]) ?? []} deals={(deals as { id: string; title: string; org_id: string | null }[]) ?? []} orgs={(orgs as { id: string; name: string }[]) ?? []} proposal={p} />
       </div>
     );
   }
@@ -47,6 +48,7 @@ export default async function PropostaPage({ params }: { params: Promise<{ id: s
   const maxSec = Math.max(1, ...Object.values(secTotals));
   const decision = (events ?? []).find((e) => ["approved", "adjust_requested", "refused"].includes(e.kind));
   const link = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/p/${p.access_token ?? ""}`;
+  const { data: org } = p.org_id ? await supabase.from("organizations").select("id, name").eq("id", p.org_id).single() : { data: null };
 
   const docData = {
     title: p.title, client_name: p.client_name, valid_until: p.valid_until, frentes: p.frentes,
@@ -66,7 +68,8 @@ export default async function PropostaPage({ params }: { params: Promise<{ id: s
               <h3 className="font-serif text-xl font-semibold">Status</h3>
               <span className={proposalStatusBadge(p.status)}>{PROPOSAL_STATUS_LABELS[p.status]}</span>
             </div>
-            <p className="text-xs text-muted2 mb-3">v{p.version}{p.sent_at ? ` · enviada ${new Date(p.sent_at).toLocaleDateString("pt-BR")}` : ""}</p>
+            <p className="text-xs text-muted2 mb-1">v{p.version}{p.sent_at ? ` · enviada ${new Date(p.sent_at).toLocaleDateString("pt-BR")}` : ""}</p>
+            <p className="text-sm text-muted mb-3">Conta: {org ? <Link href={`/admin/crm/contas/${org.id}`} className="text-gold hover:underline">{org.name}</Link> : <span className="text-muted2">nenhuma</span>}{p.client_name ? ` · ${p.client_name}` : ""}</p>
             <ProposalActions id={id} status={p.status} link={link} />
           </div>
 
