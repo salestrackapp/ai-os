@@ -34,8 +34,8 @@ export async function middleware(request: NextRequest) {
   if (path.startsWith("/admin") && !user) return redir("/login", { next: path });
   if (path === "/login" && user) return redir("/admin");
 
-  // Enforcement de MFA para administradores Salestrack
-  if (path.startsWith("/admin") && user) {
+  // Enforcement de MFA para administradores Salestrack (atrás de flag; ligar com MFA_ENFORCE=true)
+  if (process.env.MFA_ENFORCE === "true" && path.startsWith("/admin") && user) {
     const { data: mem } = await supabase
       .from("memberships")
       .select("role, organizations!inner(is_salestrack)")

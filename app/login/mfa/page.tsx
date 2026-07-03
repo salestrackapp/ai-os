@@ -26,10 +26,9 @@ export default function MfaChallenge() {
     const challenge = await supabase.auth.mfa.challenge({ factorId });
     if (challenge.error) { setLoading(false); return setMsg(challenge.error.message); }
     const { error } = await supabase.auth.mfa.verify({ factorId, challengeId: challenge.data.id, code });
-    setLoading(false);
-    if (error) return setMsg(error.message);
-    router.push("/admin");
-    router.refresh();
+    if (error) { setLoading(false); return setMsg(error.message); }
+    // navegação de página inteira: garante que o cookie AAL2 recém-gravado chegue ao servidor/middleware
+    window.location.assign("/admin");
   }
 
   async function signOut() { await supabase.auth.signOut(); router.push("/login"); }
