@@ -60,6 +60,38 @@ export const MEMBERSHIP_ROLES: Record<string,string> = {
   salestrack_admin: "Admin Salestrack", sponsor: "Sponsor", gestor_frente: "Gestor de frente",
   colaborador: "Colaborador", financeiro: "Financeiro",
 };
+export type ProposalItem = { catalog_item_id?: string | null; name: string; qty: number; price: number; brand: string };
+export type TimelinePhase = { n: number; titulo: string; meses: number; descricao: string };
+export type Proposal = {
+  id: string; org_id: string | null; deal_id: string | null; version: number; status: string;
+  title: string; frentes: string[] | null; items: ProposalItem[] | null;
+  platform_plan_md: string | null; monthly_platform_fee: number | null; installments: number | null;
+  html: string | null; content_hash: string | null; sent_at: string | null; decided_at: string | null;
+  read_analytics: unknown; decision_note: string | null; created_at: string;
+  access_token: string | null; valid_until: string | null; timeline: TimelinePhase[] | null;
+  roi_note: string | null; conditions_md: string | null; client_name: string | null; client_email: string | null;
+};
+export const PROPOSAL_STATUS_LABELS: Record<string, string> = {
+  rascunho: "Rascunho", enviada: "Enviada", em_leitura: "Em leitura", aprovada: "Aprovada",
+  ajuste_solicitado: "Ajuste solicitado", recusada: "Recusada", expirada: "Expirada",
+};
+export function proposalStatusBadge(s: string): string {
+  if (s === "aprovada") return "badge-teal";
+  if (s === "recusada" || s === "expirada") return "badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-red-400 border-red-500/40 bg-red-500/10";
+  if (s === "enviada" || s === "em_leitura" || s === "ajuste_solicitado") return "badge-gold";
+  return "badge-muted";
+}
+/** Soma por marca dos itens de uma proposta (colunas duplas AK × ST). */
+export function proposalTotals(items: ProposalItem[]): { byBrand: Record<string, number>; total: number } {
+  const byBrand: Record<string, number> = {};
+  let total = 0;
+  for (const it of items ?? []) {
+    const v = (Number(it.qty) || 0) * (Number(it.price) || 0);
+    byBrand[it.brand] = (byBrand[it.brand] ?? 0) + v; total += v;
+  }
+  return { byBrand, total };
+}
+
 export const FRENTE_SUGGESTIONS = [
   "Comercial","Marketing","Financeiro","Operações","RH","Jurídico","Atendimento","Diretoria",
 ];

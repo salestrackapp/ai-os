@@ -166,6 +166,7 @@ export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks
         {/* Ações */}
         <div className="card p-6 space-y-3">
           <h3 className="font-serif text-xl font-semibold">Ações</h3>
+          <a href={`/admin/propostas/nova?deal=${deal.id}`} className="btn-gold w-full justify-center">Gerar proposta</a>
           {deal.stage !== "cliente" && (
             <form action={convertToClient.bind(null, deal.id)} className="space-y-2">
               {!deal.org_id && (
