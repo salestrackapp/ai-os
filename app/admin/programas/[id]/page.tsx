@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { PROJECT_STATUS_LABELS, ASSET_TYPE_LABELS, type Project, type LibraryAsset } from "@/lib/types";
-import { setProgramStatus, uploadLibraryAsset, deleteLibraryAsset } from "../actions";
+import { setProgramStatus, uploadLibraryAsset, deleteLibraryAsset, viewPortalAs } from "../actions";
 import { createClientInvite } from "@/app/portal/equipe/actions";
 
 export const dynamic = "force-dynamic";
@@ -77,6 +77,7 @@ export default async function ProgramaDetail({ params }: { params: Promise<{ id:
               {project.status !== "ativo" && <form action={setProgramStatus.bind(null, id, "ativo")}><button className="btn-gold w-full justify-center">Ativar programa</button></form>}
               {project.status === "ativo" && <form action={setProgramStatus.bind(null, id, "pausado")}><button className="btn-ghost w-full justify-center">Pausar</button></form>}
               {project.status === "pausado" && <form action={setProgramStatus.bind(null, id, "ativo")}><button className="btn-gold w-full justify-center">Retomar</button></form>}
+              {project.org_id && <form action={viewPortalAs.bind(null, project.org_id)}><button className="btn-ghost w-full justify-center">👁 Ver portal do cliente</button></form>}
             </div>
           </div>
 

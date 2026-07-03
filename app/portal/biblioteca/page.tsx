@@ -1,13 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { currentMembership } from "@/lib/auth";
+import { resolvePortalOrg } from "@/lib/portal";
 import { LibraryGrid } from "@/components/portal/LibraryGrid";
 import type { LibraryAsset } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function Biblioteca() {
-  const m = await currentMembership();
+  const m = await resolvePortalOrg();
   const orgId = m!.orgId!;
   const supabase = await createClient();
   // RLS: assets da própria org + repositório-mestre (org_id null)

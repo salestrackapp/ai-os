@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PROJECT_STATUS_LABELS, type Project } from "@/lib/types";
+import { viewPortalAs } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,10 @@ export default async function ProgramasPage() {
                 <td className="td"><span className={p.status === "ativo" ? "badge-teal" : p.status === "onboarding" ? "badge-gold" : "badge-muted"}>{PROJECT_STATUS_LABELS[p.status] ?? p.status}</span></td>
                 <td className="td text-xs text-muted2">{p.activated_at ? new Date(p.activated_at).toLocaleDateString("pt-BR") : "—"}</td>
                 <td className="td text-xs text-muted2">{p.org_id && lastAccess[p.org_id] ? new Date(lastAccess[p.org_id]).toLocaleString("pt-BR") : "—"}</td>
-                <td className="td text-right"><Link href={`/admin/programas/${p.id}`} className="text-gold text-sm hover:underline">Abrir</Link></td>
+                <td className="td text-right whitespace-nowrap">
+                  {p.org_id && <form action={viewPortalAs.bind(null, p.org_id)} className="inline"><button className="text-muted2 hover:text-gold text-xs mr-3">👁 Portal</button></form>}
+                  <Link href={`/admin/programas/${p.id}`} className="text-gold text-sm hover:underline">Abrir</Link>
+                </td>
               </tr>
             ))}
             {list.length === 0 && <tr><td className="td text-muted2" colSpan={6}>Nenhum programa. Eles são criados no kickoff (contrato assinado).</td></tr>}

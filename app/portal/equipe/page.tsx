@@ -1,15 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { emailMap } from "@/lib/supabase/admin";
-import { currentMembership } from "@/lib/auth";
+import { resolvePortalOrg } from "@/lib/portal";
 import { CLIENT_ROLE_LABELS } from "@/lib/types";
 import { createClientInvite, removeClientMember, resendInvite } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function PortalEquipe() {
-  const m = await currentMembership();
+  const m = await resolvePortalOrg();
   const orgId = m!.orgId!;
-  const isAdmin = m!.role === "client_admin";
+  const isAdmin = m!.adminView || m!.role === "client_admin";
   const supabase = await createClient();
   const { data: mems } = await supabase.from("memberships").select("user_id, role, created_at").eq("org_id", orgId).order("created_at");
   const emails = await emailMap((mems ?? []).map((x: { user_id: string }) => x.user_id));

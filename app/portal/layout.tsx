@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { currentMembership } from "@/lib/auth";
+import { resolvePortalOrg } from "@/lib/portal";
+import { exitPortalView } from "@/app/admin/programas/actions";
 import { PortalNav } from "@/components/portal/PortalNav";
 
 export const dynamic = "force-dynamic";
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
-  const m = await currentMembership();
+  const m = await resolvePortalOrg();
   if (!m) redirect("/login");
-  if (m.isSalestrackAdmin) redirect("/admin");
+  if (m.isAdmin && !m.orgId) redirect("/admin/programas");   // admin escolhe a org lá
   if (!m.orgId) redirect("/sem-acesso");
 
   const supabase = await createClient();
@@ -35,9 +36,15 @@ export default async function PortalLayout({ children }: { children: React.React
         </div>
       </aside>
       <main className="flex-1 min-w-0 p-10">
+        {m.adminView && (
+          <div className="mb-5 card p-3 border-goldline bg-[rgba(200,155,60,.06)] flex items-center justify-between gap-3">
+            <p className="text-sm text-gold">👁 Visão admin — vendo o portal de <b>{org?.name}</b> com controle total.</p>
+            <form action={exitPortalView}><button className="btn-ghost text-xs">Sair da visão</button></form>
+          </div>
+        )}
         <div className="mb-8 flex items-center justify-between">
           <p className="text-sm text-muted2">{org?.name}</p>
-          <span className="badge-muted">Cliente</span>
+          <span className="badge-muted">{m.adminView ? "Admin" : "Cliente"}</span>
         </div>
         {children}
       </main>

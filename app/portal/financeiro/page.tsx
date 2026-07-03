@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { currentMembership } from "@/lib/auth";
+import { resolvePortalOrg } from "@/lib/portal";
 import { brl, type Invoice, type Subscription } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function PortalFinanceiro() {
-  const m = await currentMembership();
+  const m = await resolvePortalOrg();
   const orgId = m!.orgId!;
   const supabase = await createClient();
   const [{ data: invs }, { data: subs }] = await Promise.all([

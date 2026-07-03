@@ -1,8 +1,25 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { currentMembership } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
 import { audit } from "@/lib/audit";
+
+/** Admin entra no portal no contexto da org (visão total). */
+export async function viewPortalAs(orgId: string) {
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) throw new Error("Apenas admin Salestrack.");
+  (await cookies()).set("aios_view_org", orgId, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 4 });
+  redirect("/portal");
+}
+
+/** Sai da visão de portal e volta ao admin. */
+export async function exitPortalView() {
+  (await cookies()).delete("aios_view_org");
+  redirect("/admin/programas");
+}
 
 export async function setProgramStatus(projectId: string, status: string) {
   if (!["onboarding", "ativo", "pausado", "encerrado"].includes(status)) throw new Error("Status inválido.");

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { currentMembership } from "@/lib/auth";
+import { resolvePortalOrg } from "@/lib/portal";
 import { notifyAdmin } from "@/lib/whatsapp";
 import { emailAdmin } from "@/lib/email";
 import {
@@ -18,16 +18,16 @@ const SESSION_LABEL: Record<string, string> = {
 };
 
 export default async function PortalHome() {
-  const m = await currentMembership();
+  const m = await resolvePortalOrg();
   const orgId = m!.orgId!;
   const supabase = await createClient();
   const { data: proj } = await supabase.from("projects").select("*").eq("org_id", orgId).order("created_at").limit(1).single();
   const project = proj as Project | null;
 
-  // Ativação por primeiro acesso + log (via service role — cliente não escreve projects)
+  // Ativação por primeiro acesso + log — só para acesso real do cliente (não na visão admin)
   const svc = createServiceClient();
-  await svc.from("portal_access_log").insert({ org_id: orgId, user_id: m!.userId });
-  if (project && project.status === "onboarding") {
+  if (!m!.adminView) await svc.from("portal_access_log").insert({ org_id: orgId, user_id: m!.userId });
+  if (project && project.status === "onboarding" && !m!.adminView) {
     await svc.from("projects").update({ status: "ativo", activated_at: new Date().toISOString(), activated_by: "primeiro_acesso" }).eq("id", project.id);
     await svc.from("audit_logs").insert({ org_id: orgId, actor_id: m!.userId, action: "program.activated", resource: "projects", resource_id: project.id, payload: { by: "primeiro_acesso" }, hash: "pending" });
     const { data: org } = await svc.from("organizations").select("name").eq("id", orgId).single();
