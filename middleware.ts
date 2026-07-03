@@ -31,8 +31,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   };
 
-  if (path.startsWith("/admin") && !user) return redir("/login", { next: path });
-  if (path === "/login" && user) return redir("/admin");
+  if ((path.startsWith("/admin") || path.startsWith("/portal")) && !user) return redir("/login", { next: path });
+  if (path === "/login" && user) return redir("/entrar");
 
   // Enforcement de MFA para administradores Salestrack (atrás de flag; ligar com MFA_ENFORCE=true)
   if (process.env.MFA_ENFORCE === "true" && path.startsWith("/admin") && user) {

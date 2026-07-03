@@ -18,7 +18,7 @@ const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const TENANT_TABLES = [
   "tenant_branding","client_ai_stack","orchestrations","ai_policies",
   "sessions","session_credits","proposals","contracts","projects",
-  "deliverables","subscriptions","invoices","activities",
+  "deliverables","subscriptions","invoices","activities","library_assets","invites",
 ];
 
 let admin: SupabaseClient;
@@ -54,6 +54,10 @@ beforeAll(async () => {
   await admin.from("contracts").insert({ org_id: orgB, proposal_id: propB!.id, status: "minuta" });
   await admin.from("invoices").insert({ org_id: orgB, amount: 1000, status: "aberta", kind: "implantacao" });
   await admin.from("subscriptions").insert({ org_id: orgB, plan: "professional", monthly_amount: 4500, status: "ativa" });
+  const { data: projB } = await admin.from("projects").insert({ org_id: orgB, name: "SEGREDO-B-proj" }).select("id").single();
+  await admin.from("deliverables").insert({ project_id: projB!.id, org_id: orgB, title: "SEGREDO-B" });
+  await admin.from("library_assets").insert({ org_id: orgB, type: "documento", title: "SEGREDO-B" });
+  await admin.from("invites").insert({ org_id: orgB, email: "spy@b.com", role: "client_member" });
   await admin.from("activities").insert({ org_id: orgB, kind: "sistema", payload: { secret: "B" } });
   await admin.from("client_ai_stack").insert({
     org_id: orgB,
@@ -71,7 +75,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Limpeza
-  for (const t of ["contracts","invoices","subscriptions","activities","proposals","projects","sessions","client_ai_stack","memberships"]) {
+  for (const t of ["invites","library_assets","deliverables","contracts","invoices","subscriptions","activities","proposals","projects","sessions","client_ai_stack","memberships"]) {
     await admin.from(t).delete().in("org_id", [orgA, orgB]);
   }
   await admin.from("organizations").delete().in("id", [orgA, orgB]);
@@ -148,6 +152,21 @@ describe("Propostas · acesso público só via service role", () => {
   it("cliente autenticado de outra org NÃO lê proposal_events (admin-only)", async () => {
     const { data } = await userA.from("proposal_events").select("*");
     expect(data ?? []).toHaveLength(0);
+  });
+});
+
+describe("Portal do cliente · Fase 4a", () => {
+  it("client_member (sponsor) NÃO cria convites (só client_admin)", async () => {
+    const { error } = await userA.from("invites").insert({ org_id: orgA, email: "hack@a.com", role: "client_member" });
+    expect(error).not.toBeNull();
+  });
+  it("anônimo NÃO lê invites nem library_assets", async () => {
+    expect((await anon.from("invites").select("*")).data ?? []).toHaveLength(0);
+    expect((await anon.from("library_assets").select("*")).data ?? []).toHaveLength(0);
+  });
+  it("cliente NÃO lê tabelas administrativas (deals, catalog_items)", async () => {
+    expect((await userA.from("deals").select("*")).data ?? []).toHaveLength(0);
+    expect((await userA.from("catalog_items").select("*")).data ?? []).toHaveLength(0);
   });
 });
 

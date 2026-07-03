@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { currentMembership } from "@/lib/auth";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/crm", label: "CRM" },
   { href: "/admin/tarefas", label: "Tarefas" },
+  { href: "/admin/programas", label: "Programas" },
   { href: "/admin/propostas", label: "Propostas" },
   { href: "/admin/contratos", label: "Contratos" },
   { href: "/admin/financeiro", label: "Financeiro" },
@@ -24,6 +26,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) redirect(m?.orgId ? "/portal" : "/sem-acesso");
 
   return (
     <div className="min-h-screen flex">

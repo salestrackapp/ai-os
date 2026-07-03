@@ -19,15 +19,14 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return setMsg(error.message);
-    router.push(params.get("next") ?? "/admin");
-    router.refresh();
+    window.location.assign(params.get("next") ?? "/entrar");
   }
 
   async function magicLink() {
     if (!email) return setMsg("Informe o e-mail para receber o link mágico.");
     setLoading(true); setMsg(null);
     const { error } = await supabase.auth.signInWithOtp({
-      email, options: { emailRedirectTo: `${location.origin}/admin` },
+      email, options: { emailRedirectTo: `${location.origin}/entrar` },
     });
     setLoading(false);
     setMsg(error ? error.message : "Link mágico enviado — verifique seu e-mail.");

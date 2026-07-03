@@ -117,6 +117,42 @@ export type Subscription = {
   addons: unknown; status: string; started_at: string; contract_id: string | null;
 };
 
+export type Project = {
+  id: string; org_id: string | null; contract_id: string | null; name: string; phase: string;
+  timeline: TimelinePhase[] | null; progress_pct: number; health_score: number | null; created_at: string;
+  kickoff_checklist: unknown; status: string; activated_at: string | null; activated_by: string | null;
+};
+export type Deliverable = {
+  id: string; project_id: string; org_id: string; frente: string | null; title: string;
+  status: string; due_date: string | null; delivered_at: string | null; artifact_asset_id: string | null;
+};
+export type LibraryAsset = {
+  id: string; org_id: string | null; type: string; frente: string | null; title: string;
+  version: number; storage_path: string | null; url: string | null; meta: unknown; created_at: string;
+};
+export type Session = {
+  id: string; org_id: string; type: string; brand: string; title: string; status: string;
+  scheduled_at: string | null; meet_link: string | null; created_at: string;
+};
+export type Invite = {
+  id: string; org_id: string; email: string; role: string; token: string;
+  invited_by: string | null; expires_at: string; accepted_at: string | null; created_at: string;
+};
+export const PROJECT_STATUS_LABELS: Record<string, string> = {
+  onboarding: "Onboarding", ativo: "Ativo", pausado: "Pausado", encerrado: "Encerrado",
+};
+export const DELIVERABLE_STATUS_LABELS: Record<string, string> = {
+  planejado: "Planejado", em_andamento: "Em andamento", entregue: "Entregue",
+  entregue_pelo_cliente: "Entregue pelo cliente", bloqueado: "Bloqueado",
+};
+export const ASSET_TYPE_LABELS: Record<string, string> = {
+  documento: "Documento", video: "Vídeo", gravacao: "Gravação", material: "Material",
+  skill: "Skill", prompt: "Prompt", playbook: "Playbook", automacao: "Automação",
+};
+export const CLIENT_ROLE_LABELS: Record<string, string> = {
+  client_admin: "Administrador", client_member: "Membro",
+};
+
 export const FRENTE_SUGGESTIONS = [
   "Comercial","Marketing","Financeiro","Operações","RH","Jurídico","Atendimento","Diretoria",
 ];
