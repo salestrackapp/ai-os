@@ -1,6 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
+import { platformSubscriptionEnabled } from "@/lib/config";
 import { notifyAdmin } from "@/lib/whatsapp";
 import { stripeConfigured, startBillingStripe } from "@/lib/stripe";
 import { asaasConfigured, startBillingAsaas } from "@/lib/asaas";
@@ -56,6 +57,14 @@ export async function runKickoff(contractId: string): Promise<{ ok: boolean; che
     projectId = data.id; return `criado ${projectId}`;
   });
 
+  // 1b. regua.instantiated — cada programa nasce com a régua de comunicação instanciada (R4.1).
+  await run("regua.instantiated", async () => {
+    if (!projectId) return "sem project";
+    const { instantiateReguaForProgram } = await import("@/lib/comms/instantiate");
+    const rid = await instantiateReguaForProgram(projectId, contract.org_id ?? null);
+    return rid ? `régua ${rid}` : "sem régua-template (seed pendente)";
+  });
+
   // 2. org.activated
   await run("org.activated", async () => {
     if (!contract.org_id) return "sem org";
@@ -84,6 +93,9 @@ export async function runKickoff(contractId: string): Promise<{ ok: boolean; che
 
   // 5. billing.started
   await run("billing.started", async () => {
+    // Modelo atual: sem mensalidade de plataforma → nenhuma cobrança recorrente automática.
+    // Contrato/valores ficam registrados; o faturamento da OFERTA (se/quando) é manual. Reversível pela flag.
+    if (!platformSubscriptionEnabled()) return "sem cobrança automática (modelo sem mensalidade de plataforma)";
     const total = items.reduce((a, it) => a + (Number(it.qty) || 0) * (Number(it.price) || 0), 0);
     const inst = proposal?.installments && proposal.installments > 1 ? proposal.installments : 1;
     const monthly = proposal?.monthly_platform_fee ?? 0;

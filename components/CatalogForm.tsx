@@ -61,10 +61,10 @@ export function CatalogForm({ item, action, title }: {
         </div>
         <div className="flex gap-8 pt-2">
           <label className="flex items-center gap-2 text-sm text-muted">
-            <input type="checkbox" name="active" defaultChecked={item?.active ?? true} className="accent-[#C89B3C]" /> Ativo
+            <input type="checkbox" name="active" defaultChecked={item?.active ?? true} className="accent-[#4F1FFF]" /> Ativo
           </label>
           <label className="flex items-center gap-2 text-sm text-muted">
-            <input type="checkbox" name="needs_review" defaultChecked={item?.needs_review ?? false} className="accent-[#C89B3C]" /> Preço a revisar
+            <input type="checkbox" name="needs_review" defaultChecked={item?.needs_review ?? false} className="accent-[#4F1FFF]" /> Preço a revisar
           </label>
         </div>
         <div className="pt-4 flex gap-3">

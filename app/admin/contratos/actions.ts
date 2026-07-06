@@ -10,7 +10,46 @@ import { sendEmail } from "@/lib/email";
 import { contractHtml } from "@/lib/contract-html";
 import { docusignConfigured, sendEnvelope } from "@/lib/docusign";
 import { runKickoff } from "@/lib/kickoff";
-import type { ProposalItem } from "@/lib/types";
+import { getContractSettings } from "@/lib/settings";
+import { runCopilot } from "@/lib/agents/copilot";
+import { brl, proposalTotals, type ProposalItem } from "@/lib/types";
+
+/** Regenera a minuta usando IA a partir da proposta + cláusulas configuradas. Só em status 'minuta'. Rascunho para revisão jurídica. */
+export async function regenerateContractByAi(contractId: string) {
+  const supabase = await createClient();
+  const { data: c } = await supabase.from("contracts").select("*").eq("id", contractId).single();
+  if (!c) throw new Error("Contrato não encontrado.");
+  if (c.status !== "minuta") throw new Error("Só é possível regerar minutas (contrato ainda não enviado/assinado).");
+  const [{ data: proposal }, { data: org }, cfg] = await Promise.all([
+    c.proposal_id ? supabase.from("proposals").select("*").eq("id", c.proposal_id).single() : Promise.resolve({ data: null }),
+    c.org_id ? supabase.from("organizations").select("name, cnpj").eq("id", c.org_id).single() : Promise.resolve({ data: null }),
+    getContractSettings(),
+  ]);
+  const items = (proposal?.items as ProposalItem[]) ?? [];
+  const totals = proposalTotals(items);
+  const ctx = [
+    `CONTRATADA: ${cfg.contratada_nome}, CNPJ ${cfg.contratada_cnpj}, ${cfg.contratada_endereco}.`,
+    `CONTRATANTE: ${org?.name ?? proposal?.client_name ?? "Cliente"}${org?.cnpj ? `, CNPJ ${org.cnpj}` : ""}.`,
+    `Objeto/frentes: ${(proposal?.frentes ?? []).join(", ") || "programa de IA"}.`,
+    items.length ? `Itens:\n${items.map((it) => `- ${it.name} ${it.qty}x ${brl(it.price)}`).join("\n")}\nTotal: ${brl(totals.total)}` : "",
+    proposal?.monthly_platform_fee ? `Mensalidade da plataforma: ${brl(proposal.monthly_platform_fee)}` : "",
+    proposal?.installments ? `Parcelas de implantação: ${proposal.installments}x` : "",
+    `Foro: ${cfg.foro}. Reajuste: ${cfg.reajuste_indice}. Aviso prévio: ${cfg.aviso_previo_dias} dias. Validade de créditos: ${cfg.creditos_validade_meses} meses.`,
+    `CLÁUSULAS BASE (use e adapte):\n- Plataforma: ${cfg.clausula_plataforma}\n- Confidencialidade: ${cfg.clausula_confidencialidade}\n- LGPD: ${cfg.clausula_lgpd}\n- Rescisão: ${cfg.clausula_rescisao}`,
+    cfg.clausulas_extras.length ? `Cláusulas extras:\n${cfg.clausulas_extras.map((e) => `- ${e.titulo}: ${e.corpo}`).join("\n")}` : "",
+  ].filter(Boolean).join("\n");
+
+  const task = `Gere uma minuta de contrato de prestação de serviços COMPLETA e profissional, em HTML limpo e imprimível (fundo claro, tipografia sóbria, sem scripts). Estruture com cláusulas numeradas: qualificação das partes, objeto, escopo/entregas (baseado nas frentes e itens), valor e forma de pagamento, vigência e reajuste, obrigações das partes, confidencialidade, LGPD, rescisão, foro. Ao final, um bloco de assinaturas contendo EXATAMENTE o texto âncora "/assinatura_contratante/" na linha de assinatura do CONTRATANTE. Responda SOMENTE com o HTML do corpo do documento (sem cercas de código, sem comentários).`;
+  const r = await runCopilot({ task, context: ctx, maxTokens: 3000 });
+  if (r.degraded) throw new Error("IA indisponível (sem ANTHROPIC_API_KEY).");
+  let html = r.text.trim().replace(/^```(?:html)?/i, "").replace(/```$/, "").trim();
+  if (!/\/assinatura_contratante\//.test(html)) html += `\n<p style="margin-top:48px">_____________________________________<br/>/assinatura_contratante/<br/>${org?.name ?? proposal?.client_name ?? "CONTRATANTE"}</p>`;
+  const { error } = await supabase.from("contracts").update({ content_html: html }).eq("id", contractId);
+  if (error) throw new Error(error.message);
+  await supabase.from("contract_events").insert({ contract_id: contractId, kind: "minuta_ia" });
+  await audit("contract.ai_draft", "contracts", contractId, null, c.org_id ?? undefined);
+  revalidatePath(`/admin/contratos/${contractId}`);
+}
 
 export async function generateContractFromProposal(proposalId: string) {
   const supabase = await createClient();

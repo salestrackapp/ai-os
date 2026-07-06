@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/ds";
 import { emailMap } from "@/lib/supabase/admin";
 import { resolvePortalOrg } from "@/lib/portal";
 import { CLIENT_ROLE_LABELS } from "@/lib/types";
@@ -17,8 +18,7 @@ export default async function PortalEquipe() {
 
   return (
     <div className="max-w-3xl">
-      <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">Sua equipe</p>
-      <h1 className="font-serif text-4xl font-semibold mb-6">Equipe</h1>
+      <PageHeader eyebrow="Sua equipe" title="Equipe" />
 
       {isAdmin && (
         <form action={createClientInvite.bind(null, orgId)} className="card p-4 mb-6 flex flex-wrap items-end gap-3">

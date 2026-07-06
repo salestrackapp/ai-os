@@ -133,7 +133,11 @@ export type LibraryAsset = {
 export type Session = {
   id: string; org_id: string; type: string; brand: string; title: string; status: string;
   scheduled_at: string | null; meet_link: string | null; created_at: string;
+  calendly_ref: string | null; gcal_event_id: string | null; readai_ref: string | null;
+  summary_md: string | null; action_items: unknown; recording_url: string | null;
+  attendees: unknown; catalog_id: string | null;
 };
+export type SessionCredit = { id: string; org_id: string; type: string; total: number; consumed: number; valid_until: string | null };
 export type Invite = {
   id: string; org_id: string; email: string; role: string; token: string;
   invited_by: string | null; expires_at: string; accepted_at: string | null; created_at: string;
@@ -152,6 +156,30 @@ export const ASSET_TYPE_LABELS: Record<string, string> = {
 export const CLIENT_ROLE_LABELS: Record<string, string> = {
   client_admin: "Administrador", client_member: "Membro",
 };
+
+export type PlaybookTrilha = { id: string; slug: string; titulo: string; perfil: string; descricao: string | null; ordem: number; published: boolean };
+export type PlaybookRecipe = {
+  id: string; slug: string; titulo: string; frente: string | null; perfil: string; nivel: string;
+  tempo_min: number | null; oque: string | null; porque: string | null; ganho: string | null;
+  passos: string[] | null; prompt_pronto: string | null; trilha_id: string | null; ordem: number;
+  needs_review: boolean; published: boolean;
+};
+export type SessionCatalog = {
+  id: string; slug: string; titulo: string; marca: string; modalidade: string;
+  duracao_min: number | null; descricao: string | null; calendly_url: string | null; published: boolean;
+};
+export const SESSION_TYPE_LABELS: Record<string, string> = {
+  sessao_estrategica: "Sessão Estratégica", sprint_30d: "Sprint 30 dias", mentoria_trimestral: "Mentoria Trimestral",
+  workshop: "Workshop", palestra: "Palestra", treinamento: "Treinamento", ai_academy: "AI Academy",
+  ai_labs: "AI Labs", diagnostico_stack: "Diagnóstico de Stack",
+};
+export const SESSION_STATUS_LABELS: Record<string, string> = {
+  agendada: "Agendada", realizada: "Realizada", cancelada: "Cancelada", no_show: "Não compareceu",
+};
+export const PERFIL_LABELS: Record<string, string> = { clevel: "C-Level", gestor: "Gestores", operacional: "Operacional" };
+export const NIVEL_LABELS: Record<string, string> = { iniciante: "Iniciante", intermediario: "Intermediário", avancado: "Avançado" };
+export const MARCA_LABELS: Record<string, string> = { AK: "André Kachan", ST: "Salestrack AI" };
+export const MODALIDADE_LABELS: Record<string, string> = { online: "Online", in_loco: "In loco", hibrido: "Híbrido" };
 
 export const FRENTE_SUGGESTIONS = [
   "Comercial","Marketing","Financeiro","Operações","RH","Jurídico","Atendimento","Diretoria",

@@ -38,7 +38,7 @@ export function DecisionBar({ token }: { token: string }) {
                 <div className="space-y-3">
                   <div><label className="label">Nome completo</label><input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus /></div>
                   <div><label className="label">Cargo</label><input className="input" value={role} onChange={(e) => setRole(e.target.value)} /></div>
-                  <label className="flex items-center gap-2 text-sm text-muted"><input type="checkbox" className="accent-[#C89B3C]" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> Li e aprovo esta proposta</label>
+                  <label className="flex items-center gap-2 text-sm text-muted"><input type="checkbox" className="accent-[#4F1FFF]" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> Li e aprovo esta proposta</label>
                 </div>
                 {err && <p className="text-sm text-red-400 mt-3">{err}</p>}
                 <div className="mt-5 flex gap-3 justify-end">

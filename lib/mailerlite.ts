@@ -24,3 +24,18 @@ export async function syncContactToMailerLite(c: { email?: string | null; name?:
     if (!res.ok && res.status !== 200 && res.status !== 201) console.warn("[mailerlite] sync falhou:", res.status);
   } catch (e) { console.warn("[mailerlite] erro:", (e as Error).message); }
 }
+
+/** Nurture comercial: adiciona um prospect aquecido ao grupo de nurture ("IA em Toda a Empresa").
+ *  Sem env → retorna false (modo manual: o operador exporta o segmento). */
+export async function addToNurture(c: { email?: string | null; name?: string | null; company?: string | null }): Promise<boolean> {
+  if (!c.email || !KEY) return false;
+  const group = process.env.MAILERLITE_NURTURE_GROUP_ID ?? GROUP;
+  try {
+    const res = await fetch("https://connect.mailerlite.com/api/subscribers", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ email: c.email, fields: { name: c.name ?? "", company: c.company ?? "" }, groups: [group] }),
+    });
+    return res.ok || res.status === 200 || res.status === 201;
+  } catch { return false; }
+}

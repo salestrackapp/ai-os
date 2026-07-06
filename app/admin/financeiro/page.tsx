@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { brl, type Invoice, type Subscription } from "@/lib/types";
+import { AiAssist } from "@/components/AiAssist";
 import { createManualInvoice, markInvoicePaid, createManualSubscription, cancelSubscription } from "./actions";
+import { PageHeader } from "@/components/ds";
+import { Breadcrumbs } from "@/components/ds/nav";
+import { HelpButton } from "@/components/guidance/HelpButton";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +36,10 @@ export default async function FinanceiroPage() {
 
   return (
     <div>
-      <div className="mb-8"><p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">Fechar · billing</p><h1 className="font-serif text-4xl font-semibold">Financeiro</h1></div>
+      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Plataforma", href: "/admin/plataforma" }, { label: "Financeiro" }]} className="mb-4" />
+      <PageHeader eyebrow="Plataforma · billing" title="Financeiro"
+        subtitle="Faturas e recebíveis das ofertas vendidas. Sem mensalidade de plataforma."
+        comoUsar={<HelpButton routeKey="/admin/plataforma" />} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         {cards.map((c) => (
@@ -42,6 +49,18 @@ export default async function FinanceiroPage() {
             <p className="mt-2 text-xs text-muted">{c.note}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mb-6">
+        <AiAssist title="Copiloto financeiro" context={[
+          `MRR: ${brl(mrr)} · A receber: ${brl(aReceber)} (${open.length} faturas) · Em atraso: ${brl(atrasoTotal)} (${atraso.length})`,
+          atraso.length ? `Faturas em atraso:\n${atraso.map((i) => `- ${orgName[i.org_id] ?? i.org_id}: ${brl(i.amount)} venc. ${i.due_date}`).join("\n")}` : "Sem faturas em atraso.",
+          open.length ? `Em aberto (próximas):\n${open.slice(0, 15).map((i) => `- ${orgName[i.org_id] ?? i.org_id}: ${brl(i.amount)} venc. ${i.due_date ?? "s/data"} [${i.status}]`).join("\n")}` : "",
+        ].filter(Boolean).join("\n")} actions={[
+          { label: "Analisar recebíveis e risco", task: "Analise a saúde financeira: risco de inadimplência, concentração e o que priorizar. Bullets acionáveis." },
+          { label: "Priorizar cobranças de hoje", task: "Liste as cobranças a fazer hoje, em ordem de prioridade, com o motivo de cada uma." },
+          { label: "Mensagem de cobrança cordial", task: "Rascunhe uma mensagem de cobrança cordial e profissional para o cliente com a fatura mais atrasada, pronta para enviar." },
+        ]} />
       </div>
 
       <div className="flex flex-wrap gap-3 mb-6">

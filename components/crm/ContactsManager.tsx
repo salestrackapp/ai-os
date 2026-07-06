@@ -60,7 +60,7 @@ export function ContactsManager({ contacts, orgs }: { contacts: Contact[]; orgs:
                   {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </select></div>
               <label className="flex items-center gap-2 text-sm text-muted">
-                <input type="checkbox" name="opt_in_whatsapp" defaultChecked={cur?.opt_in_whatsapp ?? false} className="accent-[#C89B3C]" /> Opt-in WhatsApp
+                <input type="checkbox" name="opt_in_whatsapp" defaultChecked={cur?.opt_in_whatsapp ?? false} className="accent-[#4F1FFF]" /> Opt-in WhatsApp
               </label>
               <div className="flex gap-3 pt-2">
                 <button className="btn-gold">Salvar</button>

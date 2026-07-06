@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { TasksBoard } from "@/components/TasksBoard";
 import type { Task } from "@/lib/types";
+import { PageHeader } from "@/components/ds";
+import { Breadcrumbs } from "@/components/ds/nav";
+import { HelpButton } from "@/components/guidance/HelpButton";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +25,10 @@ export default async function TarefasPage() {
 
   return (
     <div className="max-w-3xl">
-      <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">Execução</p>
-      <h1 className="font-serif text-4xl font-semibold mb-2">Tarefas</h1>
-      <p className="text-sm text-muted mb-6">{open} aberta(s) · {rows.length} no total. Tarefas de oportunidades aparecem aqui e no card do pipeline.</p>
+      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "Tarefas" }]} className="mb-4" />
+      <PageHeader eyebrow="Comercial · execução" title="Tarefas"
+        subtitle={`${open} aberta(s) · ${rows.length} no total. Tarefas de oportunidades aparecem aqui e no card do pipeline.`}
+        comoUsar={<HelpButton routeKey="/admin/comercial" />} />
       <TasksBoard tasks={rows} />
     </div>
   );

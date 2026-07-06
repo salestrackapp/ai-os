@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { runConsultorTurn } from "@/lib/agents/channel";
+import { sendToContact } from "@/lib/whatsapp";
 
 const STATUS_MAP: Record<string, string> = {
   sent: "enviado", received: "entregue", delivered: "entregue", read: "lido",
@@ -36,14 +38,25 @@ export async function POST(req: NextRequest) {
     // tenta associar a um contato/org pelo telefone
     const digits = String(fromPhone ?? "").replace(/\D/g, "");
     let orgId: string | null = null;
+    let optIn = false;
     if (digits) {
-      const { data: c } = await sb.from("contacts").select("org_id").ilike("phone", `%${digits.slice(-8)}%`).limit(1).single();
+      const { data: c } = await sb.from("contacts").select("org_id, opt_in_whatsapp, phone").ilike("phone", `%${digits.slice(-8)}%`).limit(1).single();
       orgId = c?.org_id ?? null;
+      optIn = !!c?.opt_in_whatsapp;
     }
     await sb.from("activities").insert({
       org_id: orgId, kind: "whatsapp", ref_table: "wa_messages", ref_id: msg?.id ?? null,
       payload: { direction: "in", from: fromPhone, text },
     });
+
+    // Consultor do Programa via WhatsApp: só contato identificado de uma org E com opt-in.
+    // Mesma memória/histórico da org (continuidade com o portal). Degrada sem ANTHROPIC/Z-API sem quebrar.
+    if (text && orgId && optIn) {
+      try {
+        const turn = await runConsultorTurn({ orgId, canal: "whatsapp", text: String(text) });
+        await sendToContact({ phone: fromPhone, optIn: true, body: turn.text, orgId });
+      } catch { /* nunca quebra o webhook */ }
+    }
   }
 
   return NextResponse.json({ ok: true });

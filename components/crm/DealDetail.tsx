@@ -104,7 +104,7 @@ export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks
           <div className="space-y-2">
             {signalDefs.map((s) => (
               <label key={s.id} className="flex items-start gap-3 text-sm text-muted hover:text-cream cursor-pointer">
-                <input type="checkbox" className="accent-[#C89B3C] mt-0.5" checked={signals.includes(s.id)} onChange={() => toggle(s.id)} />
+                <input type="checkbox" className="accent-[#4F1FFF] mt-0.5" checked={signals.includes(s.id)} onChange={() => toggle(s.id)} />
                 <span className="flex-1">{s.label}</span>
                 <span className="text-muted2 font-mono text-xs">+{s.weight}</span>
               </label>

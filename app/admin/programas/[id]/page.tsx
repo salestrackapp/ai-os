@@ -2,9 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { PROJECT_STATUS_LABELS, ASSET_TYPE_LABELS, type Project, type LibraryAsset } from "@/lib/types";
-import { setProgramStatus, uploadLibraryAsset, deleteLibraryAsset, viewPortalAs } from "../actions";
+import {
+  PROJECT_STATUS_LABELS, ASSET_TYPE_LABELS, SESSION_TYPE_LABELS, SESSION_STATUS_LABELS,
+  type Project, type LibraryAsset, type Session, type SessionCredit, type SessionCatalog,
+} from "@/lib/types";
+import { setProgramStatus, uploadLibraryAsset, deleteLibraryAsset, viewPortalAs, grantSessionCredits, scheduleSession, closeSession } from "../actions";
 import { createClientInvite } from "@/app/portal/equipe/actions";
+import { Icon } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +20,18 @@ export default async function ProgramaDetail({ params }: { params: Promise<{ id:
   const { data: p } = await supabase.from("projects").select("*").eq("id", id).single();
   if (!p) notFound();
   const project = p as Project;
-  const [{ data: org }, { data: assets }] = await Promise.all([
+  const [{ data: org }, { data: assets }, { data: credits }, { data: sessions }, { data: catalog }] = await Promise.all([
     project.org_id ? supabase.from("organizations").select("id, name").eq("id", project.org_id).single() : Promise.resolve({ data: null }),
     project.org_id ? supabase.from("library_assets").select("*").eq("org_id", project.org_id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    project.org_id ? supabase.from("session_credits").select("*").eq("org_id", project.org_id) : Promise.resolve({ data: [] }),
+    project.org_id ? supabase.from("sessions").select("*").eq("org_id", project.org_id).order("scheduled_at", { ascending: false, nullsFirst: false }).limit(20) : Promise.resolve({ data: [] }),
+    supabase.from("session_catalog").select("*").order("titulo"),
   ]);
   const checklist = (project.kickoff_checklist as Step[] | null) ?? [];
+  const creditList = (credits as SessionCredit[]) ?? [];
+  const sessionList = (sessions as Session[]) ?? [];
+  const catList = (catalog as SessionCatalog[]) ?? [];
+  const typeOpts = Object.entries(SESSION_TYPE_LABELS);
 
   return (
     <div>
@@ -64,6 +75,64 @@ export default async function ProgramaDetail({ params }: { params: Promise<{ id:
               </form>
             </div>
           )}
+
+          {/* Sessões & créditos */}
+          {project.org_id && (
+            <div className="card p-6">
+              <h2 className="font-serif text-xl font-semibold mb-4">Sessões ao Vivo & créditos</h2>
+
+              {/* Créditos */}
+              <p className="label mb-2">Créditos</p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {creditList.map((c) => (
+                  <span key={c.id} className="badge-muted">{SESSION_TYPE_LABELS[c.type] ?? c.type}: {Math.max(0, c.total - (c.consumed ?? 0))}/{c.total}</span>
+                ))}
+                {creditList.length === 0 && <span className="text-sm text-muted2">Nenhum crédito.</span>}
+              </div>
+              <form action={grantSessionCredits.bind(null, project.org_id)} className="flex flex-wrap items-end gap-2 mb-6">
+                <div><label className="label">Tipo</label><select className="input" name="type" defaultValue="sessao_estrategica">{typeOpts.map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+                <div className="w-24"><label className="label">Total</label><input className="input" name="total" type="number" min={0} defaultValue={1} /></div>
+                <div><label className="label">Validade</label><input className="input" name="valid_until" type="date" /></div>
+                <button className="btn-ghost">Conceder</button>
+              </form>
+
+              {/* Agendar sessão */}
+              <p className="label mb-2">Agendar sessão (manual)</p>
+              <form action={scheduleSession.bind(null, project.org_id)} className="grid sm:grid-cols-2 gap-2 mb-6">
+                <select className="input" name="type" defaultValue="sessao_estrategica">{typeOpts.map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+                <select className="input" name="catalog_id" defaultValue="">
+                  <option value="">— catálogo (opcional) —</option>
+                  {catList.map((c) => <option key={c.id} value={c.id}>{c.titulo}</option>)}
+                </select>
+                <input className="input sm:col-span-2" name="title" placeholder="Título da sessão" required />
+                <input className="input" name="scheduled_at" type="datetime-local" />
+                <input className="input" name="meet_link" placeholder="Link da sala (Meet)" />
+                <button className="btn-gold sm:col-span-2">Agendar</button>
+              </form>
+
+              {/* Sessões existentes */}
+              <p className="label mb-2">Sessões</p>
+              <div className="space-y-2">
+                {sessionList.map((s) => (
+                  <details key={s.id} className="bg-navy3 border border-line rounded-lg px-3 py-2">
+                    <summary className="cursor-pointer list-none flex items-center justify-between text-sm">
+                      <span className="text-cream">{s.title} <span className="text-muted2 text-xs">· {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("pt-BR") : "sem data"}</span></span>
+                      <span className={s.status === "realizada" ? "badge-teal" : "badge-muted"}>{SESSION_STATUS_LABELS[s.status] ?? s.status}</span>
+                    </summary>
+                    {s.status !== "realizada" && (
+                      <form action={closeSession.bind(null, s.id)} className="mt-3 space-y-2">
+                        <textarea className="input w-full text-sm" name="summary_md" rows={2} placeholder="Resumo da sessão (Read AI / manual)" />
+                        <input className="input w-full text-sm" name="recording_url" placeholder="URL da gravação" />
+                        <button className="btn-ghost text-xs">Marcar realizada (debita 1 crédito)</button>
+                      </form>
+                    )}
+                    {s.status === "realizada" && s.summary_md && <p className="text-xs text-muted mt-2 whitespace-pre-wrap">{s.summary_md}</p>}
+                  </details>
+                ))}
+                {sessionList.length === 0 && <p className="text-sm text-muted2">Nenhuma sessão registrada.</p>}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-5">
@@ -77,7 +146,7 @@ export default async function ProgramaDetail({ params }: { params: Promise<{ id:
               {project.status !== "ativo" && <form action={setProgramStatus.bind(null, id, "ativo")}><button className="btn-gold w-full justify-center">Ativar programa</button></form>}
               {project.status === "ativo" && <form action={setProgramStatus.bind(null, id, "pausado")}><button className="btn-ghost w-full justify-center">Pausar</button></form>}
               {project.status === "pausado" && <form action={setProgramStatus.bind(null, id, "ativo")}><button className="btn-gold w-full justify-center">Retomar</button></form>}
-              {project.org_id && <form action={viewPortalAs.bind(null, project.org_id)}><button className="btn-ghost w-full justify-center">👁 Ver portal do cliente</button></form>}
+              {project.org_id && <form action={viewPortalAs.bind(null, project.org_id)}><button className="btn-ghost w-full justify-center"><Icon name="eye" size={14} /> Ver portal do cliente</button></form>}
             </div>
           </div>
 

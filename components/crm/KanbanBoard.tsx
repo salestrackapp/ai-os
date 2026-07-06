@@ -8,6 +8,7 @@ import {
 import { DEAL_STAGES, STAGE_LABELS, BRAND_LABELS, PROPOSAL_STATUS_LABELS, proposalStatusBadge, brl, daysSince, STAGNATION_DAYS, type Deal } from "@/lib/types";
 import { moveDealToStage, markLost } from "@/app/admin/crm/actions";
 import { createTask } from "@/app/admin/tarefas/actions";
+import { Icon } from "@/components/ui/icons";
 
 type TaskCount = { open: number; total: number };
 type PropInfo = { status: string; count: number };
@@ -23,7 +24,7 @@ function CardInner({ d, overlay = false, tc, prop }: { d: Deal; overlay?: boolea
         <span className={d.score >= 20 ? "badge-teal" : "badge-muted"}>score {d.score}</span>
         {stagnant && <span className="badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-amber-400 border-amber-500/40 bg-amber-500/10">estagnado</span>}
         {tc && tc.open > 0 && <span className="badge-muted">✓ {tc.open} tarefa(s)</span>}
-        {prop && <span className={proposalStatusBadge(prop.status)}>📄 {PROPOSAL_STATUS_LABELS[prop.status] ?? prop.status}{prop.count > 1 ? ` (${prop.count})` : ""}</span>}
+        {prop && <span className={proposalStatusBadge(prop.status)}><Icon name="fileText" size={11} /> {PROPOSAL_STATUS_LABELS[prop.status] ?? prop.status}{prop.count > 1 ? ` (${prop.count})` : ""}</span>}
       </div>
       <p className="mt-2 text-[11px] text-muted2">{BRAND_LABELS[d.brand] ?? d.brand} · {brl(d.value_estimated)}</p>
       {d.next_step && <p className="mt-1 text-[11px] text-muted truncate">→ {d.next_step}</p>}

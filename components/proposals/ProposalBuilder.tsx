@@ -187,8 +187,8 @@ export function ProposalBuilder({ catalog, deals, orgs, proposal, initialDealId 
             <div className="card p-6 space-y-3">
               <h3 className="font-serif text-xl font-semibold">5 · Plano de Plataforma</h3>
               <div className="space-y-2 text-sm">
-                <label className="flex items-center gap-2 text-muted"><input type="radio" name="plat" className="accent-[#C89B3C]" checked={platChoice === "claude"} onChange={() => setPlatChoice("claude")} /> Claude Team/Enterprise (recomendação primária)</label>
-                <label className="flex items-center gap-2 text-muted"><input type="radio" name="plat" className="accent-[#C89B3C]" checked={platChoice === "stack"} onChange={() => setPlatChoice("stack")} /> Stack existente do cliente + trilha de migração</label>
+                <label className="flex items-center gap-2 text-muted"><input type="radio" name="plat" className="accent-[#4F1FFF]" checked={platChoice === "claude"} onChange={() => setPlatChoice("claude")} /> Claude Team/Enterprise (recomendação primária)</label>
+                <label className="flex items-center gap-2 text-muted"><input type="radio" name="plat" className="accent-[#4F1FFF]" checked={platChoice === "stack"} onChange={() => setPlatChoice("stack")} /> Stack existente do cliente + trilha de migração</label>
               </div>
               <textarea className="input" rows={3} value={platMd} onChange={(e) => setPlatMd(e.target.value)} placeholder="Detalhe do plano de plataforma…" />
               <div><label className="label">Plataforma AI OS — mensalidade (R$/mês)</label><input className="input font-mono" value={monthly} onChange={(e) => setMonthly(e.target.value)} placeholder="0,00" /></div>

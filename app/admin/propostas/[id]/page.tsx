@@ -4,11 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { ProposalBuilder } from "@/components/proposals/ProposalBuilder";
 import { ProposalDocument } from "@/components/proposals/ProposalDocument";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
+import { AiAssist } from "@/components/AiAssist";
+import { subscriptionFromProposal } from "@/app/admin/monetizacao/actions";
 import {
-  PROPOSAL_STATUS_LABELS, proposalStatusBadge, type Proposal, type CatalogItem, type ProposalItem, type TimelinePhase,
+  PROPOSAL_STATUS_LABELS, proposalStatusBadge, brl, type Proposal, type CatalogItem, type ProposalItem, type TimelinePhase,
 } from "@/lib/types";
 
+import { generateAction } from "@/app/admin/entregaveis/actions";
+import { Icon } from "@/components/ui/icons";
+import { platformSubscriptionEnabled } from "@/lib/config";
+
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const SECTION_LABELS: Record<string, string> = {
   contexto: "Contexto", investimento: "Investimento", timeline: "Timeline", plataforma: "Plataforma", condicoes: "Condições",
@@ -25,14 +32,30 @@ export default async function PropostaPage({ params }: { params: Promise<{ id: s
   // rascunho → edição no builder
   if (p.status === "rascunho") {
     const [{ data: catalog }, { data: deals }, { data: orgs }] = await Promise.all([
-      supabase.from("catalog_items").select("*").eq("active", true).order("name"),
+      supabase.from("catalog_items").select("*").eq("active", true).is("deleted_at", null).order("name"),
       supabase.from("deals").select("id, title, org_id").order("created_at", { ascending: false }),
       supabase.from("organizations").select("id, name").eq("is_salestrack", false).order("name"),
     ]);
+    const items = (p.items as ProposalItem[]) ?? [];
+    const aiCtx = [
+      `Proposta: ${p.title}`,
+      p.client_name ? `Cliente: ${p.client_name}` : "",
+      p.frentes?.length ? `Frentes: ${p.frentes.join(", ")}` : "",
+      items.length ? `Itens:\n${items.map((it) => `- ${it.name} · ${it.qty}x ${brl(it.price)} (${it.brand})`).join("\n")}` : "",
+      p.monthly_platform_fee ? `Mensalidade plataforma: ${brl(p.monthly_platform_fee)}` : "",
+    ].filter(Boolean).join("\n");
     return (
       <div>
         <div className="flex items-center gap-3 mb-6"><Link href="/admin/propostas" className="text-muted2 hover:text-gold text-sm">← Propostas</Link></div>
         <h1 className="font-serif text-4xl font-semibold mb-6">{p.title} <span className="text-muted2 text-2xl">· rascunho v{p.version}</span></h1>
+        <div className="mb-5">
+          <AiAssist context={aiCtx} title="Copiloto da proposta" actions={[
+            { label: "Rascunhar contexto/abertura", task: "Escreva a seção de CONTEXTO/abertura da proposta: 1–2 parágrafos executivos conectando as dores prováveis do cliente à solução. Sem exagero, tom André Kachan." },
+            { label: "Rascunhar plano da plataforma", task: "Escreva a seção PLATAFORMA (markdown): como o programa opera sobre a plataforma de IA (Claude Team/Enterprise) e o que isso entrega, coerente com os itens. Objetivo." },
+            { label: "Rascunhar nota de ROI", task: "Escreva uma nota de ROI honesta e convincente para esta proposta, conectando os itens ao retorno esperado. Sem inventar números." },
+            { label: "Rascunhar condições", task: "Escreva a seção CONDIÇÕES comerciais (prazos, parcelas, validade, próximos passos) de forma clara, em markdown." },
+          ]} />
+        </div>
         <ProposalBuilder catalog={(catalog as CatalogItem[]) ?? []} deals={(deals as { id: string; title: string; org_id: string | null }[]) ?? []} orgs={(orgs as { id: string; name: string }[]) ?? []} proposal={p} />
       </div>
     );
@@ -71,6 +94,18 @@ export default async function PropostaPage({ params }: { params: Promise<{ id: s
             <p className="text-xs text-muted2 mb-1">v{p.version}{p.sent_at ? ` · enviada ${new Date(p.sent_at).toLocaleDateString("pt-BR")}` : ""}</p>
             <p className="text-sm text-muted mb-3">Conta: {org ? <Link href={`/admin/crm/contas/${org.id}`} className="text-gold hover:underline">{org.name}</Link> : <span className="text-muted2">nenhuma</span>}{p.client_name ? ` · ${p.client_name}` : ""}</p>
             <ProposalActions id={id} status={p.status} link={link} />
+            {p.org_id && (
+              <form action={generateAction.bind(null, "proposta", id)} className="mt-3 pt-3 border-t border-line">
+                <button className="btn-ghost w-full justify-center text-sm"><Icon name="fileText" size={14} /> Gerar no Estúdio de Entregáveis →</button>
+                <p className="text-[11px] text-muted2 mt-1">Versão executiva (PDF) com colunas André Kachan × Salestrack e portão de aprovação.</p>
+              </form>
+            )}
+            {p.status === "aprovada" && p.org_id && platformSubscriptionEnabled() && (
+              <form action={subscriptionFromProposal.bind(null, id)} className="mt-3 pt-3 border-t border-line">
+                <button className="btn-gold w-full justify-center text-sm"><Icon name="creditCard" size={14} /> Criar assinatura (Plataforma AI OS)</button>
+                <p className="text-[11px] text-muted2 mt-1">Liga o que foi vendido à cobrança: plano Professional + mensalidade {p.monthly_platform_fee ? brl(p.monthly_platform_fee) : "da proposta"}.</p>
+              </form>
+            )}
           </div>
 
           {(versions ?? []).length > 1 && (

@@ -29,7 +29,7 @@ export function DealTasks({ dealId, tasks }: { dealId: string; tasks: Task[] }) 
       <ul className="space-y-2">
         {tasks.map((t) => (
           <li key={t.id} className="flex items-center gap-3 text-sm">
-            <input type="checkbox" className="accent-[#C89B3C]" checked={t.done} onChange={() => start(() => toggleTask(t.id, !t.done).then(() => {}))} />
+            <input type="checkbox" className="accent-[#4F1FFF]" checked={t.done} onChange={() => start(() => toggleTask(t.id, !t.done).then(() => {}))} />
             <span className={`flex-1 ${t.done ? "line-through text-muted2" : "text-cream"}`}>{t.title}</span>
             {t.due_date && <span className="text-[11px] text-muted2">{new Date(t.due_date + "T00:00:00").toLocaleDateString("pt-BR")}</span>}
             <button className="text-muted2 hover:text-red-400 text-xs" onClick={() => start(() => deleteTask(t.id).then(() => {}))}>excluir</button>

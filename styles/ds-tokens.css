@@ -1,0 +1,148 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   AI OS · Design System v5 — Salestrack AI v2
+   Centro de operações de IA. Referência: Notion · Linear · Stripe · Vercel · Ramp.
+   Acento único violeta; lime é "spark" raríssimo; ink escuro; Montserrat.
+   Camada ADITIVA e isolada — nomes próprios (--brand, --ink, --fg-*), não colide
+   com o tema legado (navy/gold) das telas atuais.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Marca (violeta) ── */
+  --brand: #4F1FFF;
+  --brand-light: #7C4DFF;
+  --brand-hover: #3E14E0;
+  --brand-deep: #310CB8;
+
+  /* ── Spark (lime) — uso raríssimo: glifo de canto, dot ao vivo, check em bloco escuro ── */
+  --accent: #EBF212;
+
+  /* ── Ink ── */
+  --ink: #0B0B16;
+  --ink-violet: #110C2E;
+
+  /* ── Tile de ícone (lavanda; recebe ícone violeta) ── */
+  --tile: #EEEAFF;
+
+  /* ── Ramp neutro (cinza frio, leve tinte violeta) ── */
+  --gray-50: #F7F7FA;
+  --gray-100: #EFEFF4;
+  --gray-200: #E4E3EE;
+  --gray-300: #D2D0E0;
+  --gray-400: #9B99AC;
+  --gray-500: #6B6B7C;
+  --gray-600: #52515F;
+  --gray-700: #3B3A46;
+  --gray-800: #26252F;
+  --gray-900: #12121C;
+
+  /* ── Status (+ tint suave) ── */
+  --success: #18A06B;   --success-tint: #E4F5EE;
+  --warn: #E8A317;      --warn-tint: #FBF1DC;
+  --danger: #E5685F;    --danger-tint: #FBE7E5;
+
+  /* ── Logo APENAS (nunca acento de UI) ── */
+  --logo-navy: #081860;
+  --logo-cyan: #00B0FF;
+
+  /* ── Gradiente de marca (card featured / CTA primário / barra de posicionamento) ── */
+  --grad-brand: linear-gradient(135deg, #4F1FFF, #3E5BF0);
+
+  /* ── Bloom (assinatura): radial rosa/lavanda no topo-direito, uma vez por superfície ── */
+  --wash-bloom: radial-gradient(58% 46% at 88% -8%, rgba(124, 77, 255, 0.16), rgba(235, 242, 18, 0.05) 42%, transparent 72%);
+
+  /* ── Semânticos (use ESTES na UI) ── */
+  --fg-1: var(--ink);        /* títulos */
+  --fg-2: #2A2A38;           /* corpo forte */
+  --fg-3: var(--gray-500);   /* muted */
+  --fg-4: var(--gray-400);   /* disabled */
+  --bg-1: #FFFFFF;           /* superfície */
+  --bg-2: var(--gray-50);    /* hover de linha / canvas */
+  --border: #E7E4F1;         /* hairline violeta-cinza */
+  --border-strong: #D3CFE6;
+  --ring: rgba(79, 31, 255, 0.35);   /* foco 3px violeta */
+
+  /* ── Espaçamento (grid 4px) ── */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px; --s-5: 20px;
+  --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px; --s-16: 64px;
+  --s-20: 80px; --s-24: 96px; --s-32: 128px;
+  --container: 1160px;
+
+  /* ── Cantos ── */
+  --r-input: 12px;
+  --r-card: 16px;
+  --r-panel: 24px;
+  --r-pill: 999px;
+
+  /* ── Elevação (suave, difusa, tingida de ink-violeta) ── */
+  --shadow-xs: 0 1px 2px rgba(17, 12, 46, 0.06);
+  --shadow-sm: 0 2px 10px -2px rgba(17, 12, 46, 0.08);
+  --shadow-md: 0 10px 28px -12px rgba(17, 12, 46, 0.14);
+  --shadow-lg: 0 20px 50px -18px rgba(17, 12, 46, 0.20);
+  --shadow-xl: 0 32px 74px -26px rgba(17, 12, 46, 0.26);
+  --shadow-brand: 0 14px 32px -10px rgba(79, 31, 255, 0.45);
+
+  /* ── Fontes ── */
+  --ds-font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --ds-font-mono: "JetBrains Mono", Menlo, ui-monospace, "SF Mono", monospace;
+
+  /* ── Motion ── */
+  --ds-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ds-dur: 180ms;
+}
+
+/* Superfície-raiz do design system: define fonte, cor e canvas. Componentes ds herdam. */
+.ds {
+  font-family: var(--ds-font-sans);
+  color: var(--fg-2);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Tipografia (Bloco 3) ── */
+.ds-eyebrow {
+  font-family: var(--ds-font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ds-eyebrow::before { content: ""; width: 18px; height: 1.5px; background: var(--brand); display: inline-block; }
+.ds-display { font-family: var(--ds-font-sans); font-weight: 800; font-size: clamp(40px, 5vw, 64px); line-height: 1.02; letter-spacing: -0.03em; color: var(--fg-1); }
+.ds-h1 { font-family: var(--ds-font-sans); font-weight: 800; font-size: 40px; line-height: 1.08; letter-spacing: -0.028em; color: var(--fg-1); }
+.ds-h2 { font-family: var(--ds-font-sans); font-weight: 800; font-size: 32px; line-height: 1.12; letter-spacing: -0.025em; color: var(--fg-1); }
+.ds-h3 { font-family: var(--ds-font-sans); font-weight: 600; font-size: 22px; line-height: 1.2; letter-spacing: -0.02em; color: var(--fg-1); }
+.ds-lead { font-family: var(--ds-font-sans); font-weight: 400; font-size: 18px; line-height: 1.6; color: var(--fg-2); }
+.ds-body { font-family: var(--ds-font-sans); font-weight: 400; font-size: 15px; line-height: 1.6; color: var(--fg-2); }
+.ds-small { font-family: var(--ds-font-sans); font-weight: 400; font-size: 13px; line-height: 1.5; color: var(--fg-3); }
+.ds-mono { font-family: var(--ds-font-mono); font-weight: 400; font-size: 12px; letter-spacing: 0.01em; color: var(--fg-3); }
+
+/* Foco de teclado — violeta, sempre visível (nunca remover) */
+.ds :focus-visible, .ds-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+  border-radius: 8px;
+}
+
+/* Dot "ao vivo" com pulso lento */
+@keyframes ds-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.ds-dot-live { animation: ds-pulse 2.4s var(--ds-ease) infinite; }
+
+/* Entrada suave */
+@keyframes ds-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.ds-animate-in { animation: ds-in 220ms var(--ds-ease) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds *, .ds *::before, .ds *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Impressão fiel (Estúdio de Documentos): restaura variáveis + cores exatas */
+@media print {
+  .ds {
+    --bg-1: #FFFFFF; --fg-1: #0B0B16; --brand: #4F1FFF;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .ds .ds-no-print { display: none !important; }
+}

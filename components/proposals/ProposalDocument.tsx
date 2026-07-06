@@ -107,7 +107,7 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
           <div className="flex gap-4 overflow-x-auto pb-2">
             {(p.timeline ?? []).map((f) => (
               <div key={f.n} className="min-w-56 card p-5 relative">
-                <div className="w-7 h-7 rounded-full bg-[rgba(200,155,60,.14)] border border-goldline text-gold flex items-center justify-center font-mono text-sm mb-3">{f.n}</div>
+                <div className="w-7 h-7 rounded-full bg-[rgba(79, 31, 255,.14)] border border-goldline text-gold flex items-center justify-center font-mono text-sm mb-3">{f.n}</div>
                 <p className="font-serif text-lg font-semibold">{f.titulo}</p>
                 <p className="text-[11px] uppercase tracking-[.14em] text-muted2 mb-2">{f.meses} {f.meses === 1 ? "mês" : "meses"}</p>
                 <p className="text-sm text-muted leading-relaxed">{f.descricao}</p>
@@ -122,7 +122,7 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
         <div className="card p-6 mb-4">
           <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">{p.platform_plan_md || "O programa opera sobre uma plataforma de IA corporativa. Recomendação primária: Claude Team ou Enterprise."}</p>
         </div>
-        <div className="card p-6 border-goldline bg-[rgba(200,155,60,.05)] flex items-center justify-between flex-wrap gap-3">
+        <div className="card p-6 border-goldline bg-[rgba(79, 31, 255,.05)] flex items-center justify-between flex-wrap gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[.2em] text-gold">Plataforma AI OS</p>
             <p className="text-sm text-muted">Forma e canal de entrega do programa · mensalidade recorrente</p>

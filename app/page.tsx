@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { SalestrackLogo } from "@/components/ds";
 
 export default function Home() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="max-w-xl text-center">
+        <div className="mb-8 flex justify-center"><SalestrackLogo /></div>
         <p className="text-[11px] uppercase tracking-[.3em] text-gold mb-6">Salestrack Inteligência Digital</p>
         <h1 className="font-serif text-6xl font-semibold leading-none">
           AI Operation <em className="text-gold not-italic italic">System</em>

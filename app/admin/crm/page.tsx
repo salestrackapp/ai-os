@@ -3,6 +3,9 @@ import type { Deal, Organization, Contact } from "@/lib/types";
 import { CrmNav } from "@/components/crm/CrmNav";
 import { KanbanBoard } from "@/components/crm/KanbanBoard";
 import { NewDealForm } from "@/components/crm/NewDealForm";
+import { PageHeader } from "@/components/ds";
+import { Breadcrumbs } from "@/components/ds/nav";
+import { HelpButton } from "@/components/guidance/HelpButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +36,10 @@ export default async function CrmPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">Pipeline · sinal → cliente</p>
-          <h1 className="font-serif text-4xl font-semibold">CRM</h1>
-        </div>
-      </div>
+      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "CRM" }]} className="mb-4" />
+      <PageHeader eyebrow="Comercial · pipeline" title="CRM"
+        subtitle="Do sinal ao cliente — pipeline, contas e contatos."
+        comoUsar={<HelpButton routeKey="/admin/comercial" />} />
 
       <CrmNav />
 

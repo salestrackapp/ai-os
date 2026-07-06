@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CONTRACT_STATUS_LABELS, contractStatusBadge, type Contract } from "@/lib/types";
+import { PageHeader } from "@/components/ds";
+import { Breadcrumbs } from "@/components/ds/nav";
+import { HelpButton } from "@/components/guidance/HelpButton";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +17,10 @@ export default async function ContratosPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">Fechar · assinatura</p>
-        <h1 className="font-serif text-4xl font-semibold">Contratos</h1>
-      </div>
+      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "Contratos" }]} className="mb-4" />
+      <PageHeader eyebrow="Comercial · fechar" title="Contratos"
+        subtitle="Minutas, assinatura e kickoff — a partir de propostas aprovadas."
+        comoUsar={<HelpButton routeKey="/admin/comercial" />} />
       <div className="card overflow-x-auto">
         <table className="w-full">
           <thead><tr>

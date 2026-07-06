@@ -4,7 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { docusignConfigured } from "@/lib/docusign";
 import { ContractActions } from "@/components/contracts/ContractActions";
+import { AiAssist } from "@/components/AiAssist";
+import { regenerateContractByAi } from "../actions";
 import { CONTRACT_STATUS_LABELS, contractStatusBadge, type Contract } from "@/lib/types";
+import { Icon } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +42,19 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
             <iframe title="Minuta" srcDoc={contract.content_html ?? "<p>Sem conteúdo</p>"} className="w-full" style={{ height: 720, border: 0, background: "#f4f1ea" }} />
           </div>
           <p className="text-[11px] text-muted2 mt-2">Template base — validar com assessoria jurídica antes do primeiro envio real.</p>
+          {contract.status === "minuta" && (
+            <form action={regenerateContractByAi.bind(null, id)} className="mt-3">
+              <button className="btn-ghost text-sm"><Icon name="sparkles" size={14} /> Regerar minuta por IA (rascunho)</button>
+              <p className="text-[11px] text-muted2 mt-1">Gera uma minuta completa a partir da proposta + cláusulas configuradas. Rascunho — revise juridicamente antes de enviar.</p>
+            </form>
+          )}
+          <div className="mt-5">
+            <AiAssist context={`Status: ${contract.status}\nCliente: ${org?.name ?? "—"}\n\nMINUTA:\n${(contract.content_html ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 6000)}`} title="Copiloto do contrato" actions={[
+              { label: "Resumir a minuta", task: "Resuma esta minuta de contrato em bullets: partes, objeto, valores/prazos, renovação, rescisão e pontos de atenção." },
+              { label: "Explicar em linguagem simples", task: "Explique as principais cláusulas em linguagem simples para um cliente leigo, sem jargão jurídico." },
+              { label: "Pontos a revisar", task: "Aponte cláusulas ou lacunas que merecem revisão jurídica antes do envio. Seja específico." },
+            ]} />
+          </div>
         </div>
 
         <div className="space-y-5">

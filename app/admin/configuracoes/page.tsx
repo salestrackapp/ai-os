@@ -1,14 +1,28 @@
+import Link from "next/link";
 import { MfaEnroll } from "@/components/MfaEnroll";
 import { ChangePassword } from "@/components/ChangePassword";
 import { ConfigNav } from "@/components/config/ConfigNav";
+import { PageHeader } from "@/components/ds";
+import { Breadcrumbs } from "@/components/ds/nav";
+import { HelpButton } from "@/components/guidance/HelpButton";
 
 export default async function ConfigPage({ searchParams }: { searchParams: Promise<{ mfa?: string }> }) {
   const { mfa } = await searchParams;
   return (
     <div className="max-w-2xl">
-      <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">A Fortaleza · Domínio 1</p>
-      <h1 className="font-serif text-4xl font-semibold mb-6">Configurações &amp; Segurança</h1>
+      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Plataforma", href: "/admin/plataforma" }, { label: "Configurações" }]} className="mb-4" />
+      <PageHeader eyebrow="Plataforma" title="Configurações e segurança"
+        subtitle="Parâmetros, integrações e segurança da sua conta."
+        comoUsar={<HelpButton routeKey="/admin/plataforma" />} />
       <ConfigNav />
+
+      <Link href="/admin/configuracoes/parametros" className="card p-5 mb-5 flex items-center justify-between gap-3 hover:border-gold/50 transition-colors">
+        <div>
+          <h2 className="font-serif text-xl font-semibold">Console de Configurações</h2>
+          <p className="text-sm text-muted">Todos os parâmetros da plataforma (IA, FinOps, prospecção, planos, marca) e chaves de integração em um só lugar. Precedência app → env → default.</p>
+        </div>
+        <span className="btn-gold text-xs whitespace-nowrap">Abrir console</span>
+      </Link>
 
       {mfa === "required" && (
         <div className="card p-5 mb-5 border-amber-500/50 bg-amber-500/5">

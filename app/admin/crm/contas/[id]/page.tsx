@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CrmNav } from "@/components/crm/CrmNav";
+import { AiAssist } from "@/components/AiAssist";
 import { ORG_PLAN_LABELS, ORG_STATUS_LABELS, STAGE_LABELS, brl, type Organization, type Deal, type Contact } from "@/lib/types";
 import { updateOrg, deleteOrg, addContactToOrg } from "../actions";
 
@@ -17,11 +18,25 @@ export default async function ContaDetail({ params }: { params: Promise<{ id: st
     supabase.from("contacts").select("*").eq("org_id", id).order("name"),
   ]);
   const o = org as Organization;
+  const dealList = (deals as Deal[] | null) ?? [];
+  const contactList = (contacts as Contact[] | null) ?? [];
+  const accCtx = [
+    `Conta: ${o.name}${o.cnpj ? ` · CNPJ ${o.cnpj}` : ""} · plano ${o.plan} · status ${o.status}${o.icp ? ` · ICP ${o.icp}` : ""}`,
+    dealList.length ? `Deals:\n${dealList.map((d) => `- ${d.title} · ${STAGE_LABELS[d.stage] ?? d.stage} · ${brl(d.value_estimated)}`).join("\n")}` : "Sem deals.",
+    contactList.length ? `Contatos: ${contactList.map((c) => `${c.name}${c.role ? ` (${c.role})` : ""}`).join(", ")}` : "Sem contatos.",
+  ].join("\n");
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-6"><Link href="/admin/crm/contas" className="text-muted2 hover:text-gold text-sm">← Contas</Link></div>
       <CrmNav />
+      <div className="mb-5">
+        <AiAssist context={accCtx} title="Copiloto da conta" actions={[
+          { label: "Resumo 360º da conta", task: "Faça um resumo executivo desta conta: momento, oportunidades abertas, riscos e a próxima melhor ação. Bullets." },
+          { label: "Plano de relacionamento", task: "Sugira um plano de relacionamento/expansão para esta conta nos próximos 30-60 dias, prático." },
+          { label: "Rascunhar e-mail ao contato", task: "Rascunhe um e-mail de relacionamento para o principal contato desta conta, no tom André Kachan, com um próximo passo claro." },
+        ]} />
+      </div>
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-5">
           <div className="card p-6">
@@ -75,7 +90,7 @@ export default async function ContaDetail({ params }: { params: Promise<{ id: st
                   <input className="input font-mono" name="phone" placeholder="Telefone" />
                   <input className="input" name="role" placeholder="Cargo" />
                 </div>
-                <label className="flex items-center gap-2 text-xs text-muted"><input type="checkbox" name="opt_in_whatsapp" className="accent-[#C89B3C]" /> Opt-in WhatsApp</label>
+                <label className="flex items-center gap-2 text-xs text-muted"><input type="checkbox" name="opt_in_whatsapp" className="accent-[#4F1FFF]" /> Opt-in WhatsApp</label>
                 <button className="btn-gold w-full justify-center">Adicionar contato</button>
               </form>
             </details>

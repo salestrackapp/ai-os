@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/ds";
 import { resolvePortalOrg } from "@/lib/portal";
 import { brl, type Invoice, type Subscription } from "@/lib/types";
 
@@ -19,8 +20,7 @@ export default async function PortalFinanceiro() {
 
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">Somente leitura</p>
-      <h1 className="font-serif text-4xl font-semibold mb-6">Financeiro</h1>
+      <PageHeader eyebrow="Somente leitura" title="Financeiro" />
 
       {subscriptions.length > 0 && (
         <div className="card p-6 mb-6 border-goldline">

@@ -31,7 +31,7 @@ export function MfaEnroll() {
       {!qr && <button onClick={enroll} className="btn-gold">Ativar MFA (TOTP)</button>}
       {qr && (
         <div className="space-y-4">
-          <div className="bg-cream rounded-lg p-4 w-fit" dangerouslySetInnerHTML={{ __html: qr.startsWith("<svg") ? qr : `<img src="${qr}" alt="QR MFA" />` }} />
+          <div className="bg-white rounded-lg p-4 w-fit" dangerouslySetInnerHTML={{ __html: qr.startsWith("<svg") ? qr : `<img src="${qr}" alt="QR MFA" />` }} />
           <div className="flex gap-3 max-w-xs">
             <input className="input font-mono" placeholder="Código de 6 dígitos" value={code} onChange={(e) => setCode(e.target.value)} />
             <button onClick={verify} className="btn-gold shrink-0">Verificar</button>

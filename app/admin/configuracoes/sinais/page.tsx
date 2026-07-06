@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SinaisPage() {
   const supabase = await createClient();
-  const { data: signals } = await supabase.from("signal_definitions").select("*").order("sort");
+  const { data: signals } = await supabase.from("signal_definitions").select("*").is("deleted_at", null).order("sort");
 
   return (
     <div className="max-w-3xl">
@@ -26,7 +26,7 @@ export default async function SinaisPage() {
             <div className="w-20"><label className="label">Ordem</label>
               <input className="input font-mono" name="sort" type="number" defaultValue={s.sort} /></div>
             <label className="flex items-center gap-2 text-sm text-muted pb-2">
-              <input type="checkbox" name="active" defaultChecked={s.active} className="accent-[#C89B3C]" /> Ativo
+              <input type="checkbox" name="active" defaultChecked={s.active} className="accent-[#4F1FFF]" /> Ativo
             </label>
             <button className="btn-gold">Salvar</button>
             <button formAction={deleteSignal.bind(null, s.id)} className="btn-ghost !text-muted2 hover:!text-red-400 text-xs">Excluir</button>

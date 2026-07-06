@@ -52,3 +52,16 @@ export async function getContractSettings(): Promise<ContractSettings> {
   const v = await getSetting<Partial<ContractSettings>>("contract", {});
   return { ...DEFAULT_CONTRACT_SETTINGS, ...v };
 }
+
+/** Posicionamento comercial / o que a Salestrack entrega — embasa os agentes de prospecção e conteúdo.
+ *  Editável em /admin/configuracoes (chave app_settings 'sales_offer'). */
+export const DEFAULT_SALES_OFFER = `A Salestrack (marca pessoal André Kachan) implanta **IA em toda a empresa** — não uma ferramenta isolada, mas um método de transformação. Entregas:
+- **Programa de IA** por frentes (Comercial, Marketing, Operações, Financeiro, RH, Atendimento), com evolução por fases.
+- **Playbook** de Receitas prontas (o time aplica IA no dia a dia no próprio Claude) — do operacional ao C-level.
+- **Sessões ao vivo**: mentorias, workshops, treinamentos e formação (AI Academy / AI Labs).
+- **Consultoria executiva** de estratégia com IA para a liderança.
+Posicionamento: IA aplicada ao negócio, com adoção real e ROI mensurável — o decisor no comando, o time capacitado.`;
+
+export async function getSalesOffer(): Promise<string> {
+  return getSetting<string>("sales_offer", DEFAULT_SALES_OFFER);
+}

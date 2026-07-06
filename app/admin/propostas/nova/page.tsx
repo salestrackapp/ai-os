@@ -9,7 +9,7 @@ export default async function NovaProposta({ searchParams }: { searchParams: Pro
   const { deal } = await searchParams;
   const supabase = await createClient();
   const [{ data: catalog }, { data: deals }, { data: orgs }] = await Promise.all([
-    supabase.from("catalog_items").select("*").eq("active", true).order("name"),
+    supabase.from("catalog_items").select("*").eq("active", true).is("deleted_at", null).order("name"),
     supabase.from("deals").select("id, title, org_id").order("created_at", { ascending: false }),
     supabase.from("organizations").select("id, name").eq("is_salestrack", false).order("name"),
   ]);
