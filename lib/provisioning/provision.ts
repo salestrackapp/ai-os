@@ -92,7 +92,7 @@ export async function provisionTenant(input: ProvisionInput): Promise<ProvisionR
         const { data: ex } = await sb.from("invites").select("token").eq("org_id", orgId).eq("email", email).is("accepted_at", null).maybeSingle();
         const token = ex?.token ?? (await sb.from("invites").insert({ org_id: orgId, email, role: "client_admin", invited_by: input.createdBy ?? null, expires_at: new Date(Date.now() + 14 * 86400000).toISOString() }).select("token").single()).data!.token;
         inviteLink = `${base}/convite/${token}`;
-        if (googleConfigured()) {
+        if ((await googleConfigured())) {
           await sendGmail(email, `Seu acesso ao programa ${input.name} · AI OS`, `Olá,\n\nVocê foi convidado a acessar o portal do seu programa de IA no AI OS.\nCrie seu acesso por este link:\n${inviteLink}\n\nAté já,\nEquipe Salestrack`);
         }
       }

@@ -74,7 +74,7 @@ export async function resendInvite(inviteId: string) {
   const host = process.env.NEXT_PUBLIC_APP_HOST || process.env.NEXT_PUBLIC_SITE_URL || "";
   const base = host.startsWith("http") ? host : `https://${host}`;
   const link = `${base}/convite/${inv.token}`;
-  if (googleConfigured()) await sendGmail(inv.email, "Seu acesso ao AI OS (reenvio)", `Olá,\n\nRetomando seu convite de acesso ao AI OS:\n${link}\n\nEquipe Salestrack`);
+  if ((await googleConfigured())) await sendGmail(inv.email, "Seu acesso ao AI OS (reenvio)", `Olá,\n\nRetomando seu convite de acesso ao AI OS:\n${link}\n\nEquipe Salestrack`);
   await audit("invite.resend", "invites", inviteId, null, inv.org_id ?? undefined);
   revalidatePath("/admin/onboarding");
 }

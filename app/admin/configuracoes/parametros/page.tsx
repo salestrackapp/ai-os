@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { CATEGORIES, SETTINGS, SECRET_PROVIDERS } from "@/lib/settings/registry";
 import { getSettingSource } from "@/lib/settings/resolve";
-import { getSecretStatuses } from "@/lib/settings/secrets";
-import { saveSetting, saveSecretAction, testSecretAction } from "./actions";
+import { getSecretStatuses, getProviderFieldStatus, PROVIDER_FIELDS } from "@/lib/settings/secrets";
+import { saveSetting, saveSecretAction, saveProviderConfigAction, testSecretAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +16,9 @@ export default async function Console({ searchParams }: { searchParams: Promise<
   // valor efetivo + fonte de cada setting da categoria
   const resolved = await Promise.all(settings.map(async (s) => ({ def: s, ...(await getSettingSource(s.key)) })));
   const secretStatuses = cat === "integracoes" ? await getSecretStatuses() : {};
+  // status por campo dos provedores multi-campo (google, zapi)
+  const fieldStatuses: Record<string, Record<string, boolean>> = {};
+  if (cat === "integracoes") for (const prov of Object.keys(PROVIDER_FIELDS)) fieldStatuses[prov] = await getProviderFieldStatus(prov);
 
   return (
     <div>
@@ -42,10 +45,28 @@ export default async function Console({ searchParams }: { searchParams: Promise<
                     <form action={testSecretAction.bind(null, p.provider)}><button className="btn-ghost text-xs">Testar conexão</button></form>
                   </div>
                   <p className="text-[11px] text-muted2 mb-2">Sem esta chave: {p.degrada}</p>
-                  <form action={saveSecretAction.bind(null, p.provider)} className="flex gap-2">
-                    <input name="secret" type="password" autoComplete="new-password" placeholder="•••••••• (write-only — nunca exibido)" className="input flex-1 text-sm" />
-                    <button className="btn-gold text-xs">Salvar</button>
-                  </form>
+                  {PROVIDER_FIELDS[p.provider] ? (
+                    // Multi-campo (Google, Z-API): um campo por valor; só grava o que for preenchido.
+                    <form action={saveProviderConfigAction.bind(null, p.provider)} className="space-y-2">
+                      {PROVIDER_FIELDS[p.provider].map((f) => {
+                        const has = fieldStatuses[p.provider]?.[f.key];
+                        return (
+                          <div key={f.key}>
+                            <label className="label !mb-0.5 flex items-center gap-2">{f.label} <span className={has ? "text-teal text-[10px]" : "text-muted2 text-[10px]"}>{has ? "● salvo" : "○ falta"}</span></label>
+                            <input name={f.key} type={f.secret ? "password" : "text"} autoComplete="new-password"
+                              placeholder={f.secret ? "•••••••• (write-only — deixe vazio p/ manter)" : (has ? "(preenchido — deixe vazio p/ manter)" : "")}
+                              className="input w-full text-sm" />
+                          </div>
+                        );
+                      })}
+                      <button className="btn-gold text-xs">Salvar {p.label}</button>
+                    </form>
+                  ) : (
+                    <form action={saveSecretAction.bind(null, p.provider)} className="flex gap-2">
+                      <input name="secret" type="password" autoComplete="new-password" placeholder="•••••••• (write-only — nunca exibido)" className="input flex-1 text-sm" />
+                      <button className="btn-gold text-xs">Salvar</button>
+                    </form>
+                  )}
                   {st.last_tested_at && <p className="text-[10px] text-muted2 mt-1">Testado em {new Date(st.last_tested_at).toLocaleString("pt-BR")}</p>}
                 </div>
               );

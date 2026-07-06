@@ -48,7 +48,7 @@ export default async function OperacoesPage() {
 
   const integrations = [
     { k: "Anthropic (agentes)", on: anthropicConfigured() }, { k: "Stripe (cobrança)", on: hasBilling() },
-    { k: "Google (Gmail/Calendar)", on: googleConfigured() }, { k: "Apollo (prospecção)", on: apolloConfigured() },
+    { k: "Google (Gmail/Calendar)", on: (await googleConfigured()) }, { k: "Apollo (prospecção)", on: apolloConfigured() },
     { k: "Slack (alertas)", on: slackConfigured() }, { k: "Cron (jobs)", on: !!process.env.CRON_SECRET },
     { k: "Preços de modelo (FinOps)", on: hasPrices }, { k: "Cotação USD/BRL", on: !!rate },
   ];

@@ -62,7 +62,7 @@ export default async function NovoTenant({ searchParams }: { searchParams: Promi
         <div className="card p-6 space-y-3">
           <p className="label">4 · Admin do cliente</p>
           <input name="admin_email" type="email" className="input w-full" placeholder="e-mail do administrador do cliente" />
-          <p className="text-[11px] text-muted2">{googleConfigured() ? "O convite será enviado por e-mail (conta Salestrack)." : "Sem Gmail: o link do convite aparece na Central de Onboarding para você copiar."} A senha é definida pelo próprio usuário.</p>
+          <p className="text-[11px] text-muted2">{(await googleConfigured()) ? "O convite será enviado por e-mail (conta Salestrack)." : "Sem Gmail: o link do convite aparece na Central de Onboarding para você copiar."} A senha é definida pelo próprio usuário.</p>
         </div>
 
         <div className="flex gap-3">

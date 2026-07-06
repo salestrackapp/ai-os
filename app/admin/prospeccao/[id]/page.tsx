@@ -58,9 +58,9 @@ export default async function ProspectFicha({ params }: { params: Promise<{ id: 
           {/* Timeline */}
           <div className="card p-6">
             <div className="flex items-center justify-between mb-3"><h2 className="font-serif text-lg font-semibold">Timeline</h2>
-              <form action={ingestTimeline.bind(null, id)}><button className="btn-ghost text-xs" title={googleConfigured() ? "" : "Sem GOOGLE_OAUTH — Gmail/Calendar inativos"}>Sincronizar Gmail/Calendar</button></form>
+              <form action={ingestTimeline.bind(null, id)}><button className="btn-ghost text-xs" title={(await googleConfigured()) ? "" : "Sem GOOGLE_OAUTH — Gmail/Calendar inativos"}>Sincronizar Gmail/Calendar</button></form>
             </div>
-            {timeline.length === 0 ? <p className="text-sm text-muted2">Sem eventos. {googleConfigured() ? "Sincronize acima." : "Gmail/Calendar em modo manual (sem env)."}</p> : (
+            {timeline.length === 0 ? <p className="text-sm text-muted2">Sem eventos. {(await googleConfigured()) ? "Sincronize acima." : "Gmail/Calendar em modo manual (sem env)."}</p> : (
               <ul className="space-y-2">
                 {timeline.map((e) => (
                   <li key={e.id} className="flex gap-3 text-sm border-b border-line last:border-0 pb-2">

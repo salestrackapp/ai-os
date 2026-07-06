@@ -81,7 +81,7 @@ export async function deliverApproved(messageId: string, approverId: string): Pr
 
   let sent = false, manual = false;
   if (msg.channel === "email") {
-    if (googleConfigured() && p?.email) { const r = await sendGmail(p.email, msg.subject ?? "", msg.body ?? ""); sent = r.sent; }
+    if ((await googleConfigured()) && p?.email) { const r = await sendGmail(p.email, msg.subject ?? "", msg.body ?? ""); sent = r.sent; }
     else manual = true;
   } else if (msg.channel === "whatsapp") {
     // WhatsApp comercial exige telefone; opt-in não se aplica a prospect frio → registra como tarefa manual se não houver via segura

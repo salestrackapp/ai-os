@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { currentMembership } from "@/lib/auth";
 import { setSettingValue } from "@/lib/settings/resolve";
 import { findSetting } from "@/lib/settings/registry";
-import { setSecret, testConnection } from "@/lib/settings/secrets";
+import { setSecret, testConnection, setProviderConfig, PROVIDER_FIELDS } from "@/lib/settings/secrets";
 
 async function requireAdmin() {
   const m = await currentMembership();
@@ -29,6 +29,17 @@ export async function saveSecretAction(provider: string, formData: FormData) {
   const value = String(formData.get("secret") ?? "").trim();
   if (!value) throw new Error("Informe o segredo.");
   await setSecret(provider, value, m.userId);
+  revalidatePath("/admin/configuracoes/parametros");
+}
+
+/** Salva vários campos de um provedor (Google, Z-API) de uma vez. Só grava campos preenchidos. */
+export async function saveProviderConfigAction(provider: string, formData: FormData) {
+  const m = await requireAdmin();
+  const fields = PROVIDER_FIELDS[provider];
+  if (!fields) throw new Error("Provedor sem campos.");
+  const values: Record<string, string> = {};
+  for (const f of fields) values[f.key] = String(formData.get(f.key) ?? "");
+  await setProviderConfig(provider, values, m.userId);
   revalidatePath("/admin/configuracoes/parametros");
 }
 

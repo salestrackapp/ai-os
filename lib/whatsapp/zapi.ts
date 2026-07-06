@@ -1,19 +1,17 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
+import { getProviderConfig } from "@/lib/settings/secrets";
 import type { CanalWhatsApp, WaResult, WaRef } from "./types";
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
-/** Implementação Z-API. Modo degradado quando as envs não estão configuradas. */
+/** Implementação Z-API. Config vem do Console (integration_secrets) → env. Degradado sem config. */
 export class ZapiCanal implements CanalWhatsApp {
-  private instance = process.env.ZAPI_INSTANCE_ID;
-  private token = process.env.ZAPI_TOKEN;
-  private clientToken = process.env.ZAPI_CLIENT_TOKEN;
-
-  private configured() { return !!(this.instance && this.token && this.clientToken); }
-
   async enviar(to: string, body: string, ref?: WaRef): Promise<WaResult> {
     const phone = onlyDigits(to);
+    const cfg = await getProviderConfig("zapi");
+    const instance = cfg.instance_id, token = cfg.token, clientToken = cfg.client_token;
+    const configured = !!(instance && token && clientToken);
     const sb = createServiceClient();
     // registra a intenção de envio (out)
     const { data: row } = await sb.from("wa_messages").insert({
@@ -23,17 +21,17 @@ export class ZapiCanal implements CanalWhatsApp {
     }).select("id").single();
     const msgId = row?.id;
 
-    if (!this.configured()) {
+    if (!configured) {
       console.warn("[whatsapp] Z-API não configurada — modo degradado, mensagem não enviada.");
       if (msgId) await sb.from("wa_messages").update({ status: "erro", body: body + " [não enviado: sem config]" }).eq("id", msgId);
       return { ok: false, id: msgId, degraded: true };
     }
 
     try {
-      const url = `https://api.z-api.io/instances/${this.instance}/token/${this.token}/send-text`;
+      const url = `https://api.z-api.io/instances/${instance}/token/${token}/send-text`;
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Client-Token": this.clientToken! },
+        headers: { "Content-Type": "application/json", "Client-Token": clientToken! },
         body: JSON.stringify({ phone, message: body }),
       });
       const json = await res.json().catch(() => ({}));

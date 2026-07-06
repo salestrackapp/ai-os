@@ -25,7 +25,7 @@ export default async function AprovacaoPage() {
         <form action={processCadencesNow}><button className="btn-ghost text-sm">Processar cadências agora</button></form>
       </div>
 
-      {!googleConfigured() && <div className="card p-3 mb-4 border-goldline bg-[rgba(79, 31, 255,.06)]"><p className="text-sm text-gold">Sem GOOGLE_OAUTH: aprovar e-mail marca como <b>aprovada</b> para envio manual (o Gmail não dispara automaticamente).</p></div>}
+      {!(await googleConfigured()) && <div className="card p-3 mb-4 border-goldline bg-[rgba(79, 31, 255,.06)]"><p className="text-sm text-gold">Sem GOOGLE_OAUTH: aprovar e-mail marca como <b>aprovada</b> para envio manual (o Gmail não dispara automaticamente).</p></div>}
 
       <div className="space-y-4">
         {list.map((m) => {

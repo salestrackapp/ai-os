@@ -1,19 +1,28 @@
 import "server-only";
+import { getProviderConfig } from "@/lib/settings/secrets";
 
-/** Google (conta Salestrack) configurado? client id+secret+refresh token. */
-export function googleConfigured(): boolean {
-  return !!(process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET && process.env.GOOGLE_OAUTH_REFRESH_TOKEN);
+/** Config do Google (Console → env): client id/secret, refresh token, remetente. */
+async function resolveGoogle(): Promise<{ clientId: string; clientSecret: string; refreshToken: string; sender: string }> {
+  const c = await getProviderConfig("google");
+  return { clientId: c.client_id ?? "", clientSecret: c.client_secret ?? "", refreshToken: c.refresh_token ?? "", sender: c.sender_email ?? "" };
+}
+
+/** Google (conta Salestrack) configurado? client id+secret+refresh token (Console ou env). */
+export async function googleConfigured(): Promise<boolean> {
+  const g = await resolveGoogle();
+  return !!(g.clientId && g.clientSecret && g.refreshToken);
 }
 
 /** Troca o refresh token por um access token de curta duração. Null se não configurado/erro. */
 async function accessToken(): Promise<string | null> {
-  if (!googleConfigured()) return null;
+  const g = await resolveGoogle();
+  if (!(g.clientId && g.clientSecret && g.refreshToken)) return null;
   try {
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: process.env.GOOGLE_OAUTH_CLIENT_ID!, client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
-        refresh_token: process.env.GOOGLE_OAUTH_REFRESH_TOKEN!, grant_type: "refresh_token",
+        client_id: g.clientId, client_secret: g.clientSecret,
+        refresh_token: g.refreshToken, grant_type: "refresh_token",
       }),
     });
     const d = await res.json();
@@ -21,15 +30,17 @@ async function accessToken(): Promise<string | null> {
   } catch { return null; }
 }
 
-/** Envia um e-mail pela conta Salestrack via Gmail API. Retorna {sent, id} ou {sent:false} degradado. */
-export async function sendGmail(to: string, subject: string, body: string): Promise<{ sent: boolean; id?: string }> {
+/** Envia um e-mail pela conta Salestrack via Gmail API. `html` → Content-Type text/html. Degradado sem config. */
+export async function sendGmail(to: string, subject: string, body: string, opts?: { html?: boolean }): Promise<{ sent: boolean; id?: string }> {
   const token = await accessToken();
   if (!token) return { sent: false };
-  const from = process.env.GOOGLE_SENDER_EMAIL || "me";
+  const g = await resolveGoogle();
+  const from = g.sender || "me";
+  const contentType = opts?.html ? "text/html; charset=UTF-8" : "text/plain; charset=UTF-8";
   // Subject com acentos precisa de MIME encoded-word (RFC 2047), senão vira mojibake.
   const encSubject = `=?UTF-8?B?${Buffer.from(subject, "utf8").toString("base64")}?=`;
   const raw = [
-    `To: ${to}`, `From: ${from}`, `Subject: ${encSubject}`, "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: 8bit", "", body,
+    `To: ${to}`, `From: ${from}`, `Subject: ${encSubject}`, "MIME-Version: 1.0", `Content-Type: ${contentType}`, "Content-Transfer-Encoding: 8bit", "", body,
   ].join("\r\n");
   const encoded = Buffer.from(raw, "utf8").toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   try {

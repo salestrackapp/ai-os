@@ -21,8 +21,8 @@ async function addEvent(sb: ReturnType<typeof createServiceClient>, ev: { subjec
 export async function ingestProspectTimeline(prospectId: string): Promise<{ gmail: number; calendar: number; degraded: boolean }> {
   const sb = createServiceClient();
   const { data: p } = await sb.from("prospects").select("email, name, account_id").eq("id", prospectId).single();
-  if (!p?.email) return { gmail: 0, calendar: 0, degraded: !googleConfigured() };
-  if (!googleConfigured()) return { gmail: 0, calendar: 0, degraded: true };
+  if (!p?.email) return { gmail: 0, calendar: 0, degraded: !(await googleConfigured()) };
+  if (!(await googleConfigured())) return { gmail: 0, calendar: 0, degraded: true };
 
   let gmail = 0, calendar = 0;
   for (const m of await listGmail(`from:${p.email} OR to:${p.email}`, 10)) {

@@ -29,6 +29,68 @@ export async function getSecret(provider: string): Promise<string | null> {
   return process.env[ENV_MAP[provider]] ?? null;
 }
 
+// ── Provedores MULTI-CAMPO (Console guarda vários valores num JSON no campo `secret`) ──
+// Cada campo tem fallback para uma env. Ordem: valor gravado no Console → env.
+export const PROVIDER_FIELDS: Record<string, { key: string; label: string; env: string; secret: boolean }[]> = {
+  google: [
+    { key: "client_id", label: "OAuth Client ID", env: "GOOGLE_OAUTH_CLIENT_ID", secret: false },
+    { key: "client_secret", label: "OAuth Client Secret", env: "GOOGLE_OAUTH_CLIENT_SECRET", secret: true },
+    { key: "refresh_token", label: "Refresh Token", env: "GOOGLE_OAUTH_REFRESH_TOKEN", secret: true },
+    { key: "sender_email", label: "E-mail remetente (Gmail)", env: "GOOGLE_SENDER_EMAIL", secret: false },
+  ],
+  zapi: [
+    { key: "instance_id", label: "Instance ID", env: "ZAPI_INSTANCE_ID", secret: false },
+    { key: "token", label: "Token", env: "ZAPI_TOKEN", secret: true },
+    { key: "client_token", label: "Client-Token", env: "ZAPI_CLIENT_TOKEN", secret: true },
+    { key: "admin_numbers", label: "Números admin (notificação, vírgula)", env: "ADMIN_WHATSAPP_NUMBERS", secret: false },
+  ],
+};
+
+function parseJsonSecret(raw: string | null | undefined): Record<string, string> {
+  if (!raw) return {};
+  try { const o = JSON.parse(raw); return o && typeof o === "object" ? o : {}; } catch { return {}; }
+}
+
+/** Config completa de um provedor multi-campo: cada campo = valor do Console → env. Server-only. */
+export async function getProviderConfig(provider: string): Promise<Record<string, string>> {
+  const fields = PROVIDER_FIELDS[provider];
+  if (!fields) return {};
+  const sb = createServiceClient();
+  const { data } = await sb.from("integration_secrets").select("secret").eq("provider", provider).is("org_id", null).maybeSingle();
+  const stored = parseJsonSecret(data?.secret);
+  const out: Record<string, string> = {};
+  for (const f of fields) {
+    const v = stored[f.key] || process.env[f.env] || "";
+    if (v) out[f.key] = v;
+  }
+  return out;
+}
+
+/** Quais campos de um provedor já têm valor (Console OU env) — status na UI, sem expor segredo. */
+export async function getProviderFieldStatus(provider: string): Promise<Record<string, boolean>> {
+  const fields = PROVIDER_FIELDS[provider];
+  if (!fields) return {};
+  const cfg = await getProviderConfig(provider);
+  return Object.fromEntries(fields.map((f) => [f.key, !!cfg[f.key]]));
+}
+
+/** Grava/atualiza campos de um provedor multi-campo (merge; não apaga o que veio vazio). Write-only. */
+export async function setProviderConfig(provider: string, values: Record<string, string>, updatedBy?: string | null): Promise<void> {
+  const fields = PROVIDER_FIELDS[provider];
+  if (!fields) return;
+  const sb = createServiceClient();
+  const { data: ex } = await sb.from("integration_secrets").select("id, secret").eq("provider", provider).is("org_id", null).maybeSingle();
+  const merged = { ...parseJsonSecret(ex?.secret) };
+  for (const f of fields) {
+    const v = (values[f.key] ?? "").trim();
+    if (v) merged[f.key] = v; // só sobrescreve com valor não-vazio
+  }
+  const row = { provider, scope: "global", org_id: null, secret: JSON.stringify(merged), status: "configurado", updated_by: updatedBy ?? null, updated_at: new Date().toISOString() };
+  if (ex) await sb.from("integration_secrets").update(row).eq("id", ex.id);
+  else await sb.from("integration_secrets").insert(row);
+  await auditService("secret.save", "integration_secrets", provider, { fields: Object.keys(values) }, undefined);
+}
+
 /** Grava um segredo (write-only). Nunca lido de volta pela UI. Auditado (sem o valor). */
 export async function setSecret(provider: string, value: string, updatedBy?: string | null): Promise<void> {
   const sb = createServiceClient();
@@ -41,7 +103,9 @@ export async function setSecret(provider: string, value: string, updatedBy?: str
 
 /** Testa a conexão do provedor e atualiza o status. Nunca expõe o segredo. */
 export async function testConnection(provider: string): Promise<{ ok: boolean; status: string }> {
-  const key = await getSecret(provider);
+  const multi = !!PROVIDER_FIELDS[provider];
+  const cfg = multi ? await getProviderConfig(provider) : {};
+  const key = multi ? (Object.keys(cfg).length ? "multi" : null) : await getSecret(provider);
   let ok = false;
   if (key) {
     try {
@@ -52,8 +116,13 @@ export async function testConnection(provider: string): Promise<{ ok: boolean; s
         const r = await fetch("https://api.apollo.io/v1/auth/health", { headers: { "x-api-key": key } });
         const d = await r.json().catch(() => ({})); ok = !!d?.healthy;
       } else if (provider === "google") {
-        const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: process.env.GOOGLE_OAUTH_CLIENT_ID ?? "", client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "", refresh_token: key, grant_type: "refresh_token" }) });
+        // Troca o refresh_token do Console/env por um access token — valida as 3 chaves.
+        const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: cfg.client_id ?? "", client_secret: cfg.client_secret ?? "", refresh_token: cfg.refresh_token ?? "", grant_type: "refresh_token" }) });
         const d = await r.json().catch(() => ({})); ok = !!d?.access_token;
+      } else if (provider === "zapi") {
+        // Status da instância Z-API (conectada?).
+        const r = await fetch(`https://api.z-api.io/instances/${cfg.instance_id}/token/${cfg.token}/status`, { headers: { "Client-Token": cfg.client_token ?? "" } });
+        const d = await r.json().catch(() => ({})); ok = r.ok && (d?.connected === true || d?.smartphoneConnected === true || d?.value === true);
       } else ok = true; // demais: presença da chave = configurado
     } catch { ok = false; }
   }

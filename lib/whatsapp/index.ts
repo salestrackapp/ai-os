@@ -2,6 +2,7 @@ import "server-only";
 import { ZapiCanal } from "./zapi";
 import type { CanalWhatsApp, WaRef } from "./types";
 import { auditService } from "@/lib/audit";
+import { getProviderConfig } from "@/lib/settings/secrets";
 
 /** Factory: escolhe o provedor pela env WHATSAPP_PROVIDER (default zapi). Pronto p/ meta_cloud. */
 export function canalWhatsApp(): CanalWhatsApp {
@@ -14,9 +15,10 @@ export function canalWhatsApp(): CanalWhatsApp {
   }
 }
 
-/** Notifica os números admin (env ADMIN_WHATSAPP_NUMBERS). Isentos de opt-in. Degradado sem envs. */
+/** Notifica os números admin (Console zapi.admin_numbers → env). Isentos de opt-in. Degradado sem config. */
 export async function notifyAdmin(body: string, ref?: WaRef): Promise<void> {
-  const nums = (process.env.ADMIN_WHATSAPP_NUMBERS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const cfg = await getProviderConfig("zapi");
+  const nums = (cfg.admin_numbers ?? "").split(",").map((s) => s.trim()).filter(Boolean);
   if (nums.length === 0) { console.warn("[whatsapp] ADMIN_WHATSAPP_NUMBERS não configurado — notificação de admin ignorada."); return; }
   const canal = canalWhatsApp();
   for (const n of nums) { try { await canal.enviar(n, body, ref); } catch { /* nunca quebra o fluxo */ } }

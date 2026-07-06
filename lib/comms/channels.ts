@@ -1,5 +1,6 @@
 import "server-only";
 import { canalWhatsApp } from "@/lib/whatsapp";
+import { googleConfigured, sendGmail } from "@/lib/google";
 
 /** Resultado de um despacho de canal. 'manual' = sem credencial (conteúdo pronto para copiar). */
 export type DispatchResult = { status: "enviado" | "falhou" | "manual"; providerRef?: string | null; erro?: string; content?: string };
@@ -27,15 +28,23 @@ export const whatsappChannel = defineChannel({
   },
 });
 
-// ── E-mail (Resend/MailerLite-ready HTML, ferramenta da Salestrack) ──
+// ── E-mail (Gmail-first: caixa da Salestrack; fallback Resend; graceful manual) ──
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM || "Salestrack AI <no-reply@salestrack.com.br>";
 export const emailChannel = defineChannel({
-  key: "email", label: "E-mail (MailerLite-ready)",
-  configured: () => !!RESEND_KEY,
+  key: "email", label: "E-mail (Gmail / Resend)",
+  configured: () => !!(RESEND_KEY || process.env.GOOGLE_OAUTH_REFRESH_TOKEN), // best-effort (Console resolvido no dispatch)
   async dispatch(input) {
     const html = input.html ?? "";
     if (!input.recipient.email) return { status: "falhou", erro: "Sem e-mail do destinatário." };
+    // 1) Preferência: enviar pela caixa do Gmail (Console → env)
+    if (await googleConfigured()) {
+      const r = await sendGmail(input.recipient.email, input.subject ?? "(sem assunto)", html, { html: true });
+      if (r.sent) return { status: "enviado", providerRef: r.id ?? null };
+      // se o Gmail falhar mas houver Resend, tenta o fallback abaixo
+      if (!RESEND_KEY) return { status: "falhou", erro: "Gmail não enviou (verifique credenciais no Console)." };
+    }
+    // 2) Fallback: Resend
     if (!RESEND_KEY) return { status: "manual", content: html }; // graceful: conteúdo pronto para envio manual
     try {
       const res = await fetch("https://api.resend.com/emails", {
