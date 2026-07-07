@@ -2,6 +2,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { runConsultorTurn } from "@/lib/agents/channel";
 import { sendToContact } from "@/lib/whatsapp";
+import { ingestWhatsAppInbound } from "@/lib/relacionamento/sync-whatsapp";
+
+/** Extrai uma referência de mídia do payload Z-API, se houver (imagem/áudio/vídeo/documento). */
+function extractMedia(body: Record<string, unknown>): { tipo: string; url?: string | null } | null {
+  const pick = (o: unknown) => (o && typeof o === "object" ? (o as { url?: string; imageUrl?: string; documentUrl?: string }) : null);
+  if (body.image) return { tipo: "imagem", url: pick(body.image)?.imageUrl ?? pick(body.image)?.url ?? null };
+  if (body.audio) return { tipo: "áudio", url: pick(body.audio)?.url ?? null };
+  if (body.video) return { tipo: "vídeo", url: pick(body.video)?.url ?? null };
+  if (body.document) return { tipo: "documento", url: pick(body.document)?.documentUrl ?? pick(body.document)?.url ?? null };
+  if (body.sticker) return { tipo: "figurinha", url: null };
+  return null;
+}
 
 const STATUS_MAP: Record<string, string> = {
   sent: "enviado", received: "entregue", delivered: "entregue", read: "lido",
@@ -48,6 +60,15 @@ export async function POST(req: NextRequest) {
       org_id: orgId, kind: "whatsapp", ref_table: "wa_messages", ref_id: msg?.id ?? null,
       payload: { direction: "in", from: fromPhone, text },
     });
+
+    // E3: ingesta na inbox de EQUIPE (rel_conversas/rel_mensagens, channel=whatsapp). Nunca quebra o webhook.
+    try {
+      await ingestWhatsAppInbound({
+        phone: String(fromPhone ?? ""), name: body?.senderName ?? body?.chatName ?? null,
+        text: text ? String(text) : null, providerRef, media: extractMedia(body ?? {}),
+        at: body?.momment ? new Date(Number(body.momment)).toISOString() : null,
+      });
+    } catch { /* inbox de equipe é aditiva; não derruba o consultor/webhook */ }
 
     // Consultor do Programa via WhatsApp: só contato identificado de uma org E com opt-in.
     // Mesma memória/histórico da org (continuidade com o portal). Degrada sem ANTHROPIC/Z-API sem quebrar.

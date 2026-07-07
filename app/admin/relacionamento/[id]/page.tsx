@@ -11,6 +11,7 @@ import { MarkReadOnOpen } from "@/components/relacionamento/MarkReadOnOpen";
 import { Responder } from "@/components/relacionamento/Responder";
 import { CHANNEL_LABELS, STATUS_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
 import { getSendPolicy, listTemplates } from "@/lib/relacionamento/responder";
+import { whatsappContext } from "@/lib/relacionamento/sync-whatsapp";
 import { assignToMeAction, unassignAction, statusAction, snoozeAction, linkClienteAction, aprovarEnvioFormAction, descartarEnvioAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -34,12 +35,13 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
   const clientName = c.client_id ? (orgs ?? []).find((o) => o.id === c.client_id)?.name : null;
   const mine = c.assigned_to && c.assigned_to === m?.userId;
   const isEmail = c.channel === "email";
+  const waCtx = isEmail ? null : await whatsappContext({ id, contact_id: c.contact_id, contato_phone: c.contato_phone });
 
   // Rascunhos de saída pendentes (fila de aprovação) ficam separados da conversa em si.
   const msgs = (allMsgs ?? []).filter((mm) => mm.status_entrega !== "rascunho");
   const pendentes = (allMsgs ?? []).filter((mm) => mm.direction === "out" && mm.status_entrega === "rascunho");
 
-  const contatoNome = c.contato_nome || c.contato_email || "";
+  const contatoNome = c.contato_nome || c.contato_email || c.contato_phone || "";
   // Contexto para o copiloto (dados internos; sem PII em URL).
   const aiContext = [
     `Assunto: ${c.assunto ?? "(sem assunto)"}`,
@@ -69,9 +71,11 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
                 <div className="mb-1 flex items-center gap-2">
                   <Badge tone={mm.direction === "out" ? "brand" : "neutral"}>{mm.direction === "out" ? "enviado" : "recebido"}</Badge>
                   {mm.status_entrega === "falha" && <Badge tone="warn">falhou</Badge>}
+                  {mm.media?.tipo && <Badge tone="neutral">📎 {mm.media.tipo}</Badge>}
                   <span className="font-jbmono text-[10px] text-[color:var(--fg-4)]">{fmt(mm.created_at)}</span>
                 </div>
                 <p className="whitespace-pre-wrap font-montserrat text-[13px] leading-relaxed text-[color:var(--fg-1)]">{mm.corpo || "(sem prévia)"}</p>
+                {mm.media?.url && <a href={mm.media.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block font-montserrat text-[12px] text-[color:var(--brand)] hover:underline">abrir {mm.media.tipo}</a>}
               </div>
             ))}
           </div>
@@ -97,7 +101,7 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
           {/* responder */}
           {isEmail
             ? <Responder conversaId={id} policy={policy} templates={templates} contatoNome={contatoNome} assunto={c.assunto || ""} />
-            : <div className="border-t border-hairline px-4 py-3"><p className="ds-small !mt-0">Responder WhatsApp chega no <b>E3</b>.</p></div>}
+            : <div className="border-t border-hairline px-4 py-3"><p className="ds-small !mt-0">Responder/enviar pelo WhatsApp (templates HSM, janela de 24h, IA) chega no <b>E4</b>. Por ora, a caixa lê e organiza.</p></div>}
         </Card>
 
         {/* lateral: copiloto + organizar + vincular */}
@@ -111,6 +115,20 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
                 { label: "Extrair tarefas", task: "Liste como checklist as tarefas/compromissos que esta conversa gera para nós, com prazos se mencionados." },
               ]} />
               <p className="ds-small !mb-0 mt-2">A IA rascunha; você edita e aprova antes de enviar.</p>
+            </Card>
+          )}
+
+          {!isEmail && waCtx && (
+            <Card>
+              <p className="mb-2 font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">WhatsApp · consentimento & janela</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone={waCtx.optIn ? "brand" : "warn"}>{waCtx.optIn ? "opt-in registrado" : "sem opt-in"}</Badge>
+                <Badge tone={waCtx.windowOpen ? "brand" : "neutral"}>{waCtx.windowOpen ? "janela 24h aberta" : "janela 24h fechada"}</Badge>
+              </div>
+              <p className="ds-small !mb-0 mt-2">
+                {waCtx.lastInboundAt ? <>Última mensagem do contato: <b>{fmt(waCtx.lastInboundAt)}</b>. </> : "Sem mensagem recebida ainda. "}
+                {waCtx.windowOpen && waCtx.windowClosesAt ? <>Janela fecha em <b>{fmt(waCtx.windowClosesAt)}</b>.</> : "Fora da janela, o envio livre exige template HSM (regra aplicada no E4)."}
+              </p>
             </Card>
           )}
 

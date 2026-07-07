@@ -47,6 +47,20 @@ export function isFollowupDue(conv: Pick<RelConversa, "snooze_until" | "status">
   return conv.snooze_until <= nowISO;
 }
 
+/** Fecha da janela de 24h do WhatsApp a partir da última msg recebida. null se nunca recebeu. (puro) */
+export function waWindowClosesAt(lastInboundISO: string | null): string | null {
+  if (!lastInboundISO) return null;
+  const t = new Date(lastInboundISO).getTime();
+  if (!Number.isFinite(t)) return null;
+  return new Date(t + 24 * 3600 * 1000).toISOString();
+}
+
+/** Janela de 24h aberta? (puro) — envio livre só dentro; fora exige template HSM (regra no E4). */
+export function isWaWindowOpen(lastInboundISO: string | null, nowISO: string): boolean {
+  const closes = waWindowClosesAt(lastInboundISO);
+  return !!closes && closes > nowISO;
+}
+
 /** Transição de status permitida? (puro) — arquivada é terminal (só reabre para 'aberta'). */
 export function canTransition(from: ConvStatus, to: ConvStatus): boolean {
   if (from === to) return false;

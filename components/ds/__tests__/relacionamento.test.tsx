@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { matchesFilter, isSnoozed, isFollowupDue, canTransition, STATUS_LABELS, FILTER_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
+import { matchesFilter, isSnoozed, isFollowupDue, canTransition, waWindowClosesAt, isWaWindowOpen, STATUS_LABELS, FILTER_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
 
 const ME = "user-1";
 const NOW = "2026-07-07T12:00:00.000Z";
@@ -34,6 +34,15 @@ describe("E0 · Relacionamento — modelo da inbox (lógica pura)", () => {
     expect(canTransition("aberta", "aberta")).toBe(false);
     expect(canTransition("arquivada", "aberta")).toBe(true);
     expect(canTransition("arquivada", "respondida")).toBe(false);
+  });
+
+  it("WhatsApp · janela de 24h a partir da última msg recebida (E3)", () => {
+    expect(waWindowClosesAt("2026-07-07T06:00:00.000Z")).toBe("2026-07-08T06:00:00.000Z");
+    expect(waWindowClosesAt(null)).toBe(null);
+    // recebeu há 6h → janela aberta; recebeu há 30h → fechada
+    expect(isWaWindowOpen("2026-07-07T06:00:00.000Z", NOW)).toBe(true);
+    expect(isWaWindowOpen("2026-07-06T05:00:00.000Z", NOW)).toBe(false);
+    expect(isWaWindowOpen(null, NOW)).toBe(false);
   });
 
   it("rótulos legíveis (sem chave crua)", () => {
