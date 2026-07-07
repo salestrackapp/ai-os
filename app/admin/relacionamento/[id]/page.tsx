@@ -149,7 +149,7 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
             <Card>
               <p className="mb-2 font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">WhatsApp · consentimento & janela</p>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge tone={waCtx.optIn ? "brand" : "warn"}>{waCtx.optIn ? "opt-in registrado" : "sem opt-in"}</Badge>
+                <Badge tone={waCtx.optIn ? "brand" : "neutral"}>{waCtx.optIn ? "opt-in registrado" : "opt-in opcional"}</Badge>
                 <Badge tone={waCtx.windowOpen ? "brand" : "neutral"}>{waCtx.windowOpen ? "janela 24h aberta" : "janela 24h fechada"}</Badge>
               </div>
               <p className="ds-small !mb-0 mt-2">

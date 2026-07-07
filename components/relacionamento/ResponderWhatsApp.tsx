@@ -39,20 +39,13 @@ export function ResponderWhatsApp({ conversaId, policy, templates, optIn, window
   const btn = "ds-focus rounded-ds-input px-4 h-10 font-montserrat text-sm font-semibold disabled:opacity-50";
   const envioDireto = policy === "direto_autorizado";
 
-  if (!optIn) {
-    return (
-      <div className="border-t border-hairline bg-[#FDECEC] p-4">
-        <p className="font-montserrat text-[13px] text-[#B42318]"><b>Sem consentimento (opt-in).</b> Não é permitido enviar mensagens para este contato. Registre o opt-in no contato do CRM para habilitar o envio.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="border-t border-hairline p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
         <p className="font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">Responder no WhatsApp</p>
         <span className={`rounded-ds-pill px-2 py-0.5 font-montserrat text-[11px] ${windowOpen ? "bg-[var(--tile)] text-[color:var(--brand-deep)]" : "bg-[#FFF7E6] text-[color:var(--fg-2)]"}`}>{windowOpen ? "janela 24h aberta" : "janela 24h fechada · só HSM"}</span>
       </div>
+      {!optIn && <p className="mb-2 font-montserrat text-[11px] text-[color:var(--fg-3)]">Opt-in não registrado (opcional) — o envio segue liberado; você pode registrar o consentimento depois.</p>}
 
       {/* templates */}
       <div className="mb-2 flex flex-wrap gap-1.5">
