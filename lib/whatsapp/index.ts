@@ -4,6 +4,8 @@ import type { CanalWhatsApp, WaRef } from "./types";
 import { auditService } from "@/lib/audit";
 import { getProviderConfig } from "@/lib/settings/secrets";
 
+export { configurarWebhookRecebido, lerWebhooks } from "./zapi";
+
 /** WhatsApp configurado? (Z-API: instance_id + token; Client-Token opcional). Console → env. */
 export async function zapiConfigured(): Promise<boolean> {
   const cfg = await getProviderConfig("zapi");

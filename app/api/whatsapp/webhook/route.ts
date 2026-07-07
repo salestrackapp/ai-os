@@ -21,27 +21,33 @@ const STATUS_MAP: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
-  // segredo simples via query
+  // Segredo via query. Se WHATSAPP_WEBHOOK_KEY estiver definido, exige match; senão, aceita (piloto) e loga.
   const key = req.nextUrl.searchParams.get("key");
-  if (!process.env.WHATSAPP_WEBHOOK_KEY || key !== process.env.WHATSAPP_WEBHOOK_KEY) {
+  const expected = process.env.WHATSAPP_WEBHOOK_KEY;
+  if (expected && key !== expected) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  if (!expected) console.warn("[whatsapp] webhook sem WHATSAPP_WEBHOOK_KEY — aceitando (defina a env para exigir chave).");
   const sb = createServiceClient();
   const body = await req.json().catch(() => ({}));
+  console.log("[whatsapp] webhook recebido:", JSON.stringify({ type: body?.type, phone: body?.phone, fromMe: body?.fromMe, hasText: !!(body?.text?.message ?? body?.message), status: body?.status }));
 
   const providerRef = body?.messageId ?? body?.id ?? body?.zaapId ?? null;
   const rawStatus = String(body?.status ?? "").toLowerCase();
 
-  // 1) Atualização de status de entrega
-  if (providerRef && rawStatus) {
+  // 1) Atualização de status de entrega (só quando há status E não é uma mensagem recebida)
+  const ehStatus = !!providerRef && !!rawStatus && body?.type !== "ReceivedCallback" && body?.fromMe !== false;
+  if (ehStatus) {
     const mapped = STATUS_MAP[rawStatus] ?? "enviado";
     await sb.from("wa_messages").update({ status: mapped }).eq("provider_ref", providerRef);
   }
 
-  // 2) Mensagem recebida (inbound)
-  const isInbound = body?.type === "ReceivedCallback" || body?.fromMe === false || (!!body?.text && !rawStatus);
-  const text = body?.text?.message ?? body?.message ?? body?.body ?? null;
-  const fromPhone = body?.phone ?? body?.from ?? null;
+  // 2) Mensagem recebida (inbound) — cobre variações de payload da Z-API
+  const rawText = body?.text?.message ?? body?.message ?? body?.body ?? (typeof body?.text === "string" ? body.text : null);
+  const text = typeof rawText === "string" ? rawText : null;
+  const temMidia = !!(body?.image || body?.audio || body?.video || body?.document || body?.sticker);
+  const fromPhone = body?.phone ?? body?.from ?? body?.participantPhone ?? null;
+  const isInbound = (body?.type === "ReceivedCallback" || body?.fromMe === false || (!ehStatus && (text != null || temMidia))) && !!fromPhone;
   if (isInbound && (text || fromPhone)) {
     const { data: msg } = await sb.from("wa_messages").insert({
       direction: "in", provider: "zapi", from_phone: fromPhone, body: text,

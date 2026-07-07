@@ -61,9 +61,17 @@ function parseAddr(raw: string | null): { nome: string | null; email: string | n
  * Agrupa por thread → rel_conversas (channel=email) + rel_mensagens (in|out).
  * Idempotente (dedup por thread e por id de mensagem). Graceful: sem Google → {degraded}.
  */
+/** Org da Salestrack (dona da caixa de equipe) via service — funciona sem sessão (cron/auto-sync). */
+async function salestrackOrgId(sb: ReturnType<typeof createServiceClient>): Promise<string | null> {
+  const { data } = await sb.from("organizations").select("id").eq("is_salestrack", true).limit(1).maybeSingle();
+  return data?.id ?? null;
+}
+
 export async function syncGmailInbox(max = 40): Promise<{ synced: number; novas: number; degraded?: boolean }> {
-  const { orgId } = await requireTeam();
   if (!(await googleConfigured())) return { synced: 0, novas: 0, degraded: true };
+  const sbOrg = createServiceClient();
+  const orgId = await salestrackOrgId(sbOrg);
+  if (!orgId) return { synced: 0, novas: 0, degraded: true };
 
   const msgs = await listGmailInbox({ max });
   const sb = createServiceClient();

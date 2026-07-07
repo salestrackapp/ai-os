@@ -1,6 +1,8 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { currentMembership } from "@/lib/auth";
+import { configurarWebhookRecebido } from "@/lib/whatsapp";
 import { syncGmailInbox } from "@/lib/relacionamento/sync-email";
 import { assignConversa, setConversaStatus, snoozeConversa, setUnread, linkConversaCliente } from "@/lib/relacionamento/inbox";
 import { responderConversa, aprovarEnvio, descartarRascunhoSaida } from "@/lib/relacionamento/responder";
@@ -10,6 +12,21 @@ import type { ConvStatus } from "@/lib/relacionamento/types";
 export async function syncInboxAction() {
   await syncGmailInbox();
   revalidatePath("/admin/relacionamento");
+}
+
+/** Registra automaticamente o webhook de recebimento do WhatsApp na Z-API (torna o WA real-time). */
+export async function ativarRecebimentoWhatsAppAction(): Promise<{ ok: boolean; url?: string; erro?: string }> {
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) return { ok: false, erro: "Apenas a equipe Salestrack." };
+  const h = await headers();
+  const host = h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  if (!host) return { ok: false, erro: "Não consegui detectar a URL do app." };
+  const key = process.env.WHATSAPP_WEBHOOK_KEY;
+  const url = `${proto}://${host}/api/whatsapp/webhook${key ? `?key=${encodeURIComponent(key)}` : ""}`;
+  const r = await configurarWebhookRecebido(url);
+  revalidatePath("/admin/relacionamento");
+  return { ok: r.ok, url: r.url, erro: r.erro };
 }
 
 export async function markReadAction(id: string, unread: boolean) {

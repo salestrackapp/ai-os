@@ -8,6 +8,7 @@ import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { AiAssist } from "@/components/AiAssist";
 import { MarkReadOnOpen } from "@/components/relacionamento/MarkReadOnOpen";
+import { AutoRefresh } from "@/components/relacionamento/AutoRefresh";
 import { EmailBody } from "@/components/relacionamento/EmailBody";
 import { Responder } from "@/components/relacionamento/Responder";
 import { ResponderWhatsApp } from "@/components/relacionamento/ResponderWhatsApp";
@@ -72,6 +73,7 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
 
   return (
     <ContentArea>
+      <AutoRefresh seconds={15} />
       <MarkReadOnOpen id={id} unread={!!c.unread} />
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Relacionamento", href: "/admin/relacionamento" }, { label: c.assunto || "Conversa" }]} className="mb-4" />
       <PageHeader eyebrow={`${CHANNEL_LABELS[c.channel as "email" | "whatsapp"]} · ${contatoNome || "—"}`} title={c.assunto || "(sem assunto)"}
