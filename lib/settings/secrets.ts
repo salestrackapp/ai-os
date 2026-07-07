@@ -107,34 +107,42 @@ export async function testConnection(provider: string): Promise<{ ok: boolean; s
   const cfg = multi ? await getProviderConfig(provider) : {};
   const key = multi ? (Object.keys(cfg).length ? "multi" : null) : await getSecret(provider);
   let ok = false;
+  // diagnóstico (sem segredo): http status + trecho da resposta do provedor, para depurar sem expor a chave.
+  const diag: Record<string, unknown> = {};
   if (key) {
     try {
       if (provider === "anthropic") {
         const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" }, body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5", max_tokens: 4, messages: [{ role: "user", content: "ok" }] }) });
-        ok = r.ok;
+        ok = r.ok; diag.http = r.status;
       } else if (provider === "apollo") {
         const r = await fetch("https://api.apollo.io/v1/auth/health", { headers: { "x-api-key": key } });
-        const d = await r.json().catch(() => ({})); ok = !!d?.healthy;
+        const d = await r.json().catch(() => ({})); ok = !!d?.healthy; diag.http = r.status;
       } else if (provider === "google") {
         // Troca o refresh_token do Console/env por um access token — valida as 3 chaves.
         const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: cfg.client_id ?? "", client_secret: cfg.client_secret ?? "", refresh_token: cfg.refresh_token ?? "", grant_type: "refresh_token" }) });
-        const d = await r.json().catch(() => ({})); ok = !!d?.access_token;
+        const d = await r.json().catch(() => ({})); ok = !!d?.access_token; diag.http = r.status; diag.err = d?.error ?? d?.error_description ?? null;
       } else if (provider === "zapi") {
         // Status da instância Z-API. Client-Token só entra se existir (senão a Z-API rejeita header vazio).
         const headers: Record<string, string> = {};
         if (cfg.client_token) headers["Client-Token"] = cfg.client_token;
         const r = await fetch(`https://api.z-api.io/instances/${cfg.instance_id}/token/${cfg.token}/status`, { headers });
         const d = await r.json().catch(() => ({}));
+        diag.http = r.status;
+        diag.err = typeof d?.error === "string" ? d.error : (d?.error === true ? "error:true" : null);
+        diag.connected = d?.connected ?? null;
+        diag.smartphoneConnected = d?.smartphoneConnected ?? null;
+        diag.hasClientToken = !!cfg.client_token;
+        diag.keys = Object.keys(d ?? {}).slice(0, 8);
         // Credenciais válidas = HTTP 200 sem `error`. (aparelho pode estar desconectado — isso é outra coisa)
         ok = r.ok && !d?.error;
-      } else ok = true; // demais: presença da chave = configurado
-    } catch { ok = false; }
+      } else { ok = true; diag.note = "presença da chave = configurado"; }
+    } catch (e) { ok = false; diag.exception = (e as Error).message; }
   }
   const status = key ? (ok ? "configurado" : "invalido") : "ausente";
   const sb = createServiceClient();
   const { data: ex } = await sb.from("integration_secrets").select("id").eq("provider", provider).is("org_id", null).maybeSingle();
   if (ex) await sb.from("integration_secrets").update({ status, last_tested_at: new Date().toISOString() }).eq("id", ex.id);
   else await sb.from("integration_secrets").insert({ provider, scope: "global", status, last_tested_at: new Date().toISOString() });
-  await auditService("secret.test", "integration_secrets", provider, { ok, status }, undefined);
+  await auditService("secret.test", "integration_secrets", provider, { ok, status, ...diag }, undefined);
   return { ok, status };
 }
