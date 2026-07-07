@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { matchesFilter, isSnoozed, isFollowupDue, canTransition, waWindowClosesAt, isWaWindowOpen, canSendWhatsApp, STATUS_LABELS, FILTER_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
+import { matchesFilter, isSnoozed, isFollowupDue, canTransition, waWindowClosesAt, isWaWindowOpen, canSendWhatsApp, isSlaBreached, STATUS_LABELS, FILTER_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
 
 const ME = "user-1";
 const NOW = "2026-07-07T12:00:00.000Z";
@@ -54,6 +54,16 @@ describe("E0 · Relacionamento — modelo da inbox (lógica pura)", () => {
     expect(canSendWhatsApp({ optIn: true, windowOpen: false, isHsm: false }).ok).toBe(false);
     // fora da janela, com HSM → ok
     expect(canSendWhatsApp({ optIn: true, windowOpen: false, isHsm: true }).ok).toBe(true);
+  });
+
+  it("SLA/aging: aberta/aguardando sem movimento além do limiar (E5)", () => {
+    // aberta há 30h com SLA 24h → atrasada
+    expect(isSlaBreached({ status: "aberta", last_message_at: "2026-07-06T06:00:00.000Z" }, 24, NOW)).toBe(true);
+    // aberta há 6h → dentro do SLA
+    expect(isSlaBreached({ status: "aberta", last_message_at: "2026-07-07T06:00:00.000Z" }, 24, NOW)).toBe(false);
+    // respondida/arquivada nunca conta como atrasada
+    expect(isSlaBreached({ status: "respondida", last_message_at: "2026-07-01T06:00:00.000Z" }, 24, NOW)).toBe(false);
+    expect(isSlaBreached({ status: "aberta", last_message_at: null }, 24, NOW)).toBe(false);
   });
 
   it("rótulos legíveis (sem chave crua)", () => {

@@ -212,20 +212,53 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
     ? <ProgramTimeline projectId={project.id} mode="conducao" />
     : <EmptyState icon={<Icon name="rocket" size={22} />} title="Sem linha do tempo ainda" description="A jornada aparece quando o programa ganhar marcos." action={<Link href="/admin/programas/novo" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="rocket" size={15} /> Criar programa</Link>} />;
 
-  // Relacionamento (E1): conversas vinculadas na timeline deste cliente (e-mail/WhatsApp)
-  const { data: relEvents } = await sb.from("timeline_events").select("id, source, kind, summary, occurred_at").eq("subject_type", "org").eq("subject_id", id).order("occurred_at", { ascending: false }).limit(30);
-  const relacionamento = (relEvents ?? []).length ? (
-    <Card className="!p-0 overflow-hidden">
-      <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5"><p className="ds-eyebrow !mb-0">Conversas vinculadas</p><Link href="/admin/relacionamento" className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Abrir caixa →</Link></div>
-      <ul className="divide-y divide-[color:var(--border)]">
-        {(relEvents ?? []).map((e) => (
-          <li key={e.id} className="flex items-start gap-3 px-4 py-3">
-            <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name="chat" size={14} /></span>
-            <span className="min-w-0 flex-1"><span className="block font-montserrat text-[13px] text-[color:var(--fg-1)]">{e.summary}</span><span className="font-jbmono text-[10px] text-[color:var(--fg-4)]">{e.source} · {new Date(e.occurred_at).toLocaleString("pt-BR")}</span></span>
-          </li>
-        ))}
-      </ul>
-    </Card>
+  // Relacionamento UNIFICADO (E5): conversas dos DOIS canais (e-mail + WhatsApp) deste cliente + timeline vinculada.
+  const [{ data: relConvs }, { data: relEvents }] = await Promise.all([
+    sb.from("rel_conversas").select("id, channel, assunto, contato_nome, contato_email, contato_phone, status, unread, last_message_at").eq("client_id", id).is("deleted_at", null).order("last_message_at", { ascending: false, nullsFirst: false }).limit(40),
+    sb.from("timeline_events").select("id, source, kind, summary, occurred_at").eq("subject_type", "org").eq("subject_id", id).order("occurred_at", { ascending: false }).limit(30),
+  ]);
+  const convs = relConvs ?? [];
+  const nEmail = convs.filter((c) => c.channel === "email").length;
+  const nWa = convs.filter((c) => c.channel === "whatsapp").length;
+  const relacionamento = (convs.length || (relEvents ?? []).length) ? (
+    <div className="space-y-4">
+      <Card className="!p-0 overflow-hidden">
+        <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
+          <p className="ds-eyebrow !mb-0">Conversas · e-mail {nEmail} · WhatsApp {nWa}</p>
+          <Link href="/admin/relacionamento?canal=todos" className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Abrir central →</Link>
+        </div>
+        {convs.length === 0 ? <p className="px-4 py-4 ds-small">Nenhuma conversa vinculada ainda — veja a história abaixo.</p> : (
+          <ul className="divide-y divide-[color:var(--border)]">
+            {convs.map((c) => (
+              <li key={c.id}>
+                <Link href={`/admin/relacionamento/${c.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--bg-2)]">
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${c.unread ? "bg-[var(--brand)]" : "bg-transparent"}`} />
+                  <Badge tone={c.channel === "whatsapp" ? "success" : "neutral"}>{c.channel === "whatsapp" ? "WhatsApp" : "E-mail"}</Badge>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-montserrat text-[13px] text-[color:var(--fg-1)]">{c.assunto || c.contato_nome || c.contato_email || c.contato_phone || "conversa"}</span>
+                    <span className="block truncate font-montserrat text-[12px] text-[color:var(--fg-3)]">{c.contato_nome || c.contato_email || c.contato_phone || ""}</span>
+                  </span>
+                  <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{c.last_message_at ? new Date(c.last_message_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—"}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      {(relEvents ?? []).length > 0 && (
+        <Card className="!p-0 overflow-hidden">
+          <div className="border-b border-hairline px-4 py-2.5"><p className="ds-eyebrow !mb-0">História (timeline)</p></div>
+          <ul className="divide-y divide-[color:var(--border)]">
+            {(relEvents ?? []).map((e) => (
+              <li key={e.id} className="flex items-start gap-3 px-4 py-3">
+                <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name="chat" size={14} /></span>
+                <span className="min-w-0 flex-1"><span className="block font-montserrat text-[13px] text-[color:var(--fg-1)]">{e.summary}</span><span className="font-jbmono text-[10px] text-[color:var(--fg-4)]">{e.source} · {new Date(e.occurred_at).toLocaleString("pt-BR")}</span></span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+    </div>
   ) : <EmptyState icon={<Icon name="chat" size={22} />} title="Sem conversas vinculadas" description="No Relacionamento, vincule uma thread de e-mail ou WhatsApp a este cliente — ela aparece aqui na timeline." action={<Link href="/admin/relacionamento" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="chat" size={15} /> Abrir caixa</Link>} />;
 
   return (

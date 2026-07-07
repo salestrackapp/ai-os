@@ -45,6 +45,8 @@ export const SETTINGS: SettingDef[] = [
     help: "IA rascunha → humano aprova → sistema envia. Default: aprovar sempre." },
   { key: "rel_email_signature", label: "Assinatura de e-mail da equipe", category: "governanca", type: "string",
     default: "—\nEquipe Salestrack AI", help: "Anexada ao final das respostas enviadas pela caixa." },
+  { key: "rel_sla_horas", label: "SLA de resposta do Relacionamento (horas)", category: "governanca", type: "number", default: 24,
+    help: "Conversas abertas/aguardando sem movimento além disso ficam marcadas como atrasadas." },
 ];
 
 export const SECRET_PROVIDERS: { provider: string; label: string; degrada: string }[] = [

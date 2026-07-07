@@ -61,6 +61,14 @@ export function isWaWindowOpen(lastInboundISO: string | null, nowISO: string): b
   return !!closes && closes > nowISO;
 }
 
+/** Conversa atrasada pelo SLA? (puro) — aberta/aguardando + sem movimento há mais de slaHoras. */
+export function isSlaBreached(conv: { status: ConvStatus; last_message_at: string | null }, slaHoras: number, nowISO: string): boolean {
+  if (!["aberta", "aguardando"].includes(conv.status)) return false;
+  if (!conv.last_message_at) return false;
+  const idadeMs = new Date(nowISO).getTime() - new Date(conv.last_message_at).getTime();
+  return idadeMs > slaHoras * 3600 * 1000;
+}
+
 /** Regra de envio do WhatsApp (puro): consentimento obrigatório; dentro de 24h texto livre; fora → só HSM. */
 export function canSendWhatsApp(opts: { optIn: boolean; windowOpen: boolean; isHsm: boolean }): { ok: boolean; motivo?: string } {
   if (!opts.optIn) return { ok: false, motivo: "Contato sem consentimento (opt-in) — não é permitido enviar." };
