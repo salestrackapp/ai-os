@@ -45,14 +45,11 @@ describe("E0 · Relacionamento — modelo da inbox (lógica pura)", () => {
     expect(isWaWindowOpen(null, NOW)).toBe(false);
   });
 
-  it("WhatsApp · regra de envio: opt-in NÃO bloqueia; só a janela 24h/HSM da Meta (E4 ajustado)", () => {
-    // opt-in ausente não trava mais — dentro da janela envia texto livre
-    expect(canSendWhatsApp({ optIn: false, windowOpen: true, isHsm: false }).ok).toBe(true);
+  it("WhatsApp · envio via Z-API: nunca bloqueia (sem janela 24h/HSM; opt-in informativo)", () => {
+    // texto livre fora da janela e sem opt-in → OK (Z-API não impõe a regra da Meta)
+    expect(canSendWhatsApp({ optIn: false, windowOpen: false, isHsm: false }).ok).toBe(true);
     expect(canSendWhatsApp({ optIn: true, windowOpen: true, isHsm: false }).ok).toBe(true);
-    // fora da janela, sem HSM → bloqueia (regra da Meta, não opt-in)
-    expect(canSendWhatsApp({ optIn: true, windowOpen: false, isHsm: false }).ok).toBe(false);
-    // fora da janela, com HSM → ok mesmo sem opt-in
-    expect(canSendWhatsApp({ optIn: false, windowOpen: false, isHsm: true }).ok).toBe(true);
+    expect(canSendWhatsApp().ok).toBe(true);
   });
 
   it("SLA/aging: aberta/aguardando sem movimento além do limiar (E5)", () => {

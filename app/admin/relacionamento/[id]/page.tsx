@@ -147,14 +147,14 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
 
           {!isEmail && waCtx && (
             <Card>
-              <p className="mb-2 font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">WhatsApp · consentimento & janela</p>
+              <p className="mb-2 font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">WhatsApp · contexto</p>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone={waCtx.optIn ? "brand" : "neutral"}>{waCtx.optIn ? "opt-in registrado" : "opt-in opcional"}</Badge>
-                <Badge tone={waCtx.windowOpen ? "brand" : "neutral"}>{waCtx.windowOpen ? "janela 24h aberta" : "janela 24h fechada"}</Badge>
+                <Badge tone="brand">envio livre (Z-API)</Badge>
               </div>
               <p className="ds-small !mb-0 mt-2">
                 {waCtx.lastInboundAt ? <>Última mensagem do contato: <b>{fmt(waCtx.lastInboundAt)}</b>. </> : "Sem mensagem recebida ainda. "}
-                {waCtx.windowOpen && waCtx.windowClosesAt ? <>Janela fecha em <b>{fmt(waCtx.windowClosesAt)}</b>.</> : "Fora da janela, o envio livre exige template HSM (regra aplicada no E4)."}
+                Você pode enviar <b>texto livre e templates a qualquer momento</b> — a Z-API não aplica a janela de 24h/HSM da API oficial.
               </p>
             </Card>
           )}

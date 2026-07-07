@@ -69,12 +69,11 @@ export function isSlaBreached(conv: { status: ConvStatus; last_message_at: strin
   return idadeMs > slaHoras * 3600 * 1000;
 }
 
-/** Regra de envio do WhatsApp (puro): opt-in é INFORMATIVO (não bloqueia). Só vale a regra da Meta:
- * dentro de 24h → texto livre; fora → só template HSM aprovado. `optIn` fica para rastreio/UX. */
-export function canSendWhatsApp(opts: { optIn?: boolean; windowOpen: boolean; isHsm: boolean }): { ok: boolean; motivo?: string } {
-  if (opts.windowOpen) return { ok: true };
-  if (opts.isHsm) return { ok: true };
-  return { ok: false, motivo: "Fora da janela de 24h do WhatsApp — envie um template HSM (regra da Meta, não do opt-in)." };
+/** Regra de envio do WhatsApp (puro). Via Z-API (WhatsApp Web do número conectado) NÃO há restrição
+ * de janela de 24h nem de template HSM aprovado — texto livre e template podem sair a qualquer hora.
+ * `optIn`/`windowOpen` ficam apenas para rastreio/UX (informativo). Regra da Meta só valeria na Cloud API oficial. */
+export function canSendWhatsApp(_opts?: { optIn?: boolean; windowOpen?: boolean; isHsm?: boolean }): { ok: boolean; motivo?: string } {
+  return { ok: true };
 }
 
 /** Transição de status permitida? (puro) — arquivada é terminal (só reabre para 'aberta'). */
