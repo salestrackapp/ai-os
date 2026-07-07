@@ -15,12 +15,12 @@
 No **Google Cloud Console** (console.cloud.google.com), com a conta do e-mail que vai enviar:
 1. **Criar projeto** (ou usar um existente).
 2. **APIs e serviços → Biblioteca**: ativar **Gmail API** e **Google Calendar API**.
-3. **Tela de consentimento OAuth**: tipo *Externo*, publique (ou deixe em teste e adicione seu e-mail como testador). Escopos: `.../auth/gmail.send`, `.../auth/gmail.readonly`, `.../auth/calendar.readonly`.
-4. **Credenciais → Criar credenciais → ID do cliente OAuth**, tipo **App para computador** (Desktop) — mais simples para gerar o refresh token. Anote **Client ID** e **Client Secret**.
-5. **Gerar o Refresh Token** (uma vez). Atalho recomendado: **OAuth 2.0 Playground** (developers.google.com/oauthplayground):
-   - Engrenagem (⚙) → marque **Use your own OAuth credentials** → cole Client ID/Secret.
-   - Em *Step 1*, cole os escopos acima → **Authorize APIs** → faça login com a conta remetente e autorize.
-   - Em *Step 2*, **Exchange authorization code for tokens** → copie o **Refresh token**.
+3. **Tela de consentimento OAuth**: tipo *Externo*. **Publique** o app (botão “Publicar”/“Testar → Em produção”) para o refresh token não expirar em 7 dias; se deixar em *Teste*, adicione seu e-mail em *Usuários de teste* (o token vale ~7 dias e precisa ser regerado).
+4. **Credenciais → Criar credenciais → ID do cliente OAuth**, tipo **Aplicativo da Web**. Em *URIs de redirecionamento autorizados*, adicione exatamente: `https://developers.google.com/oauthplayground`. Salve e anote **Client ID** e **Client Secret**.
+5. **Gerar o Refresh Token** (uma vez) no **OAuth 2.0 Playground** (developers.google.com/oauthplayground):
+   - Engrenagem (⚙) no canto → marque **Use your own OAuth credentials** → cole **Client ID** e **Client Secret**.
+   - *Step 1*: no campo “Input your own scopes”, cole os três escopos separados por espaço: `https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly` → **Authorize APIs** → faça login com a conta remetente e **Permitir** (se aparecer “app não verificado”, clique em *Avançado → Acessar (não seguro)* — é seu próprio app).
+   - *Step 2*: clique **Exchange authorization code for tokens** → copie o **Refresh token** que aparece.
 6. No Console → Integrações → **Google OAuth (Gmail/Calendar)**, preencha:
    - OAuth Client ID · OAuth Client Secret · Refresh Token · **E-mail remetente** (o Gmail que envia).
 7. Salvar → **Testar conexão** (troca o refresh token por um access token — verde = ok).

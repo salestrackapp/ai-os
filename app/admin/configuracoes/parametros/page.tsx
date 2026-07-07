@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CATEGORIES, SETTINGS, SECRET_PROVIDERS } from "@/lib/settings/registry";
 import { getSettingSource } from "@/lib/settings/resolve";
 import { getSecretStatuses, getProviderFieldStatus, PROVIDER_FIELDS } from "@/lib/settings/secrets";
-import { saveSetting, saveSecretAction, saveProviderConfigAction, testSecretAction } from "./actions";
+import { saveSetting, saveSecretAction, saveProviderConfigAction, testSecretAction, sendTestEmailAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +61,14 @@ export default async function Console({ searchParams }: { searchParams: Promise<
                       })}
                       <button className="btn-gold text-xs">Salvar {p.label}</button>
                     </form>
-                  ) : (
+                  ) : null}
+                  {p.provider === "google" && (
+                    <form action={sendTestEmailAction} className="mt-3 flex gap-2 border-t border-line pt-3">
+                      <input name="to" type="email" placeholder="enviar e-mail de teste para…" defaultValue="andre.kachan@salestrack.com.br" className="input flex-1 text-sm" />
+                      <button className="btn-ghost text-xs whitespace-nowrap">Enviar teste</button>
+                    </form>
+                  )}
+                  {!PROVIDER_FIELDS[p.provider] && (
                     <form action={saveSecretAction.bind(null, p.provider)} className="flex gap-2">
                       <input name="secret" type="password" autoComplete="new-password" placeholder="•••••••• (write-only — nunca exibido)" className="input flex-1 text-sm" />
                       <button className="btn-gold text-xs">Salvar</button>
