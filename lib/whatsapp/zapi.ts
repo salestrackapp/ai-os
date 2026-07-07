@@ -72,7 +72,11 @@ export async function configurarWebhookRecebido(url: string): Promise<{ ok: bool
       method: "PUT", headers, body: JSON.stringify({ value: url }),
     });
     const j = await res.json().catch(() => ({}));
-    if (!res.ok) return { ok: false, erro: j?.error ?? `HTTP ${res.status}`, url };
+    const errMsg = String(j?.error ?? j?.message ?? "");
+    if (!res.ok || /client-?token/i.test(errMsg)) {
+      const precisaToken = /client-?token/i.test(errMsg) || !clientToken;
+      return { ok: false, erro: precisaToken ? "A Z-API exige o Client-Token (token de segurança da conta) para configurar o webhook." : (errMsg || `HTTP ${res.status}`), url };
+    }
     return { ok: true, url };
   } catch (e) { return { ok: false, erro: (e as Error).message, url }; }
 }
