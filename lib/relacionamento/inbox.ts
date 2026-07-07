@@ -57,11 +57,29 @@ export async function setUnread(conversaId: string, unread: boolean) {
   await createServiceClient().from("rel_conversas").update({ unread, updated_at: new Date().toISOString() }).eq("id", conversaId);
 }
 
-/** Vincula a conversa a um cliente/deal/contato (etiqueta CRM — não é acesso ao sistema do cliente). */
+/** Vincula a conversa a um cliente/deal/contato (etiqueta CRM — não é acesso ao sistema do cliente).
+ * Ao vincular a um cliente, registra evento na timeline (R2.5) → reflete na ficha 360. */
 export async function linkConversaCliente(conversaId: string, link: { client_id?: string | null; deal_id?: string | null; contact_id?: string | null }) {
   const { orgId } = await requireTeam();
-  await createServiceClient().from("rel_conversas").update({ ...link, updated_at: new Date().toISOString() }).eq("id", conversaId);
+  const sb = createServiceClient();
+  await sb.from("rel_conversas").update({ ...link, updated_at: new Date().toISOString() }).eq("id", conversaId);
   await auditService("rel.link_cliente", "rel_conversas", conversaId, link, orgId);
+
+  if (link.client_id) {
+    const { data: conv } = await sb.from("rel_conversas").select("channel, assunto, contato_email, external_ref").eq("id", conversaId).maybeSingle();
+    const kind = conv?.channel === "whatsapp" ? "resposta" : "email";
+    const src = conv?.channel === "whatsapp" ? "manual" : "gmail";
+    // dedup: não repete o mesmo vínculo (conversa) na timeline do cliente
+    const extRef = `rel:${conversaId}`;
+    const { data: dup } = await sb.from("timeline_events").select("id").eq("subject_id", link.client_id).eq("external_ref", extRef).maybeSingle();
+    if (!dup) {
+      await sb.from("timeline_events").insert({
+        subject_type: "org", subject_id: link.client_id, source: src, kind,
+        summary: `Conversa vinculada (${conv?.channel === "whatsapp" ? "WhatsApp" : "e-mail"}): ${conv?.assunto ?? conv?.contato_email ?? "conversa"}`,
+        external_ref: extRef, occurred_at: new Date().toISOString(),
+      });
+    }
+  }
 }
 
 /** Salva o rascunho do MEMBRO atual para uma conversa (um por membro/conversa). */

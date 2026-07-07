@@ -93,6 +93,7 @@ export function isV5Path(path: string): boolean {
   if (/^\/admin\/programas\/[^/]+\/editar$/.test(path)) return true;   // editor v5 do programa
   if (/^\/admin\/clientes\/[^/]+$/.test(path)) return true;            // ficha 360 do cliente
   if (/^\/admin\/clientes\/[^/]+\/caixa$/.test(path)) return true;     // caixa de e-mail do cliente (Gmail)
+  if (/^\/admin\/relacionamento\/[^/]+$/.test(path)) return true;      // leitura da thread (Relacionamento E1)
   if (/^\/admin\/entregaveis\/[^/]+$/.test(path)) return true;         // detalhe do entregável (Estúdio v5)
   return false;
 }

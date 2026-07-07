@@ -1,62 +1,109 @@
-/** Relacionamento (E0) — casca da inbox compartilhada de equipe. Abas Caixa de entrada / Mensagens.
- * O modelo (rel_conversas/rel_mensagens) já existe; as telas de sync chegam em E1–E4. */
+/** Relacionamento · Caixa de entrada (E1) — sincroniza e lê o e-mail da Salestrack; organiza e vincula. */
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { currentMembership } from "@/lib/auth";
 import { ContentArea, PageHeader, Card, EmptyState, Badge } from "@/components/ds";
-import { Tabs, Breadcrumbs } from "@/components/ds/nav";
+import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
+import { googleConfigured } from "@/lib/google";
+import { FILTER_LABELS, STATUS_LABELS, type InboxFilter, type Channel, type ConvStatus } from "@/lib/relacionamento/types";
+import { syncInboxAction } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
-async function counts(channel: "email" | "whatsapp") {
+const FILTERS: InboxFilter[] = ["todas", "minhas", "nao_atribuidas"];
+const chip = (active: boolean) => `rounded-ds-pill border px-3 py-1 font-montserrat text-[12px] transition-colors ${active ? "border-[color:var(--brand)] bg-[var(--tile)] text-[color:var(--brand-deep)]" : "border-hairline text-[color:var(--fg-3)] hover:border-[color:var(--brand-light)]"}`;
+const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—";
+
+export default async function Relacionamento({ searchParams }: { searchParams: Promise<{ canal?: string; filtro?: string; q?: string }> }) {
+  const sp = await searchParams;
+  const canal: Channel = sp.canal === "whatsapp" ? "whatsapp" : "email";
+  const filtro: InboxFilter = FILTERS.includes(sp.filtro as InboxFilter) ? (sp.filtro as InboxFilter) : "todas";
+  const q = (sp.q ?? "").trim();
+  const gOn = await googleConfigured();
+  const m = await currentMembership();
+
   const sb = await createClient();
-  const { count: abertas } = await sb.from("rel_conversas").select("id", { count: "exact", head: true }).eq("channel", channel).eq("status", "aberta").is("deleted_at", null);
-  const { count: naoLidas } = await sb.from("rel_conversas").select("id", { count: "exact", head: true }).eq("channel", channel).eq("unread", true).is("deleted_at", null);
-  return { abertas: abertas ?? 0, naoLidas: naoLidas ?? 0 };
-}
+  let query = sb.from("rel_conversas").select("id, assunto, contato_nome, contato_email, status, assigned_to, unread, last_message_at, client_id")
+    .eq("channel", canal).is("deleted_at", null).order("last_message_at", { ascending: false, nullsFirst: false }).limit(100);
+  if (filtro === "minhas") query = query.eq("assigned_to", m?.userId ?? "");
+  else if (filtro === "nao_atribuidas") query = query.is("assigned_to", null);
+  const qs = q.replace(/[,()%*]/g, " ").trim(); // sanitiza p/ o filtro .or (vírgula/parênteses são sintaxe)
+  if (qs) query = query.or(`assunto.ilike.%${qs}%,contato_nome.ilike.%${qs}%,contato_email.ilike.%${qs}%`);
+  const { data: convs } = await query;
+  const list = convs ?? [];
 
-export default async function Relacionamento() {
-  const [email, whats] = await Promise.all([counts("email"), counts("whatsapp")]);
-
-  const caixaEntrada = (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-3">
-        <Card className="flex-1 min-w-[180px]"><p className="ds-eyebrow">Abertas</p><p className="ds-h2">{email.abertas}</p></Card>
-        <Card className="flex-1 min-w-[180px]"><p className="ds-eyebrow">Não lidas</p><p className="ds-h2">{email.naoLidas}</p></Card>
-      </div>
-      <Card>
-        <EmptyState icon={<Icon name="chat" size={22} />} title="Sua caixa de e-mail vai aparecer aqui"
-          description="Em breve (E1) sincronizamos o Gmail da Salestrack: você lê os e-mails, atribui a um membro da equipe, vincula ao cliente e responde — tudo pela plataforma."
-          guiaHref="/admin/ajuda" />
-      </Card>
-    </div>
-  );
-
-  const mensagens = (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-3">
-        <Card className="flex-1 min-w-[180px]"><p className="ds-eyebrow">Abertas</p><p className="ds-h2">{whats.abertas}</p></Card>
-        <Card className="flex-1 min-w-[180px]"><p className="ds-eyebrow">Não lidas</p><p className="ds-h2">{whats.naoLidas}</p></Card>
-      </div>
-      <Card>
-        <EmptyState icon={<Icon name="chat" size={22} />} title="Suas conversas de WhatsApp vão aparecer aqui"
-          description="Em breve (E3) o WhatsApp (Z-API) vira conversa de 2 vias: recebe, responde e envia templates (HSM) daqui, sempre com opt-in. A cadência automática continua na Comunicação."
-          guiaHref="/admin/ajuda" />
-      </Card>
-    </div>
-  );
+  const naoLidas = list.filter((c) => c.unread).length;
+  const canalHref = (c: Channel) => `/admin/relacionamento?canal=${c}`;
+  const filtroHref = (f: InboxFilter) => `/admin/relacionamento?canal=${canal}&filtro=${f}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
 
   return (
     <ContentArea>
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Relacionamento" }]} className="mb-4" />
       <PageHeader eyebrow="Relacionamento" title="Caixa da equipe"
-        subtitle="A caixa de e-mail e as mensagens de WhatsApp da Salestrack, em um lugar — com atribuição por membro e vínculo ao cliente."
+        subtitle="Leia e organize o e-mail da Salestrack, atribua a um membro e vincule ao cliente — as mensagens aparecem na timeline dele."
         comoUsar={<HelpButton routeKey="/admin/relacionamento" />}
-        actions={<Badge tone="neutral">Fundação (E0) · telas em E1–E4</Badge>} />
-      <Tabs defaultTab="caixa" tabs={[
-        { id: "caixa", label: "Caixa de entrada", content: caixaEntrada },
-        { id: "mensagens", label: "Mensagens", content: mensagens },
-      ]} />
+        actions={canal === "email" ? (
+          <form action={syncInboxAction}>
+            <button className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="activity" size={15} /> Sincronizar Gmail</button>
+          </form>
+        ) : undefined} />
+
+      {/* seletor de canal */}
+      <div className="mb-4 flex gap-2">
+        <Link href={canalHref("email")} className={chip(canal === "email")}>Caixa de entrada</Link>
+        <Link href={canalHref("whatsapp")} className={chip(canal === "whatsapp")}>Mensagens (WhatsApp)</Link>
+      </div>
+
+      {canal === "whatsapp" ? (
+        <Card><EmptyState icon={<Icon name="chat" size={22} />} title="WhatsApp chega em E3"
+          description="Aqui as conversas de WhatsApp (Z-API) viram 2 vias. A régua automática continua na Comunicação." guiaHref="/admin/ajuda" /></Card>
+      ) : !gOn ? (
+        <Card className="border-[color:var(--warn)]"><p className="font-montserrat text-[13.5px] text-[color:var(--fg-1)]"><b>Gmail não conectado.</b> Conecte em <Link href="/admin/configuracoes/parametros?cat=integracoes" className="text-[color:var(--brand)] hover:underline">Configurações → Integrações</Link> para sincronizar a caixa. Enquanto isso, a lista fica vazia.</p></Card>
+      ) : (
+        <>
+          {/* filtros + busca */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex gap-2">{FILTERS.map((f) => <Link key={f} href={filtroHref(f)} className={chip(filtro === f)}>{FILTER_LABELS[f]}</Link>)}</div>
+            <form className="flex gap-2" method="get">
+              <input type="hidden" name="canal" value="email" /><input type="hidden" name="filtro" value={filtro} />
+              <input name="q" defaultValue={q} placeholder="Buscar por remetente ou assunto…" aria-label="Buscar na caixa"
+                className="h-10 w-64 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-sm text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+              <button className="ds-focus rounded-ds-input border border-hairline-strong px-3 font-montserrat text-sm text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Buscar</button>
+            </form>
+          </div>
+
+          <p className="ds-small mb-2">{list.length} conversa(s){naoLidas ? ` · ${naoLidas} não lida(s)` : ""}{q ? ` · busca “${q}”` : ""}</p>
+
+          <Card className="!p-0 overflow-hidden">
+            {list.length === 0 ? (
+              <div className="p-6"><EmptyState icon={<Icon name="chat" size={22} />} title="Nada por aqui ainda"
+                description={q ? "Nenhuma conversa casou com a busca." : "Clique em ‘Sincronizar Gmail’ para trazer os e-mails da caixa da Salestrack."} /></div>
+            ) : (
+              <ul className="divide-y divide-[color:var(--border)]">
+                {list.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/admin/relacionamento/${c.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--bg-2)]">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${c.unread ? "bg-[var(--brand)]" : "bg-transparent"}`} />
+                      <span className="min-w-0 flex-1">
+                        <span className={`block truncate font-montserrat text-[13px] ${c.unread ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-2)]"}`}>{c.contato_nome || c.contato_email || "—"}</span>
+                        <span className="block truncate font-montserrat text-[12px] text-[color:var(--fg-3)]">{c.assunto || "(sem assunto)"}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        {c.client_id && <Badge tone="brand">cliente</Badge>}
+                        <Badge tone={c.status === "aberta" ? "warn" : "neutral"}>{STATUS_LABELS[c.status as ConvStatus] ?? c.status}</Badge>
+                        <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{fmtDate(c.last_message_at)}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </>
+      )}
     </ContentArea>
   );
 }

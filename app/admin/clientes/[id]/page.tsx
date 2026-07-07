@@ -212,6 +212,22 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
     ? <ProgramTimeline projectId={project.id} mode="conducao" />
     : <EmptyState icon={<Icon name="rocket" size={22} />} title="Sem linha do tempo ainda" description="A jornada aparece quando o programa ganhar marcos." action={<Link href="/admin/programas/novo" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="rocket" size={15} /> Criar programa</Link>} />;
 
+  // Relacionamento (E1): conversas vinculadas na timeline deste cliente (e-mail/WhatsApp)
+  const { data: relEvents } = await sb.from("timeline_events").select("id, source, kind, summary, occurred_at").eq("subject_type", "org").eq("subject_id", id).order("occurred_at", { ascending: false }).limit(30);
+  const relacionamento = (relEvents ?? []).length ? (
+    <Card className="!p-0 overflow-hidden">
+      <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5"><p className="ds-eyebrow !mb-0">Conversas vinculadas</p><Link href="/admin/relacionamento" className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Abrir caixa →</Link></div>
+      <ul className="divide-y divide-[color:var(--border)]">
+        {(relEvents ?? []).map((e) => (
+          <li key={e.id} className="flex items-start gap-3 px-4 py-3">
+            <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name="chat" size={14} /></span>
+            <span className="min-w-0 flex-1"><span className="block font-montserrat text-[13px] text-[color:var(--fg-1)]">{e.summary}</span><span className="font-jbmono text-[10px] text-[color:var(--fg-4)]">{e.source} · {new Date(e.occurred_at).toLocaleString("pt-BR")}</span></span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  ) : <EmptyState icon={<Icon name="chat" size={22} />} title="Sem conversas vinculadas" description="No Relacionamento, vincule uma thread de e-mail ou WhatsApp a este cliente — ela aparece aqui na timeline." action={<Link href="/admin/relacionamento" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="chat" size={15} /> Abrir caixa</Link>} />;
+
   return (
     <ContentArea>
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Clientes", href: "/admin/clientes" }, { label: org.name }]} className="mb-4" />
@@ -228,6 +244,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
         { id: "resumo", label: "Resumo", content: resumo },
         { id: "programa", label: "Programa", content: programa },
         { id: "comercial", label: "Comercial", content: comercial },
+        { id: "relacionamento", label: "Relacionamento", content: relacionamento },
         { id: "sessoes", label: "Sessões", content: sessoes },
         { id: "entregaveis", label: "Entregáveis", content: entregaveis },
         { id: "resultados", label: "Resultados", content: resultados },

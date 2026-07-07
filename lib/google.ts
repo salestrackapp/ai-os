@@ -71,6 +71,40 @@ export async function listGmail(query: string, max = 10): Promise<{ summary: str
   } catch { return []; }
 }
 
+export type GmailMsg = {
+  id: string; threadId: string; snippet: string; direction: "in" | "out";
+  from: string | null; to: string | null; subject: string | null; date: string | null; internalDate: number;
+};
+/**
+ * Lista mensagens da caixa da Salestrack para sincronizar a inbox (E1).
+ * `query` default = inbox + enviados. Retorna metadados (sem corpo completo — só snippet).
+ * Direção: SENT → 'out', senão 'in'. Vazio se degradado.
+ */
+export async function listGmailInbox(opts: { query?: string; max?: number } = {}): Promise<GmailMsg[]> {
+  const token = await accessToken();
+  if (!token) return [];
+  const query = opts.query ?? "in:inbox OR in:sent";
+  const max = opts.max ?? 40;
+  try {
+    const list = await (await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=${max}`, { headers: { authorization: `Bearer ${token}` } })).json();
+    const ids: string[] = (list.messages ?? []).map((m: { id: string }) => m.id);
+    const out: GmailMsg[] = [];
+    for (const id of ids) {
+      const msg = await (await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`, { headers: { authorization: `Bearer ${token}` } })).json();
+      const h: Record<string, string> = Object.fromEntries((msg.payload?.headers ?? []).map((x: { name: string; value: string }) => [x.name.toLowerCase(), x.value]));
+      const labels: string[] = msg.labelIds ?? [];
+      out.push({
+        id, threadId: msg.threadId ?? id, snippet: msg.snippet ?? "",
+        direction: labels.includes("SENT") ? "out" : "in",
+        from: h.from ?? null, to: h.to ?? null, subject: h.subject ?? null,
+        date: h.date ? new Date(h.date).toISOString() : null,
+        internalDate: Number(msg.internalDate ?? 0),
+      });
+    }
+    return out;
+  } catch { return []; }
+}
+
 /** Lista eventos futuros/recentes do Calendar que casem com um texto. Vazio se degradado. */
 export async function listCalendar(query: string, max = 10): Promise<GEvent[]> {
   const token = await accessToken();
