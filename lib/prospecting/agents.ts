@@ -94,3 +94,18 @@ export async function classifyResponse(prospectId: string, responseText: string)
   const suggestion = r.text.split(/\r?\n/).slice(1).join(" ").trim() || "—";
   return { label, suggestion, degraded: false };
 }
+
+/** Classificador de intenção GENÉRICO (reusa o agente/etiquetas da Fase 5.5) — sem contexto de prospect.
+ * Usado pelo Relacionamento (WhatsApp/e-mail) no E4. Degrada sem ANTHROPIC. */
+export async function classifyIntent(text: string, contexto?: string): Promise<{ label: string; suggestion: string; degraded: boolean }> {
+  const r = await runAgentCore({
+    agentKey: "prospect_classifier", guardrails: PROSPECT_GUARDRAILS, extraContext: `${contexto ?? ""}\n\nMENSAGEM RECEBIDA:\n${text}`, contextLabel: "CONTEXTO",
+    maxTokens: 300,
+    userMessages: [{ role: "user", content: `Classifique a intenção da mensagem em UMA destas etiquetas: ${CLASS_LABELS.join(", ")}. Primeira linha SÓ a etiqueta; segunda linha o próximo passo sugerido (1 frase).` }],
+  });
+  if (r.degraded) return { label: "objecao", suggestion: "Revisar manualmente.", degraded: true };
+  const first = r.text.split(/\r?\n/)[0].toLowerCase().replace(/[^a-z_]/g, "");
+  const label = CLASS_LABELS.find((l) => first.includes(l)) ?? "objecao";
+  const suggestion = r.text.split(/\r?\n/).slice(1).join(" ").trim() || "—";
+  return { label, suggestion, degraded: false };
+}

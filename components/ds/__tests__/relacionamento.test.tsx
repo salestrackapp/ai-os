@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { matchesFilter, isSnoozed, isFollowupDue, canTransition, waWindowClosesAt, isWaWindowOpen, STATUS_LABELS, FILTER_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
+import { matchesFilter, isSnoozed, isFollowupDue, canTransition, waWindowClosesAt, isWaWindowOpen, canSendWhatsApp, STATUS_LABELS, FILTER_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
 
 const ME = "user-1";
 const NOW = "2026-07-07T12:00:00.000Z";
@@ -43,6 +43,17 @@ describe("E0 · Relacionamento — modelo da inbox (lógica pura)", () => {
     expect(isWaWindowOpen("2026-07-07T06:00:00.000Z", NOW)).toBe(true);
     expect(isWaWindowOpen("2026-07-06T05:00:00.000Z", NOW)).toBe(false);
     expect(isWaWindowOpen(null, NOW)).toBe(false);
+  });
+
+  it("WhatsApp · regra de envio: consentimento + 24h/HSM (E4)", () => {
+    // sem opt-in → sempre bloqueia
+    expect(canSendWhatsApp({ optIn: false, windowOpen: true, isHsm: true }).ok).toBe(false);
+    // dentro da janela → texto livre ok
+    expect(canSendWhatsApp({ optIn: true, windowOpen: true, isHsm: false }).ok).toBe(true);
+    // fora da janela, sem HSM → bloqueia
+    expect(canSendWhatsApp({ optIn: true, windowOpen: false, isHsm: false }).ok).toBe(false);
+    // fora da janela, com HSM → ok
+    expect(canSendWhatsApp({ optIn: true, windowOpen: false, isHsm: true }).ok).toBe(true);
   });
 
   it("rótulos legíveis (sem chave crua)", () => {

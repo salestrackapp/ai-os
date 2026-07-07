@@ -4,6 +4,7 @@ import { currentMembership } from "@/lib/auth";
 import { syncGmailInbox } from "@/lib/relacionamento/sync-email";
 import { assignConversa, setConversaStatus, snoozeConversa, setUnread, linkConversaCliente } from "@/lib/relacionamento/inbox";
 import { responderConversa, aprovarEnvio, descartarRascunhoSaida } from "@/lib/relacionamento/responder";
+import { responderWhatsApp } from "@/lib/relacionamento/responder-wa";
 import type { ConvStatus } from "@/lib/relacionamento/types";
 
 export async function syncInboxAction() {
@@ -61,6 +62,21 @@ export async function responderAction(id: string, formData: FormData): Promise<{
     return { ok: true, enviado: r.enviado, pendente: r.pendente, erro: r.motivo };
   } catch (e) {
     return { ok: false, enviado: false, pendente: false, erro: e instanceof Error ? e.message : "Erro ao responder." };
+  }
+}
+
+/** Responder/enviar pelo WhatsApp — aplica consentimento + janela 24h/HSM + gate. */
+export async function responderWhatsAppAction(id: string, formData: FormData): Promise<{ ok: boolean; enviado: boolean; pendente: boolean; bloqueado?: boolean; erro?: string }> {
+  const corpo = String(formData.get("corpo") ?? "");
+  const templateId = String(formData.get("templateId") ?? "").trim() || undefined;
+  const forcarRascunho = String(formData.get("modo") ?? "") === "rascunho";
+  try {
+    const r = await responderWhatsApp(id, { corpo: corpo || undefined, templateId, forcarRascunho });
+    revalidatePath(`/admin/relacionamento/${id}`);
+    revalidatePath("/admin/relacionamento");
+    return { ok: !r.bloqueado, enviado: r.enviado, pendente: r.pendente, bloqueado: r.bloqueado, erro: r.motivo };
+  } catch (e) {
+    return { ok: false, enviado: false, pendente: false, erro: e instanceof Error ? e.message : "Erro ao enviar." };
   }
 }
 

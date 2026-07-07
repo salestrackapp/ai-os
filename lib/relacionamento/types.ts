@@ -61,6 +61,14 @@ export function isWaWindowOpen(lastInboundISO: string | null, nowISO: string): b
   return !!closes && closes > nowISO;
 }
 
+/** Regra de envio do WhatsApp (puro): consentimento obrigatório; dentro de 24h texto livre; fora → só HSM. */
+export function canSendWhatsApp(opts: { optIn: boolean; windowOpen: boolean; isHsm: boolean }): { ok: boolean; motivo?: string } {
+  if (!opts.optIn) return { ok: false, motivo: "Contato sem consentimento (opt-in) — não é permitido enviar." };
+  if (opts.windowOpen) return { ok: true };
+  if (opts.isHsm) return { ok: true };
+  return { ok: false, motivo: "Fora da janela de 24h — só é possível enviar um template HSM aprovado." };
+}
+
 /** Transição de status permitida? (puro) — arquivada é terminal (só reabre para 'aberta'). */
 export function canTransition(from: ConvStatus, to: ConvStatus): boolean {
   if (from === to) return false;

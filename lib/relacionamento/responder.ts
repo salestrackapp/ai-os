@@ -91,10 +91,15 @@ export async function responderConversa(conversaId: string, corpoRaw: string, op
 export async function aprovarEnvio(msgId: string): Promise<{ enviado: boolean; motivo?: string }> {
   const { userId, orgId } = await requireTeam();
   const sb = createServiceClient();
-  const { data: msg } = await sb.from("rel_mensagens").select("id, conversa_id, corpo, direction, status_entrega").eq("id", msgId).maybeSingle();
+  const { data: msg } = await sb.from("rel_mensagens").select("id, conversa_id, corpo, media, direction, status_entrega").eq("id", msgId).maybeSingle();
   if (!msg || msg.direction !== "out" || msg.status_entrega !== "rascunho") throw new Error("Rascunho de saída não encontrado.");
   const { data: conv } = await sb.from("rel_conversas").select("id, channel, external_ref, contato_email, assunto, client_id, status").eq("id", msg.conversa_id).maybeSingle();
   if (!conv) throw new Error("Conversa não encontrada.");
+  // WhatsApp: envio pela Z-API com revalidação de consentimento + janela 24h/HSM.
+  if (conv.channel === "whatsapp") {
+    const { enviarRascunhoWA } = await import("./responder-wa");
+    return enviarRascunhoWA({ id: msg.id, conversa_id: msg.conversa_id, corpo: msg.corpo, media: (msg.media as { hsm?: boolean } | null) });
+  }
   if (!(await googleConfigured()) || !conv.contato_email) return { enviado: false, motivo: "Gmail não conectado — não é possível enviar agora." };
 
   const res = await sendGmail(conv.contato_email, reSubject(conv.assunto), msg.corpo, { threadId: conv.external_ref || undefined });

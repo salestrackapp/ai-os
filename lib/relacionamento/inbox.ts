@@ -25,6 +25,15 @@ export async function listConversas(opts: { channel?: Channel; filter?: InboxFil
   return data ?? [];
 }
 
+/** Carrega uma conversa por id (gate de equipe). Campos comuns para leitura/envio. */
+export async function listConversaByIdTeam(conversaId: string): Promise<{ id: string; channel: Channel; external_ref: string | null; status: ConvStatus; contato_nome: string | null; contato_phone: string | null; contact_id: string | null; client_id: string | null; org_id: string } | null> {
+  await requireTeam();
+  const { data } = await createServiceClient().from("rel_conversas")
+    .select("id, channel, external_ref, status, contato_nome, contato_phone, contact_id, client_id, org_id")
+    .eq("id", conversaId).is("deleted_at", null).maybeSingle();
+  return (data as { id: string; channel: Channel; external_ref: string | null; status: ConvStatus; contato_nome: string | null; contato_phone: string | null; contact_id: string | null; client_id: string | null; org_id: string } | null) ?? null;
+}
+
 /** Atribui (ou desatribui) uma conversa a um membro. Notifica o novo responsável. */
 export async function assignConversa(conversaId: string, toUserId: string | null) {
   const { orgId } = await requireTeam();

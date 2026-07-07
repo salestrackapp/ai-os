@@ -9,9 +9,13 @@ import { Icon } from "@/components/ui/icons";
 import { AiAssist } from "@/components/AiAssist";
 import { MarkReadOnOpen } from "@/components/relacionamento/MarkReadOnOpen";
 import { Responder } from "@/components/relacionamento/Responder";
+import { ResponderWhatsApp } from "@/components/relacionamento/ResponderWhatsApp";
 import { CHANNEL_LABELS, STATUS_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
 import { getSendPolicy, listTemplates } from "@/lib/relacionamento/responder";
+import { listTemplatesWhatsApp } from "@/lib/relacionamento/responder-wa";
 import { whatsappContext } from "@/lib/relacionamento/sync-whatsapp";
+import { classifyIntent } from "@/lib/prospecting/agents";
+import { anthropicConfigured } from "@/lib/agents/runner";
 import { assignToMeAction, unassignAction, statusAction, snoozeAction, linkClienteAction, aprovarEnvioFormAction, descartarEnvioAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -36,10 +40,15 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
   const mine = c.assigned_to && c.assigned_to === m?.userId;
   const isEmail = c.channel === "email";
   const waCtx = isEmail ? null : await whatsappContext({ id, contact_id: c.contact_id, contato_phone: c.contato_phone });
+  const waTemplates = isEmail ? [] : await listTemplatesWhatsApp();
 
   // Rascunhos de saída pendentes (fila de aprovação) ficam separados da conversa em si.
   const msgs = (allMsgs ?? []).filter((mm) => mm.status_entrega !== "rascunho");
   const pendentes = (allMsgs ?? []).filter((mm) => mm.direction === "out" && mm.status_entrega === "rascunho");
+
+  // Intenção (classificador da Fase 5.5) sobre a última mensagem recebida — só quando há IA e mensagem in.
+  const lastInbound = [...msgs].reverse().find((mm) => mm.direction === "in");
+  const intent = (!isEmail && anthropicConfigured() && lastInbound?.corpo) ? await classifyIntent(String(lastInbound.corpo)) : null;
 
   const contatoNome = c.contato_nome || c.contato_email || c.contato_phone || "";
   // Contexto para o copiloto (dados internos; sem PII em URL).
@@ -101,22 +110,29 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
           {/* responder */}
           {isEmail
             ? <Responder conversaId={id} policy={policy} templates={templates} contatoNome={contatoNome} assunto={c.assunto || ""} />
-            : <div className="border-t border-hairline px-4 py-3"><p className="ds-small !mt-0">Responder/enviar pelo WhatsApp (templates HSM, janela de 24h, IA) chega no <b>E4</b>. Por ora, a caixa lê e organiza.</p></div>}
+            : <ResponderWhatsApp conversaId={id} policy={policy} templates={waTemplates} optIn={!!waCtx?.optIn} windowOpen={!!waCtx?.windowOpen} />}
         </Card>
 
         {/* lateral: copiloto + organizar + vincular */}
         <div className="space-y-4">
-          {isEmail && (
-            <Card bloom>
-              <AiAssist title="Copiloto da caixa" compact context={aiContext} actions={[
-                { label: "Resumir a thread", task: "Resuma esta conversa em 3–5 bullets: contexto, o que o contato pede e o que está pendente do nosso lado." },
-                { label: "Triagem/prioridade", task: "Classifique a prioridade (alta/média/baixa) e diga em uma frase o que responder primeiro e por quê." },
-                { label: "Sugerir resposta", task: "Rascunhe uma resposta pronta para enviar ao contato, no tom da marca Salestrack, objetiva e cordial. Não invente fatos; se faltar dado, deixe um [placeholder]." },
-                { label: "Extrair tarefas", task: "Liste como checklist as tarefas/compromissos que esta conversa gera para nós, com prazos se mencionados." },
-              ]} />
-              <p className="ds-small !mb-0 mt-2">A IA rascunha; você edita e aprova antes de enviar.</p>
-            </Card>
-          )}
+          <Card bloom>
+            <AiAssist title={isEmail ? "Copiloto da caixa" : "Copiloto do WhatsApp"} compact context={aiContext} actions={isEmail ? [
+              { label: "Resumir a thread", task: "Resuma esta conversa em 3–5 bullets: contexto, o que o contato pede e o que está pendente do nosso lado." },
+              { label: "Triagem/prioridade", task: "Classifique a prioridade (alta/média/baixa) e diga em uma frase o que responder primeiro e por quê." },
+              { label: "Sugerir resposta", task: "Rascunhe uma resposta pronta para enviar ao contato, no tom da marca Salestrack, objetiva e cordial. Não invente fatos; se faltar dado, deixe um [placeholder]." },
+              { label: "Extrair tarefas", task: "Liste como checklist as tarefas/compromissos que esta conversa gera para nós, com prazos se mencionados." },
+            ] : [
+              { label: "Resumir a conversa", task: "Resuma esta conversa de WhatsApp em 3 bullets curtos: contexto, o que o contato quer e o que está pendente do nosso lado." },
+              { label: "Sugerir resposta", task: "Rascunhe uma resposta curta e cordial para WhatsApp, no tom da marca Salestrack. Sem inventar fatos; se faltar dado, deixe um [placeholder]." },
+            ]} />
+            {intent && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Badge tone="brand">intenção: {intent.label}</Badge>
+                {!intent.degraded && intent.suggestion !== "—" && <span className="font-montserrat text-[11px] text-[color:var(--fg-3)]">{intent.suggestion}</span>}
+              </div>
+            )}
+            <p className="ds-small !mb-0 mt-2">A IA rascunha; você edita e aprova antes de enviar.</p>
+          </Card>
 
           {!isEmail && waCtx && (
             <Card>
