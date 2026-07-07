@@ -6,11 +6,10 @@ import { ContentArea, PageHeader, Card, EmptyState, Badge } from "@/components/d
 import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
-import { AutoRefresh } from "@/components/relacionamento/AutoRefresh";
+import { RealtimeInbox } from "@/components/relacionamento/RealtimeInbox";
 import { AtivarRecebimentoWA } from "@/components/relacionamento/AtivarRecebimentoWA";
 import { googleConfigured } from "@/lib/google";
 import { zapiConfigured } from "@/lib/whatsapp";
-import { syncGmailInbox } from "@/lib/relacionamento/sync-email";
 import { FILTER_LABELS, STATUS_LABELS, isSlaBreached, type InboxFilter, type Channel, type ConvStatus } from "@/lib/relacionamento/types";
 import { getNumber } from "@/lib/settings/resolve";
 import { syncInboxAction, bulkAction } from "./actions";
@@ -35,9 +34,6 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
   const nowISO = new Date().toISOString();
   const m = await currentMembership();
 
-  // Auto-sincroniza o Gmail ao abrir/atualizar a caixa (real-time, sem depender do botão). Best-effort.
-  if ((isEmail || isTodos) && gOn) { try { await syncGmailInbox(30); } catch { /* nunca derruba a listagem */ } }
-
   const sb = await createClient();
   let query = sb.from("rel_conversas").select("id, channel, assunto, contato_nome, contato_email, contato_phone, status, assigned_to, unread, last_message_at, client_id")
     .is("deleted_at", null).order("last_message_at", { ascending: false, nullsFirst: false }).limit(100);
@@ -56,7 +52,7 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
 
   return (
     <ContentArea>
-      <AutoRefresh seconds={20} />
+      <RealtimeInbox syncEmail={(isEmail || isTodos) && gOn} seconds={25} />
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Relacionamento" }]} className="mb-4" />
       <PageHeader eyebrow="Relacionamento" title="Caixa da equipe"
         subtitle="Leia e organize o e-mail e o WhatsApp da Salestrack, atribua a um membro e vincule ao cliente — as mensagens aparecem na timeline dele."
