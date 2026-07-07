@@ -50,6 +50,7 @@ export const AREAS: Area[] = [
     sections: [
       { label: "Caixa de entrada", href: "/admin/relacionamento", icon: "chat", desc: "E-mails da Salestrack — ler, atribuir, responder." },
       { label: "Mensagens", href: "/admin/relacionamento", icon: "chat", desc: "WhatsApp — conversas 2 vias com opt-in." },
+      { label: "Templates & regras", href: "/admin/relacionamento/config", icon: "layers", desc: "Respostas reutilizáveis e roteamento automático." },
     ],
   },
   {

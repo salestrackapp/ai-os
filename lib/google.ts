@@ -31,7 +31,7 @@ async function accessToken(): Promise<string | null> {
 }
 
 /** Envia um e-mail pela conta Salestrack via Gmail API. `html` → Content-Type text/html. Degradado sem config. */
-export async function sendGmail(to: string, subject: string, body: string, opts?: { html?: boolean }): Promise<{ sent: boolean; id?: string }> {
+export async function sendGmail(to: string, subject: string, body: string, opts?: { html?: boolean; threadId?: string; inReplyTo?: string }): Promise<{ sent: boolean; id?: string; threadId?: string }> {
   const token = await accessToken();
   if (!token) return { sent: false };
   const g = await resolveGoogle();
@@ -39,17 +39,22 @@ export async function sendGmail(to: string, subject: string, body: string, opts?
   const contentType = opts?.html ? "text/html; charset=UTF-8" : "text/plain; charset=UTF-8";
   // Subject com acentos precisa de MIME encoded-word (RFC 2047), senão vira mojibake.
   const encSubject = `=?UTF-8?B?${Buffer.from(subject, "utf8").toString("base64")}?=`;
-  const raw = [
-    `To: ${to}`, `From: ${from}`, `Subject: ${encSubject}`, "MIME-Version: 1.0", `Content-Type: ${contentType}`, "Content-Transfer-Encoding: 8bit", "", body,
-  ].join("\r\n");
+  const headers = [
+    `To: ${to}`, `From: ${from}`, `Subject: ${encSubject}`, "MIME-Version: 1.0", `Content-Type: ${contentType}`, "Content-Transfer-Encoding: 8bit",
+  ];
+  // Encadeamento correto quando é resposta (RFC 5322): In-Reply-To/References apontam para a msg anterior.
+  if (opts?.inReplyTo) headers.push(`In-Reply-To: ${opts.inReplyTo}`, `References: ${opts.inReplyTo}`);
+  const raw = [...headers, "", body].join("\r\n");
   const encoded = Buffer.from(raw, "utf8").toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   try {
+    const payload: { raw: string; threadId?: string } = { raw: encoded };
+    if (opts?.threadId) payload.threadId = opts.threadId;   // mantém a resposta na mesma thread do Gmail
     const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
       method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ raw: encoded }),
+      body: JSON.stringify(payload),
     });
     const d = await res.json();
-    return { sent: !!d.id, id: d.id };
+    return { sent: !!d.id, id: d.id, threadId: d.threadId };
   } catch { return { sent: false }; }
 }
 

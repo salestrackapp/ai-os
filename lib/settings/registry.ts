@@ -39,6 +39,12 @@ export const SETTINGS: SettingDef[] = [
   { key: "session_reminder_hours", label: "Lembrete antes da sessão (horas)", category: "sessoes", type: "number", default: 24 },
   // Governança
   { key: "sales_offer", label: "Posicionamento comercial (oferta)", category: "governanca", type: "json", help: "Ancora os agentes de prospecção. Ver Fase 5.5." },
+  // Relacionamento (E2) — gate de envio da caixa de equipe
+  { key: "rel_send_policy", label: "Política de envio da caixa", category: "governanca", type: "string", default: "aprovar_sempre",
+    options: [{ value: "aprovar_sempre", label: "Aprovar sempre (rascunho vai à fila de aprovação)" }, { value: "direto_autorizado", label: "Direto para membro autorizado (sensíveis ainda pedem aprovação)" }],
+    help: "IA rascunha → humano aprova → sistema envia. Default: aprovar sempre." },
+  { key: "rel_email_signature", label: "Assinatura de e-mail da equipe", category: "governanca", type: "string",
+    default: "—\nEquipe Salestrack AI", help: "Anexada ao final das respostas enviadas pela caixa." },
 ];
 
 export const SECRET_PROVIDERS: { provider: string; label: string; degrada: string }[] = [

@@ -8,7 +8,7 @@ import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
 import { googleConfigured } from "@/lib/google";
 import { FILTER_LABELS, STATUS_LABELS, type InboxFilter, type Channel, type ConvStatus } from "@/lib/relacionamento/types";
-import { syncInboxAction } from "./actions";
+import { syncInboxAction, bulkAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -45,11 +45,14 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
       <PageHeader eyebrow="Relacionamento" title="Caixa da equipe"
         subtitle="Leia e organize o e-mail da Salestrack, atribua a um membro e vincule ao cliente — as mensagens aparecem na timeline dele."
         comoUsar={<HelpButton routeKey="/admin/relacionamento" />}
-        actions={canal === "email" ? (
-          <form action={syncInboxAction}>
-            <button className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="activity" size={15} /> Sincronizar Gmail</button>
-          </form>
-        ) : undefined} />
+        actions={<div className="flex items-center gap-2">
+          <Link href="/admin/relacionamento/config" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="layers" size={15} /> Templates & regras</Link>
+          {canal === "email" && (
+            <form action={syncInboxAction}>
+              <button className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="activity" size={15} /> Sincronizar Gmail</button>
+            </form>
+          )}
+        </div>} />
 
       {/* seletor de canal */}
       <div className="mb-4 flex gap-2">
@@ -77,31 +80,42 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
 
           <p className="ds-small mb-2">{list.length} conversa(s){naoLidas ? ` · ${naoLidas} não lida(s)` : ""}{q ? ` · busca “${q}”` : ""}</p>
 
-          <Card className="!p-0 overflow-hidden">
-            {list.length === 0 ? (
-              <div className="p-6"><EmptyState icon={<Icon name="chat" size={22} />} title="Nada por aqui ainda"
-                description={q ? "Nenhuma conversa casou com a busca." : "Clique em ‘Sincronizar Gmail’ para trazer os e-mails da caixa da Salestrack."} /></div>
-            ) : (
-              <ul className="divide-y divide-[color:var(--border)]">
-                {list.map((c) => (
-                  <li key={c.id}>
-                    <Link href={`/admin/relacionamento/${c.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--bg-2)]">
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${c.unread ? "bg-[var(--brand)]" : "bg-transparent"}`} />
-                      <span className="min-w-0 flex-1">
-                        <span className={`block truncate font-montserrat text-[13px] ${c.unread ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-2)]"}`}>{c.contato_nome || c.contato_email || "—"}</span>
-                        <span className="block truncate font-montserrat text-[12px] text-[color:var(--fg-3)]">{c.assunto || "(sem assunto)"}</span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-2">
-                        {c.client_id && <Badge tone="brand">cliente</Badge>}
-                        <Badge tone={c.status === "aberta" ? "warn" : "neutral"}>{STATUS_LABELS[c.status as ConvStatus] ?? c.status}</Badge>
-                        <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{fmtDate(c.last_message_at)}</span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          {list.length === 0 ? (
+            <Card className="!p-0 overflow-hidden"><div className="p-6"><EmptyState icon={<Icon name="chat" size={22} />} title="Nada por aqui ainda"
+              description={q ? "Nenhuma conversa casou com a busca." : "Clique em ‘Sincronizar Gmail’ para trazer os e-mails da caixa da Salestrack."} /></div></Card>
+          ) : (
+            <form action={bulkAction}>
+              {/* barra de ações em massa (aplica ao que estiver marcado) */}
+              <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                <span className="mr-1 font-montserrat text-[11px] uppercase tracking-[.12em] text-[color:var(--fg-3)]">Em massa:</span>
+                <button name="op" value="assumir" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Assumir p/ mim</button>
+                <button name="op" value="status:respondida" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Marcar respondida</button>
+                <button name="op" value="status:arquivada" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Arquivar</button>
+                <button name="op" value="snooze:3" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Follow-up +3d</button>
+              </div>
+              <Card className="!p-0 overflow-hidden">
+                <ul className="divide-y divide-[color:var(--border)]">
+                  {list.map((c) => (
+                    <li key={c.id} className="flex items-center gap-2 transition-colors hover:bg-[var(--bg-2)]">
+                      <label className="flex h-full shrink-0 items-center pl-4"><input type="checkbox" name="ids" value={c.id} className="h-4 w-4 accent-[var(--brand)]" aria-label="Selecionar conversa" /></label>
+                      <Link href={`/admin/relacionamento/${c.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 pr-4">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${c.unread ? "bg-[var(--brand)]" : "bg-transparent"}`} />
+                        <span className="min-w-0 flex-1">
+                          <span className={`block truncate font-montserrat text-[13px] ${c.unread ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-2)]"}`}>{c.contato_nome || c.contato_email || "—"}</span>
+                          <span className="block truncate font-montserrat text-[12px] text-[color:var(--fg-3)]">{c.assunto || "(sem assunto)"}</span>
+                        </span>
+                        <span className="flex shrink-0 items-center gap-2">
+                          {c.client_id && <Badge tone="brand">cliente</Badge>}
+                          <Badge tone={c.status === "aberta" ? "warn" : "neutral"}>{STATUS_LABELS[c.status as ConvStatus] ?? c.status}</Badge>
+                          <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{fmtDate(c.last_message_at)}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </form>
+          )}
         </>
       )}
     </ContentArea>

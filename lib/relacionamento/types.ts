@@ -4,7 +4,7 @@ export type Channel = "email" | "whatsapp";
 export type ConvStatus = "aberta" | "aguardando" | "respondida" | "arquivada";
 export type Direction = "in" | "out";
 export type InboxFilter = "minhas" | "nao_atribuidas" | "todas";
-export type NotifTipo = "nova_conversa" | "nova_mensagem" | "atribuicao" | "followup_vencido";
+export type NotifTipo = "nova_conversa" | "nova_mensagem" | "atribuicao" | "followup_vencido" | "aprovacao";
 
 export const CHANNEL_LABELS: Record<Channel, string> = { email: "E-mail", whatsapp: "WhatsApp" };
 export const STATUS_LABELS: Record<ConvStatus, string> = {

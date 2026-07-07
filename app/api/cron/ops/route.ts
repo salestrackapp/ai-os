@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { rollupAiCost } from "@/lib/finops/cost";
 import { computeTenantHealth } from "@/lib/ops/health";
 import { scanAlerts } from "@/lib/ops/alerts";
+import { dispararFollowupsVencidos } from "@/lib/relacionamento/followups";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -18,5 +19,6 @@ export async function GET(req: NextRequest) {
   const cost = await rollupAiCost(day);
   const health = await computeTenantHealth(day);
   const alerts = await scanAlerts();
-  return NextResponse.json({ ok: true, day, cost, health, alerts });
+  const followups = await dispararFollowupsVencidos();
+  return NextResponse.json({ ok: true, day, cost, health, alerts, followups });
 }

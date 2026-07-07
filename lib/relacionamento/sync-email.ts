@@ -3,6 +3,24 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
 import { googleConfigured, listGmailInbox, type GmailMsg } from "@/lib/google";
 import { requireTeam } from "./inbox";
+import { avaliarRegras } from "./responder";
+
+/** Aplica regras (rótulo/atribuição) a uma conversa NOVA — rascunham o roteamento, nunca enviam. */
+async function aplicarRegras(sb: ReturnType<typeof createServiceClient>, orgId: string, convId: string, dados: { contato_email: string | null; assunto: string | null; assigned_to: string | null }) {
+  const acoes = await avaliarRegras(dados);
+  if (!acoes.length) return;
+  for (const a of acoes) {
+    if (a.assignTo && !dados.assigned_to) {
+      await sb.from("rel_conversas").update({ assigned_to: a.assignTo }).eq("id", convId);
+      dados.assigned_to = a.assignTo;
+    }
+    if (a.rotulo) {
+      let { data: rot } = await sb.from("rel_rotulos").select("id").eq("org_id", orgId).eq("nome", a.rotulo).maybeSingle();
+      if (!rot) { const { data: ins } = await sb.from("rel_rotulos").insert({ org_id: orgId, nome: a.rotulo }).select("id").single(); rot = ins; }
+      if (rot?.id) await sb.from("rel_conversa_rotulos").upsert({ conversa_id: convId, rotulo_id: rot.id }, { onConflict: "conversa_id,rotulo_id" });
+    }
+  }
+}
 
 /** "Nome <email>" → { nome, email }. */
 function parseAddr(raw: string | null): { nome: string | null; email: string | null } {
@@ -44,7 +62,7 @@ export async function syncGmailInbox(max = 40): Promise<{ synced: number; novas:
         contato_nome: nome, contato_email: email, status: "aberta",
         unread: last.direction === "in", last_message_at: lastAt,
       }).select("id").single();
-      convId = ins?.id; if (convId) novas++;
+      convId = ins?.id; if (convId) { novas++; await aplicarRegras(sb, orgId, convId, { contato_email: email, assunto, assigned_to: null }); }
     } else {
       await sb.from("rel_conversas").update({ assunto, contato_nome: nome, contato_email: email, last_message_at: lastAt, updated_at: new Date().toISOString() }).eq("id", convId);
     }
