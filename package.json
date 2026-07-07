@@ -16,6 +16,7 @@
     "@sparticuz/chromium": "^131.0.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.0",
+    "@types/sanitize-html": "^2.16.1",
     "docx": "^9.7.1",
     "driver.js": "^1.6.0",
     "next": "^15.1.0",
@@ -25,6 +26,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.4",
+    "sanitize-html": "^2.17.5",
     "server-only": "^0.0.1",
     "zod": "^3.25.76"
   },

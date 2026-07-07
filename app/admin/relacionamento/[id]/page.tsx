@@ -8,12 +8,14 @@ import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { AiAssist } from "@/components/AiAssist";
 import { MarkReadOnOpen } from "@/components/relacionamento/MarkReadOnOpen";
+import { EmailBody } from "@/components/relacionamento/EmailBody";
 import { Responder } from "@/components/relacionamento/Responder";
 import { ResponderWhatsApp } from "@/components/relacionamento/ResponderWhatsApp";
 import { CHANNEL_LABELS, STATUS_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
 import { getSendPolicy, listTemplates } from "@/lib/relacionamento/responder";
 import { listTemplatesWhatsApp } from "@/lib/relacionamento/responder-wa";
 import { carregarCorposEmail } from "@/lib/relacionamento/sync-email";
+import { sanitizeEmailHtml } from "@/lib/relacionamento/sanitize-email";
 import { whatsappContext } from "@/lib/relacionamento/sync-whatsapp";
 import { classifyIntent } from "@/lib/prospecting/agents";
 import { anthropicConfigured } from "@/lib/agents/runner";
@@ -88,7 +90,9 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
                   {mm.media?.tipo && <Badge tone="neutral">📎 {mm.media.tipo}</Badge>}
                   <span className="font-jbmono text-[10px] text-[color:var(--fg-4)]">{fmt(mm.created_at)}</span>
                 </div>
-                <p className="whitespace-pre-wrap break-words font-montserrat text-[13px] leading-relaxed text-[color:var(--fg-1)]">{mm.corpo || "(sem prévia)"}</p>
+                {isEmail && mm.media?.html
+                  ? <EmailBody html={sanitizeEmailHtml(String(mm.media.html))} />
+                  : <p className="whitespace-pre-wrap break-words font-montserrat text-[13px] leading-relaxed text-[color:var(--fg-1)]">{mm.corpo || "(sem prévia)"}</p>}
                 {mm.media?.url && <a href={mm.media.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block font-montserrat text-[12px] text-[color:var(--brand)] hover:underline">abrir {mm.media.tipo}</a>}
               </div>
             ))}
