@@ -4,7 +4,7 @@
  * suas subseções apontando para as rotas existentes (não movemos os arquivos — escolha segura).
  * `areaForPath` resolve a área ativa; `isV5Path` distingue páginas v5 (claras) das legadas (frame escuro).
  */
-export type AreaKey = "hoje" | "clientes" | "comercial" | "estudio" | "metodo" | "plataforma";
+export type AreaKey = "hoje" | "clientes" | "comercial" | "relacionamento" | "estudio" | "metodo" | "plataforma";
 
 export type SubSection = { label: string; href: string; icon: string; desc: string };
 
@@ -42,6 +42,14 @@ export const AREAS: Area[] = [
       { label: "Tarefas", href: "/admin/tarefas", icon: "tasks", desc: "Follow-ups e pendências." },
       { label: "Catálogo de ofertas", href: "/admin/catalogo", icon: "gem", desc: "O que você vende e entrega — alimenta as propostas (Diagnose, Sprint, engajamento, Mentoria, workshops)." },
       { label: "Sinais de prospecção", href: "/admin/sinais", icon: "target", desc: "Gatilhos que somam no score — criar, editar, duplicar e excluir." },
+    ],
+  },
+  {
+    key: "relacionamento", label: "Relacionamento", href: "/admin/relacionamento", icon: "chat",
+    tagline: "A caixa de e-mail e as mensagens de WhatsApp da equipe, em um lugar.",
+    sections: [
+      { label: "Caixa de entrada", href: "/admin/relacionamento", icon: "chat", desc: "E-mails da Salestrack — ler, atribuir, responder." },
+      { label: "Mensagens", href: "/admin/relacionamento", icon: "chat", desc: "WhatsApp — conversas 2 vias com opt-in." },
     ],
   },
   {
@@ -93,6 +101,7 @@ export function isV5Path(path: string): boolean {
 const ROUTE_AREA: [string, AreaKey][] = [
   ["/admin/programas", "clientes"], ["/admin/onboarding", "clientes"], ["/admin/consultor", "clientes"], ["/admin/roi", "clientes"],
   ["/admin/crm", "comercial"], ["/admin/prospeccao", "comercial"], ["/admin/propostas", "comercial"], ["/admin/contratos", "comercial"], ["/admin/tarefas", "comercial"], ["/admin/sinais", "comercial"], ["/admin/ofertas", "comercial"], ["/admin/catalogo", "comercial"],
+  ["/admin/relacionamento", "relacionamento"],
   ["/admin/entregaveis", "estudio"], ["/admin/estudio-area", "estudio"], ["/admin/comunicacao", "estudio"],
   ["/admin/estudio", "metodo"], ["/admin/biblioteca-templates", "metodo"],
   ["/admin/financeiro", "plataforma"], ["/admin/monetizacao", "plataforma"], ["/admin/operacoes", "plataforma"], ["/admin/configuracoes", "plataforma"], ["/admin/design-system", "plataforma"],

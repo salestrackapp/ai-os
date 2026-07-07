@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
 import { FirstSteps } from "@/components/guidance/FirstSteps";
 import { computeGuide } from "@/lib/guidance/first-steps";
+import { countNotificacoes } from "@/lib/relacionamento/notify";
 import { DEAL_STAGES, STAGE_LABELS, brl, daysSince, STAGNATION_DAYS, type Deal } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ export default async function Hoje() {
   const supabase = await createClient();
   const membership = await currentMembership();
   const guide = membership?.userId && membership?.orgId ? await computeGuide("admin", membership.orgId, membership.userId, "conhecer-hoje") : null;
+  const relNotifs = await countNotificacoes();
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
   const in7 = new Date(now.getTime() + 7 * 86_400_000);
@@ -67,6 +69,13 @@ export default async function Hoje() {
         comoUsar={<HelpButton routeKey="/admin/hoje" />} />
 
       {guide && <FirstSteps surface="admin" guide={guide} />}
+
+      {relNotifs > 0 && (
+        <Link href="/admin/relacionamento" className="mb-6 flex items-center justify-between gap-3 rounded-ds-card border border-hairline bg-[var(--tile)] px-4 py-3 transition-colors hover:border-[color:var(--brand-light)]">
+          <span className="flex items-center gap-2.5 font-montserrat text-[13.5px] text-[color:var(--brand-deep)]"><Icon name="chat" size={16} /> Você tem <b>{relNotifs}</b> {relNotifs === 1 ? "novidade" : "novidades"} no Relacionamento (conversas/atribuições).</span>
+          <span className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)]">Abrir →</span>
+        </Link>
+      )}
 
       {/* 3 ações do dia */}
       <section className="mb-8" data-tour="admin-hoje">

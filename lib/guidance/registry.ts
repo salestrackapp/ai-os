@@ -71,6 +71,12 @@ export const HELP: Record<string, Help> = {
     dica: "Nada dispara sem um ativo aprovado — e, por padrão, sem a sua aprovação.",
   },
 
+  "/admin/relacionamento": {
+    titulo: "Relacionamento", oQueE: "A caixa de e-mail e as mensagens de WhatsApp da equipe, em um lugar — com atribuição por membro e vínculo ao cliente.",
+    passos: ["Abra a Caixa de entrada (e-mail) ou Mensagens (WhatsApp).", "Atribua a conversa a um membro da equipe.", "Vincule ao cliente e responda pela plataforma."],
+    dica: "É uma inbox de equipe: cada conversa tem um responsável, e as novidades aparecem no Hoje.",
+  },
+
   // ── Comercial (subtelas) ──
   "/admin/crm": { titulo: "CRM", oQueE: "Seu pipeline: onde cada negócio está e o que fazer a seguir.", passos: ["Arraste os cards entre as etapas do funil.", "Abra um negócio para ver contatos e histórico.", "Registre a próxima ação para não perder o timing."] },
   "/admin/prospeccao": { titulo: "Prospecção", oQueE: "Encontrar e abordar os clientes certos por sinal, não por volume.", passos: ["Veja os sinais que elevam o score do prospect.", "Use as cadências para abordar no tempo certo.", "Qualifique antes de investir energia."] },
