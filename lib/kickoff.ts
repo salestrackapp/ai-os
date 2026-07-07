@@ -104,9 +104,10 @@ export async function runKickoff(contractId: string): Promise<{ ok: boolean; che
     if (existingInv && existingInv.length) return "já emitido";
 
     // provider: PAYMENT_PROVIDER (asaas|stripe|manual); default = asaas se configurado, senão stripe, senão manual
-    const provider = process.env.PAYMENT_PROVIDER ?? (asaasConfigured() ? "asaas" : stripeConfigured() ? "stripe" : "manual");
+    const asaasOn = await asaasConfigured();
+    const provider = process.env.PAYMENT_PROVIDER ?? (asaasOn ? "asaas" : stripeConfigured() ? "stripe" : "manual");
 
-    if (provider === "asaas" && asaasConfigured() && contract.org_id) {
+    if (provider === "asaas" && asaasOn && contract.org_id) {
       const r = await startBillingAsaas({ orgName: org?.name ?? "Cliente", email: proposal?.client_email, cpfCnpj: org?.cnpj, contractId, total, installments: inst, monthlyFee: monthly });
       for (const p of r.payments) await sb.from("invoices").insert({ org_id: contract.org_id, contract_id: contractId, kind: "implantacao", installment_n: p.installmentN, installments_total: inst, amount: p.amount, status: "aberta", due_date: p.dueDate, stripe_invoice_id: p.asaasId, hosted_url: p.invoiceUrl });
       if (r.subscription) await sb.from("subscriptions").insert({ org_id: contract.org_id, contract_id: contractId, plan: "professional", monthly_amount: r.subscription.amount, status: "ativa", stripe_subscription_id: r.subscription.asaasId });

@@ -33,6 +33,22 @@ No **Google Cloud Console** (console.cloud.google.com), com a conta do e-mail qu
 - **WhatsApp**: a régua e as notificações usam a Z-API; envio a cliente exige **opt-in** (consentimento).
 - **Precedência das chaves:** Console (o que você colar) → variável de ambiente. Dá para migrar para env depois sem mudar código.
 
-## 4) Limites e bom senso
+## 4) Faturamento — ASAAS (assinaturas, boleto/Pix, faturas)
+> O AI OS usa o **ASAAS** para cobrar os clientes pelas ofertas (faturas de implantação + assinatura mensal, em boleto/Pix). Substitui o Stripe. Quando um contrato é fechado, o kickoff cria automaticamente o cliente + as cobranças no ASAAS.
+
+1. No painel **ASAAS** (comece em **Sandbox** para testar; depois troque para Produção): menu **Integrações → API** → copie a **Chave de API (API Key)**.
+2. **Webhook:** ASAAS → **Integrações → Notificações/Webhooks** → adicione a URL:
+   `https://ai-os-sable.vercel.app/api/asaas/webhook`
+   - Em **Token de autenticação**, invente um valor secreto (ex.: uma senha longa aleatória) — você vai usar **o mesmo** no Console.
+   - Eventos: pagamentos (recebido/confirmado) e vencidos (`PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED`, `PAYMENT_OVERDUE`).
+3. No Console → Integrações → **ASAAS**, preencha:
+   - **API Key** → a do passo 1
+   - **Token do webhook** → o mesmo valor que você pôs no ASAAS (passo 2)
+   - **Ambiente** → escreva `sandbox` (para testes) ou `produção` (para valer)
+4. Salvar → **Testar conexão** (consulta sua conta no ASAAS — verde = chave válida no ambiente escolhido).
+
+> Dica: valide primeiro em **sandbox** (cria cobranças de teste), e só depois troque a **API Key** para a de produção e o **Ambiente** para `produção`.
+
+## 5) Limites e bom senso
 - Gmail: ~**500 envios/dia** e melhor para **1-a-1** (ativação). Para volume/campanha, use Resend/MailerLite.
 - Sem credencial, **nada quebra**: os envios ficam em **modo manual** (conteúdo pronto para copiar) e o app segue funcionando.

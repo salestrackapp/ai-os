@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { anthropicConfigured } from "@/lib/agents/runner";
-import { hasBilling } from "@/lib/billing/stripe";
+import { asaasConfigured } from "@/lib/asaas";
 import { googleConfigured } from "@/lib/google";
 import { apolloConfigured } from "@/lib/apollo";
 import { slackConfigured } from "@/lib/slack";
@@ -47,7 +47,7 @@ export default async function OperacoesPage() {
   const hasPrices = (prices ?? []).length > 0;
 
   const integrations = [
-    { k: "Anthropic (agentes)", on: anthropicConfigured() }, { k: "Stripe (cobrança)", on: hasBilling() },
+    { k: "Anthropic (agentes)", on: anthropicConfigured() }, { k: "ASAAS (cobrança)", on: (await asaasConfigured()) },
     { k: "Google (Gmail/Calendar)", on: (await googleConfigured()) }, { k: "Apollo (prospecção)", on: apolloConfigured() },
     { k: "Slack (alertas)", on: slackConfigured() }, { k: "Cron (jobs)", on: !!process.env.CRON_SECRET },
     { k: "Preços de modelo (FinOps)", on: hasPrices }, { k: "Cotação USD/BRL", on: !!rate },

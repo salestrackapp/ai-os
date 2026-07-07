@@ -1,21 +1,31 @@
 import "server-only";
+import { getProviderConfig } from "@/lib/settings/secrets";
 
 /**
  * Adapter ASAAS (https://docs.asaas.com) — clientes, cobranças (boleto/Pix) e assinaturas.
- * Base: produção https://api.asaas.com/v3 · sandbox https://api-sandbox.asaas.com/v3 (ASAAS_ENV=sandbox).
- * Auth: header `access_token: $ASAAS_API_KEY`.
- * Webhook: /api/asaas/webhook validado pelo header `asaas-access-token` (= ASAAS_WEBHOOK_TOKEN).
- * Modo degradado: sem ASAAS_API_KEY, o billing cai no fluxo manual.
+ * Config vem do Console (integration_secrets provider 'asaas') → env: api_key, webhook_token, env(sandbox|produção).
+ * Base: produção https://api.asaas.com/v3 · sandbox https://api-sandbox.asaas.com/v3.
+ * Auth: header `access_token`. Webhook: /api/asaas/webhook (header asaas-access-token = webhook_token).
+ * Modo degradado: sem chave, o billing cai no fluxo manual.
  */
-const KEY = process.env.ASAAS_API_KEY;
-const BASE = (process.env.ASAAS_ENV === "sandbox" ? "https://api-sandbox.asaas.com" : "https://api.asaas.com") + "/v3";
+async function resolveAsaas(): Promise<{ key: string; base: string }> {
+  const c = await getProviderConfig("asaas");
+  const key = c.api_key ?? "";
+  const sandbox = (c.env ?? "").toLowerCase().startsWith("sand");
+  const base = (sandbox ? "https://api-sandbox.asaas.com" : "https://api.asaas.com") + "/v3";
+  return { key, base };
+}
 
-export function asaasConfigured() { return !!KEY; }
+/** ASAAS configurado? (Console ou env). */
+export async function asaasConfigured(): Promise<boolean> {
+  return !!(await resolveAsaas()).key;
+}
 
 async function asaas(path: string, init?: { method?: string; body?: unknown }) {
-  const res = await fetch(`${BASE}${path}`, {
+  const { key, base } = await resolveAsaas();
+  const res = await fetch(`${base}${path}`, {
     method: init?.method ?? "GET",
-    headers: { access_token: KEY!, "Content-Type": "application/json", "User-Agent": "AI-OS-Salestrack" },
+    headers: { access_token: key, "Content-Type": "application/json", "User-Agent": "AI-OS-Salestrack" },
     body: init?.body ? JSON.stringify(init.body) : undefined,
   });
   const json = await res.json().catch(() => ({}));

@@ -4,7 +4,8 @@ import { auditService } from "@/lib/audit";
 
 const ENV_MAP: Record<string, string> = {
   anthropic: "ANTHROPIC_API_KEY", apollo: "APOLLO_API_KEY", google: "GOOGLE_OAUTH_REFRESH_TOKEN",
-  readai: "READAI_WEBHOOK_TOKEN", mailerlite: "MAILERLITE_API_KEY", zapi: "ZAPI_TOKEN", slack: "SLACK_BOT_TOKEN", stripe: "STRIPE_SECRET_KEY",
+  readai: "READAI_WEBHOOK_TOKEN", mailerlite: "MAILERLITE_API_KEY", zapi: "ZAPI_TOKEN", slack: "SLACK_BOT_TOKEN",
+  stripe: "STRIPE_SECRET_KEY", asaas: "ASAAS_API_KEY",
 };
 
 /** Status por provedor (NUNCA retorna o segredo ao chamador). */
@@ -43,6 +44,11 @@ export const PROVIDER_FIELDS: Record<string, { key: string; label: string; env: 
     { key: "token", label: "Token da instância", env: "ZAPI_TOKEN", secret: true },
     { key: "client_token", label: "Client-Token (opcional · Conta › Segurança)", env: "ZAPI_CLIENT_TOKEN", secret: true },
     { key: "admin_numbers", label: "Números admin (notificação, vírgula)", env: "ADMIN_WHATSAPP_NUMBERS", secret: false },
+  ],
+  asaas: [
+    { key: "api_key", label: "API Key (ASAAS → Integrações)", env: "ASAAS_API_KEY", secret: true },
+    { key: "webhook_token", label: "Token do webhook (você inventa; use o mesmo no painel ASAAS)", env: "ASAAS_WEBHOOK_TOKEN", secret: true },
+    { key: "env", label: "Ambiente: sandbox ou produção", env: "ASAAS_ENV", secret: false },
   ],
 };
 
@@ -136,6 +142,14 @@ export async function testConnection(provider: string): Promise<{ ok: boolean; s
         // OK = instância conectada. A Z-API devolve error:"You are already connected." (informativo) no sucesso,
         // então NÃO tratamos `error` como falha quando connected/smartphoneConnected são true.
         ok = r.ok && (d?.connected === true || d?.smartphoneConnected === true);
+      } else if (provider === "asaas") {
+        // Valida a API Key: consulta o próprio /myAccount no ambiente escolhido (sandbox ou produção).
+        const sandbox = (cfg.env ?? "").toLowerCase().startsWith("sand");
+        const base = (sandbox ? "https://api-sandbox.asaas.com" : "https://api.asaas.com") + "/v3";
+        const r = await fetch(`${base}/myAccount`, { headers: { access_token: cfg.api_key ?? "", "User-Agent": "AI-OS-Salestrack" } });
+        const d = await r.json().catch(() => ({}));
+        diag.http = r.status; diag.ambiente = sandbox ? "sandbox" : "producao"; diag.err = d?.errors?.[0]?.description ?? null;
+        ok = r.ok;
       } else { ok = true; diag.note = "presença da chave = configurado"; }
     } catch (e) { ok = false; diag.exception = (e as Error).message; }
   }

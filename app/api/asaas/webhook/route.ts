@@ -4,15 +4,17 @@ import { auditService } from "@/lib/audit";
 import { notifyAdmin } from "@/lib/whatsapp";
 import { emailAdmin } from "@/lib/email";
 import { brl } from "@/lib/types";
+import { getProviderConfig } from "@/lib/settings/secrets";
 
 /**
  * Webhook ASAAS — configurar no painel ASAAS apontando para esta rota,
- * com token de autenticação = ASAAS_WEBHOOK_TOKEN (header asaas-access-token).
+ * com token de autenticação (header asaas-access-token) = Console asaas.webhook_token → env ASAAS_WEBHOOK_TOKEN.
  * Eventos tratados: PAYMENT_RECEIVED/CONFIRMED (paga), PAYMENT_OVERDUE (atraso → alerta).
  */
 export async function POST(req: NextRequest) {
   const token = req.headers.get("asaas-access-token");
-  if (!process.env.ASAAS_WEBHOOK_TOKEN || token !== process.env.ASAAS_WEBHOOK_TOKEN) {
+  const expected = (await getProviderConfig("asaas")).webhook_token || process.env.ASAAS_WEBHOOK_TOKEN;
+  if (!expected || token !== expected) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const body = await req.json().catch(() => ({}));

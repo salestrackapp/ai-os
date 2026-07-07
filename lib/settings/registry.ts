@@ -49,7 +49,7 @@ export const SECRET_PROVIDERS: { provider: string; label: string; degrada: strin
   { provider: "mailerlite", label: "MailerLite", degrada: "Nurture em modo manual." },
   { provider: "zapi", label: "Z-API (WhatsApp)", degrada: "Canal WhatsApp inativo." },
   { provider: "slack", label: "Slack", degrada: "Alertas críticos só no admin." },
-  { provider: "stripe", label: "Stripe", degrada: "Faturamento em modo manual." },
+  { provider: "asaas", label: "ASAAS (assinaturas, boleto/Pix, faturas)", degrada: "Faturamento em modo manual." },
 ];
 
 export function findSetting(key: string): SettingDef | undefined { return SETTINGS.find((s) => s.key === key); }
