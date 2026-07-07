@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { syncGmailInbox } from "@/lib/relacionamento/sync-email";
+import { reconcileWhatsAppInbound } from "@/lib/relacionamento/sync-whatsapp";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -13,5 +14,6 @@ export async function GET(req: NextRequest) {
   if (auth !== `Bearer ${secret}` && key !== secret) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const email = await syncGmailInbox(40);
-  return NextResponse.json({ ok: true, email });
+  const whatsapp = await reconcileWhatsAppInbound(80);
+  return NextResponse.json({ ok: true, email, whatsapp });
 }

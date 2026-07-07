@@ -14,6 +14,13 @@ export async function syncInboxAction() {
   revalidatePath("/admin/relacionamento");
 }
 
+/** Reconcilia o WhatsApp recebido (wa_messages → inbox de equipe) — auto-cura conteúdo perdido. */
+export async function reconcileWhatsAppAction() {
+  const { reconcileWhatsAppInbound } = await import("@/lib/relacionamento/sync-whatsapp");
+  await reconcileWhatsAppInbound();
+  revalidatePath("/admin/relacionamento");
+}
+
 /** Registra automaticamente o webhook de recebimento do WhatsApp na Z-API (torna o WA real-time). */
 export async function ativarRecebimentoWhatsAppAction(): Promise<{ ok: boolean; url?: string; erro?: string }> {
   const m = await currentMembership();

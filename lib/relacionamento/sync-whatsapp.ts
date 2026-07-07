@@ -69,13 +69,36 @@ export async function ingestWhatsAppInbound(msg: WaInbound): Promise<{ conversaI
     const { data: exists } = await sb.from("rel_mensagens").select("id").eq("external_ref", msg.providerRef).maybeSingle();
     if (exists) return { conversaId, nova: false };
   }
-  await sb.from("rel_mensagens").insert({
+  const { error: insErr } = await sb.from("rel_mensagens").insert({
     conversa_id: conversaId, direction: "in", corpo,
     media: msg.media ?? null, status_entrega: "recebido",
     external_ref: msg.providerRef ?? null, provider_ref: msg.providerRef ?? null, created_at: at,
   });
-  await auditService("rel.wa_inbound", "rel_conversas", conversaId, { phone, nova }, orgId);
+  if (insErr) { console.error("[whatsapp] falha ao gravar rel_mensagens:", insErr.message, { conversaId, providerRef: msg.providerRef }); }
+  await auditService("rel.wa_inbound", "rel_conversas", conversaId, { phone, nova, erro: insErr?.message ?? null }, orgId);
   return { conversaId, nova };
+}
+
+/**
+ * Reconcilia wa_messages (captura crua confiável do webhook) → inbox de equipe (rel_conversas/rel_mensagens).
+ * Auto-cura mensagens que o insert ao vivo tenha perdido. Idempotente. Chamado por cron/RealtimeInbox.
+ */
+export async function reconcileWhatsAppInbound(max = 50): Promise<{ trazidas: number }> {
+  const sb = createServiceClient();
+  const { data: was } = await sb.from("wa_messages")
+    .select("from_phone, body, provider_ref, created_at, direction")
+    .eq("direction", "in").not("body", "is", null)
+    .order("created_at", { ascending: false }).limit(max);
+  let trazidas = 0;
+  for (const w of was ?? []) {
+    if (w.provider_ref) {
+      const { data: existe } = await sb.from("rel_mensagens").select("id").eq("external_ref", w.provider_ref).maybeSingle();
+      if (existe) continue;
+    }
+    const r = await ingestWhatsAppInbound({ phone: String(w.from_phone ?? ""), text: w.body, providerRef: w.provider_ref, at: w.created_at });
+    if (r.conversaId) trazidas++;
+  }
+  return { trazidas };
 }
 
 /** Estado do consentimento + janela de 24h de uma conversa de WhatsApp (informativo no E3; regra de envio é E4). */

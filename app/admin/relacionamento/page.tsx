@@ -52,7 +52,7 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
 
   return (
     <ContentArea>
-      <RealtimeInbox syncEmail={(isEmail || isTodos) && gOn} seconds={25} />
+      <RealtimeInbox syncEmail={(isEmail || isTodos) && gOn} syncWa={(canalParam === "whatsapp" || isTodos) && wOn} seconds={25} />
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Relacionamento" }]} className="mb-4" />
       <PageHeader eyebrow="Relacionamento" title="Caixa da equipe"
         subtitle="Leia e organize o e-mail e o WhatsApp da Salestrack, atribua a um membro e vincule ao cliente — as mensagens aparecem na timeline dele."
