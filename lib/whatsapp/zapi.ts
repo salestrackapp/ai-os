@@ -11,7 +11,7 @@ export class ZapiCanal implements CanalWhatsApp {
     const phone = onlyDigits(to);
     const cfg = await getProviderConfig("zapi");
     const instance = cfg.instance_id, token = cfg.token, clientToken = cfg.client_token;
-    const configured = !!(instance && token && clientToken);
+    const configured = !!(instance && token); // Client-Token é opcional (só se a conta exigir)
     const sb = createServiceClient();
     // registra a intenção de envio (out)
     const { data: row } = await sb.from("wa_messages").insert({
@@ -31,7 +31,7 @@ export class ZapiCanal implements CanalWhatsApp {
       const url = `https://api.z-api.io/instances/${instance}/token/${token}/send-text`;
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Client-Token": clientToken! },
+        headers: { "Content-Type": "application/json", ...(clientToken ? { "Client-Token": clientToken } : {}) },
         body: JSON.stringify({ phone, message: body }),
       });
       const json = await res.json().catch(() => ({}));

@@ -4,11 +4,12 @@
 
 ## 1) WhatsApp (Z-API)
 1. Entre em **app.z-api.io**, crie uma **instância** e conecte seu número lendo o **QR Code** no WhatsApp (Aparelhos conectados).
-2. Na instância, copie: **Instance ID**, **Token** e, em Segurança, o **Client-Token**.
+2. Na página da instância, copie **ID da instância** e **Token da instância** (é só isso que precisa para enviar).
 3. No Console → Integrações → **Z-API (WhatsApp)**, preencha:
-   - Instance ID · Token · Client-Token
-   - **Números admin** (que recebem as notificações), separados por vírgula, com DDI: `5531999999999,5531988888888`
-4. Salvar → **Testar conexão** (fica verde quando a instância está conectada).
+   - **ID da instância** · **Token da instância**
+   - **Client-Token** — **opcional**. Só preencha se você tiver ativado a *segurança de conta* na Z-API (fica em **Conta → Segurança → Token de segurança da conta**, não na página da instância). Se não usa, **deixe vazio**.
+   - **Números admin** (que recebem as notificações internas), separados por vírgula, com DDI: `5531999999999,5531988888888`
+4. Salvar → **Testar conexão**. Fica verde quando as credenciais autenticam (ID + Token corretos). Se aparecer "inválida", confira o ID e o Token; o Client-Token não é obrigatório.
 
 ## 2) Gmail (enviar + ler pela sua caixa)
 No **Google Cloud Console** (console.cloud.google.com), com a conta do e-mail que vai enviar:

@@ -39,9 +39,9 @@ export const PROVIDER_FIELDS: Record<string, { key: string; label: string; env: 
     { key: "sender_email", label: "E-mail remetente (Gmail)", env: "GOOGLE_SENDER_EMAIL", secret: false },
   ],
   zapi: [
-    { key: "instance_id", label: "Instance ID", env: "ZAPI_INSTANCE_ID", secret: false },
-    { key: "token", label: "Token", env: "ZAPI_TOKEN", secret: true },
-    { key: "client_token", label: "Client-Token", env: "ZAPI_CLIENT_TOKEN", secret: true },
+    { key: "instance_id", label: "ID da instância", env: "ZAPI_INSTANCE_ID", secret: false },
+    { key: "token", label: "Token da instância", env: "ZAPI_TOKEN", secret: true },
+    { key: "client_token", label: "Client-Token (opcional · Conta › Segurança)", env: "ZAPI_CLIENT_TOKEN", secret: true },
     { key: "admin_numbers", label: "Números admin (notificação, vírgula)", env: "ADMIN_WHATSAPP_NUMBERS", secret: false },
   ],
 };
@@ -120,9 +120,13 @@ export async function testConnection(provider: string): Promise<{ ok: boolean; s
         const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: cfg.client_id ?? "", client_secret: cfg.client_secret ?? "", refresh_token: cfg.refresh_token ?? "", grant_type: "refresh_token" }) });
         const d = await r.json().catch(() => ({})); ok = !!d?.access_token;
       } else if (provider === "zapi") {
-        // Status da instância Z-API (conectada?).
-        const r = await fetch(`https://api.z-api.io/instances/${cfg.instance_id}/token/${cfg.token}/status`, { headers: { "Client-Token": cfg.client_token ?? "" } });
-        const d = await r.json().catch(() => ({})); ok = r.ok && (d?.connected === true || d?.smartphoneConnected === true || d?.value === true);
+        // Status da instância Z-API. Client-Token só entra se existir (senão a Z-API rejeita header vazio).
+        const headers: Record<string, string> = {};
+        if (cfg.client_token) headers["Client-Token"] = cfg.client_token;
+        const r = await fetch(`https://api.z-api.io/instances/${cfg.instance_id}/token/${cfg.token}/status`, { headers });
+        const d = await r.json().catch(() => ({}));
+        // Credenciais válidas = HTTP 200 sem `error`. (aparelho pode estar desconectado — isso é outra coisa)
+        ok = r.ok && !d?.error;
       } else ok = true; // demais: presença da chave = configurado
     } catch { ok = false; }
   }
