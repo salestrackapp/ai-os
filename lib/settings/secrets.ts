@@ -133,8 +133,9 @@ export async function testConnection(provider: string): Promise<{ ok: boolean; s
         diag.smartphoneConnected = d?.smartphoneConnected ?? null;
         diag.hasClientToken = !!cfg.client_token;
         diag.keys = Object.keys(d ?? {}).slice(0, 8);
-        // Credenciais válidas = HTTP 200 sem `error`. (aparelho pode estar desconectado — isso é outra coisa)
-        ok = r.ok && !d?.error;
+        // OK = instância conectada. A Z-API devolve error:"You are already connected." (informativo) no sucesso,
+        // então NÃO tratamos `error` como falha quando connected/smartphoneConnected são true.
+        ok = r.ok && (d?.connected === true || d?.smartphoneConnected === true);
       } else { ok = true; diag.note = "presença da chave = configurado"; }
     } catch (e) { ok = false; diag.exception = (e as Error).message; }
   }
