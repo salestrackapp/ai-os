@@ -1,9 +1,34 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
-import { googleConfigured, listGmailInbox, type GmailMsg } from "@/lib/google";
+import { googleConfigured, listGmailInbox, getGmailBody, type GmailMsg } from "@/lib/google";
 import { requireTeam } from "./inbox";
 import { avaliarRegras } from "./responder";
+
+/**
+ * Carrega o CORPO COMPLETO dos e-mails de uma conversa ao abri-la (E1 guardava só o snippet).
+ * Busca no Gmail por id (external_ref), atualiza rel_mensagens.corpo e marca media.full=true (cache). Graceful.
+ */
+export async function carregarCorposEmail(conversaId: string): Promise<{ carregados: number }> {
+  await requireTeam();
+  if (!(await googleConfigured())) return { carregados: 0 };
+  const sb = createServiceClient();
+  const { data: conv } = await sb.from("rel_conversas").select("channel").eq("id", conversaId).maybeSingle();
+  if (conv?.channel !== "email") return { carregados: 0 };
+
+  // mensagens recebidas/sincronizadas (têm o id do Gmail em external_ref) ainda sem corpo completo
+  const { data: msgs } = await sb.from("rel_mensagens").select("id, external_ref, media").eq("conversa_id", conversaId).not("external_ref", "is", null);
+  let carregados = 0;
+  for (const mm of msgs ?? []) {
+    const media = (mm.media as { full?: boolean; html?: string | null } | null) ?? null;
+    if (media?.full) continue;                         // já em cache
+    const body = await getGmailBody(String(mm.external_ref));
+    if (!body || !body.text) continue;
+    await sb.from("rel_mensagens").update({ corpo: body.text, media: { ...(media ?? {}), full: true, html: body.html } }).eq("id", mm.id);
+    carregados++;
+  }
+  return { carregados };
+}
 
 /** Aplica regras (rótulo/atribuição) a uma conversa NOVA — rascunham o roteamento, nunca enviam. */
 async function aplicarRegras(sb: ReturnType<typeof createServiceClient>, orgId: string, convId: string, dados: { contato_email: string | null; assunto: string | null; assigned_to: string | null }) {

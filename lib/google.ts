@@ -110,6 +110,38 @@ export async function listGmailInbox(opts: { query?: string; max?: number } = {}
   } catch { return []; }
 }
 
+const b64url = (data: string) => Buffer.from(data.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+
+/** HTML → texto legível (fallback quando o e-mail só tem parte HTML). Simples e seguro (sem render de HTML). */
+export function htmlParaTexto(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<\/(p|div|tr|li|h[1-6])>/gi, "\n").replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
+    .replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** Corpo COMPLETO de uma mensagem do Gmail (format=full) — texto legível + html cru. Null se degradado. */
+export async function getGmailBody(id: string): Promise<{ text: string; html: string | null } | null> {
+  const token = await accessToken();
+  if (!token) return null;
+  try {
+    const msg = await (await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`, { headers: { authorization: `Bearer ${token}` } })).json();
+    let text = "", html = "";
+    const walk = (part: { mimeType?: string; body?: { data?: string }; parts?: unknown[] } | undefined) => {
+      if (!part) return;
+      const mt = part.mimeType ?? "";
+      if (mt === "text/plain" && part.body?.data) text += b64url(part.body.data);
+      else if (mt === "text/html" && part.body?.data) html += b64url(part.body.data);
+      for (const p of (part.parts ?? [])) walk(p as { mimeType?: string; body?: { data?: string }; parts?: unknown[] });
+    };
+    walk(msg.payload);
+    const finalText = (text.trim() || (html ? htmlParaTexto(html) : "") || String(msg.snippet ?? "")).trim();
+    return { text: finalText, html: html || null };
+  } catch { return null; }
+}
+
 /** Lista eventos futuros/recentes do Calendar que casem com um texto. Vazio se degradado. */
 export async function listCalendar(query: string, max = 10): Promise<GEvent[]> {
   const token = await accessToken();

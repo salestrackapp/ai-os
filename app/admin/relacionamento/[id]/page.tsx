@@ -13,12 +13,14 @@ import { ResponderWhatsApp } from "@/components/relacionamento/ResponderWhatsApp
 import { CHANNEL_LABELS, STATUS_LABELS, type ConvStatus } from "@/lib/relacionamento/types";
 import { getSendPolicy, listTemplates } from "@/lib/relacionamento/responder";
 import { listTemplatesWhatsApp } from "@/lib/relacionamento/responder-wa";
+import { carregarCorposEmail } from "@/lib/relacionamento/sync-email";
 import { whatsappContext } from "@/lib/relacionamento/sync-whatsapp";
 import { classifyIntent } from "@/lib/prospecting/agents";
 import { anthropicConfigured } from "@/lib/agents/runner";
 import { assignToMeAction, unassignAction, statusAction, snoozeAction, linkClienteAction, aprovarEnvioFormAction, descartarEnvioAction } from "../actions";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const STATUSES: ConvStatus[] = ["aberta", "aguardando", "respondida", "arquivada"];
 const fmt = (s: string | null) => s ? new Date(s).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
@@ -28,6 +30,9 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
   const sb = await createClient();
   const { data: c } = await sb.from("rel_conversas").select("*").eq("id", id).maybeSingle();
   if (!c) notFound();
+
+  // Ao abrir um e-mail, puxa o corpo completo do Gmail (E1 guardava só o snippet) — cache após a 1ª vez.
+  if (c.channel === "email") await carregarCorposEmail(id);
 
   const [{ data: allMsgs }, { data: orgs }, m, policy, templates] = await Promise.all([
     sb.from("rel_mensagens").select("*").eq("conversa_id", id).order("created_at", { ascending: true }),
@@ -76,14 +81,14 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
           <div className="border-b border-hairline px-4 py-2.5"><p className="ds-eyebrow !mb-0">Conversa · {msgs.length} mensagem(ns)</p></div>
           <div className="space-y-3 p-4">
             {msgs.length === 0 ? <p className="ds-small">Sem mensagens sincronizadas nesta conversa.</p> : msgs.map((mm) => (
-              <div key={mm.id} className={`max-w-[85%] rounded-ds-card border p-3 ${mm.direction === "out" ? "ml-auto border-[color:var(--brand-light)] bg-[var(--tile)]" : "border-hairline bg-[var(--bg-2)]"}`}>
+              <div key={mm.id} className={`rounded-ds-card border p-3 ${isEmail ? "w-full" : "max-w-[85%]"} ${mm.direction === "out" ? `${isEmail ? "" : "ml-auto"} border-[color:var(--brand-light)] bg-[var(--tile)]` : "border-hairline bg-[var(--bg-2)]"}`}>
                 <div className="mb-1 flex items-center gap-2">
                   <Badge tone={mm.direction === "out" ? "brand" : "neutral"}>{mm.direction === "out" ? "enviado" : "recebido"}</Badge>
                   {mm.status_entrega === "falha" && <Badge tone="warn">falhou</Badge>}
                   {mm.media?.tipo && <Badge tone="neutral">📎 {mm.media.tipo}</Badge>}
                   <span className="font-jbmono text-[10px] text-[color:var(--fg-4)]">{fmt(mm.created_at)}</span>
                 </div>
-                <p className="whitespace-pre-wrap font-montserrat text-[13px] leading-relaxed text-[color:var(--fg-1)]">{mm.corpo || "(sem prévia)"}</p>
+                <p className="whitespace-pre-wrap break-words font-montserrat text-[13px] leading-relaxed text-[color:var(--fg-1)]">{mm.corpo || "(sem prévia)"}</p>
                 {mm.media?.url && <a href={mm.media.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block font-montserrat text-[12px] text-[color:var(--brand)] hover:underline">abrir {mm.media.tipo}</a>}
               </div>
             ))}
