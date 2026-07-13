@@ -270,6 +270,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
         actions={<div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-2 rounded-ds-input border border-hairline px-3 py-2"><span className="h-2 w-2 rounded-full" style={{ background: healthColor }} /><span className="font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{healthLabel}</span></span>
           <Link href={`/admin/clientes/${id}/caixa`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="chat" size={15} /> Caixa de e-mail</Link>
+          <Link href={`/admin/clientes/${id}/diagnostico`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="fileText" size={15} /> Diagnóstico</Link>
           <Link href="/admin/propostas" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="pen" size={15} /> Nova proposta</Link>
         </div>} />
 
