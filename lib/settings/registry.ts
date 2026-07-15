@@ -47,6 +47,8 @@ export const SETTINGS: SettingDef[] = [
     default: "—\nEquipe Salestrack AI", help: "Anexada ao final das respostas enviadas pela caixa." },
   { key: "rel_sla_horas", label: "SLA de resposta do Relacionamento (horas)", category: "governanca", type: "number", default: 24,
     help: "Conversas abertas/aguardando sem movimento além disso ficam marcadas como atrasadas." },
+  { key: "journey_sla_horas", label: "SLA por etapa da Jornada (horas)", category: "governanca", type: "number", default: 48,
+    help: "Etapa em andamento parada além disso acende como atrasada no painel de jornadas." },
 ];
 
 export const SECRET_PROVIDERS: { provider: string; label: string; degrada: string }[] = [
