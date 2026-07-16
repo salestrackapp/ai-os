@@ -90,6 +90,31 @@ export async function enviarDiagWhatsAppAction(orgId: string, token: string): Pr
   return res.ok ? { ok: true } : { ok: false, erro: res.error ?? "Falha no envio." };
 }
 
+/** Compartilha um link qualquer (entregável/diagnóstico) por WhatsApp ao contato principal. */
+export async function compartilharWhatsAppAction(orgId: string, url: string, titulo: string): Promise<{ ok: boolean; erro?: string }> {
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) return { ok: false, erro: "Apenas a equipe." };
+  if (!(await zapiConfigured())) return { ok: false, erro: "WhatsApp (Z-API) não conectado." };
+  const sb = createServiceClient();
+  const { data: c } = await sb.from("contacts").select("phone").eq("org_id", orgId).not("phone", "is", null).order("created_at").limit(1).maybeSingle();
+  if (!c?.phone) return { ok: false, erro: "Contato sem telefone." };
+  const res = await canalWhatsApp().enviar(c.phone, `Olá! Segue ${titulo}: ${url}`, { org_id: orgId });
+  return res.ok ? { ok: true } : { ok: false, erro: res.error ?? "Falha no envio." };
+}
+
+/** Compartilha um link qualquer por e-mail ao contato principal. */
+export async function compartilharEmailAction(orgId: string, url: string, titulo: string): Promise<{ ok: boolean; erro?: string }> {
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) return { ok: false, erro: "Apenas a equipe." };
+  if (!(await googleConfigured())) return { ok: false, erro: "Gmail não conectado." };
+  const sb = createServiceClient();
+  const { data: c } = await sb.from("contacts").select("email").eq("org_id", orgId).not("email", "is", null).order("created_at").limit(1).maybeSingle();
+  if (!c?.email) return { ok: false, erro: "Contato sem e-mail." };
+  const html = `<p>Olá!</p><p>Segue ${titulo}:</p><p><a href="${url}">${url}</a></p><p>Abraço,<br>Equipe Salestrack AI</p>`;
+  const res = await sendGmail(c.email, `${titulo} — Salestrack AI`, html, { html: true });
+  return res.sent ? { ok: true } : { ok: false, erro: "Falha no envio pelo Gmail." };
+}
+
 /** Envia o link do diagnóstico por e-mail ao contato principal. */
 export async function enviarDiagEmailAction(orgId: string, token: string): Promise<{ ok: boolean; erro?: string }> {
   const m = await currentMembership();

@@ -1,5 +1,6 @@
 /** Ficha 360 do cliente — visão única (consome os domínios existentes; aditivo). id = org do cliente. */
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { currentMembership } from "@/lib/auth";
@@ -7,6 +8,10 @@ import { emailMap } from "@/lib/supabase/admin";
 import { ContentArea, PageHeader, Card, Kpi, CopilotCard, EmptyState, Badge, StatusDot } from "@/components/ds";
 import { Breadcrumbs, Tabs } from "@/components/ds/nav";
 import { CycleSteps } from "@/components/ds/CycleSteps";
+import { JornadaHeader } from "@/components/journey/JornadaHeader";
+import { Compartilhar } from "@/components/journey/Compartilhar";
+import { getJourney } from "@/lib/journey";
+import { getOrCreateIntakeForOrg } from "@/lib/diagnostico";
 import { ProgramTimeline } from "@/components/timeline/ProgramTimeline";
 import { AI_METHOD } from "@/lib/ds/method";
 import { HelpButton } from "@/components/guidance/HelpButton";
@@ -48,7 +53,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
     sb.from("tenant_health").select("churn_risk, engagement_score, mrr, margin_usd").eq("org_id", id).eq("date", today).maybeSingle(),
     sb.from("sessions").select("*").eq("org_id", id).order("scheduled_at", { ascending: false }).limit(12),
     sb.from("deliverables").select("*").eq("org_id", id).is("deleted_at", null).order("due_date", { nullsFirst: false }),
-    sb.from("studio_deliverables").select("id, title, kind, status").eq("org_id", id).order("created_at", { ascending: false }).limit(10),
+    sb.from("studio_deliverables").select("id, title, kind, status, public_token").eq("org_id", id).is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
     sb.from("roi_reports").select("periodo, metricas, publicado").eq("org_id", id).order("periodo", { ascending: false }).limit(1).maybeSingle(),
     sb.from("proposals").select("id, title, status, items, monthly_platform_fee, created_at").eq("org_id", id).order("created_at", { ascending: false }),
     sb.from("contracts").select("id, status, created_at").eq("org_id", id).order("created_at", { ascending: false }),
@@ -66,6 +71,21 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
   const past = sessList.filter((s) => s.scheduled_at && s.scheduled_at < nowISO());
   const metricas = (roi?.metricas ?? {}) as { playbook?: { concluidas_mes?: number; usuarios_ativos?: number }; sessoes?: { realizadas_mes?: number }; programa?: { progresso_pct?: number } };
   const emails = await emailMap((members ?? []).map((x) => x.user_id));
+
+  // Jornada (U3) + diagnóstico + financeiro + link público base
+  const hdrs = await headers();
+  const baseUrl = `${hdrs.get("x-forwarded-proto") ?? "https"}://${hdrs.get("host")}`;
+  const journey = await getJourney(id);
+  const intake = await getOrCreateIntakeForOrg(id, `Diagnóstico Digital · ${org.name}`);
+  const [{ data: invoices }, { data: subscription }, { data: stMembers }] = await Promise.all([
+    sb.from("invoices").select("amount, status, due_date, kind, installment_n, installments_total").eq("org_id", id).order("due_date"),
+    sb.from("subscriptions").select("plan_key, monthly_amount, status").eq("org_id", id).order("started_at", { ascending: false }).limit(1).maybeSingle(),
+    sb.from("memberships").select("user_id, email").eq("role", "salestrack_admin"),
+  ]);
+  const stMemberName = new Map((stMembers ?? []).map((x) => [x.user_id, x.email as string]));
+  const ownerNome = journey?.row.owner ? (stMemberName.get(journey.row.owner) ?? null) : null;
+  const isMine = !!journey?.row.owner && journey.row.owner === m.userId;
+  const diagUrl = `${baseUrl}/diagnostico/${intake.token}`;
 
   // Saúde da conta
   const churn = health?.churn_risk ?? (project?.status === "ativo" ? "baixo" : project ? "medio" : null);
@@ -176,13 +196,68 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
 
   const entregaveis = (
     <div className="space-y-6">
-      <Card>
-        <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow">Entregáveis do programa</p>{project && <Link href={`/admin/programas/${project.id}/editar`} className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Editar →</Link>}</div>
-        {delsList.length === 0 ? <p className="ds-small">Nenhum entregável registrado.</p> : <ul className="space-y-2">{delsList.map((d) => <li key={d.id} className="flex items-center justify-between gap-2 rounded-[10px] border border-hairline bg-[var(--bg-2)] px-4 py-2.5"><span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{d.title}</span><Badge tone={d.status.startsWith("entregue") ? "success" : d.status === "bloqueado" ? "danger" : "neutral"}>{DELIVERABLE_STATUS_LABELS[d.status] ?? d.status}</Badge></li>)}</ul>}
+      <Card className="!p-0 overflow-hidden">
+        <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
+          <p className="ds-eyebrow !mb-0">Entregas compartilháveis</p>
+          <Link href={`/admin/entregaveis?cliente=${id}`} className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">+ Entregável nesta etapa</Link>
+        </div>
+        <ul className="divide-y divide-[color:var(--border)]">
+          {/* Diagnóstico como primeira entrega */}
+          <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <div className="min-w-0"><p className="font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">Diagnóstico Digital</p><p className="ds-small !mt-0">Formulário do cliente</p></div>
+            <div className="flex items-center gap-3">
+              <Badge tone={intake.status === "enviado" ? "success" : "warn"}>{intake.status === "enviado" ? "preenchido" : "aguardando"}</Badge>
+              <Compartilhar orgId={id} url={diagUrl} titulo="o diagnóstico digital" compact />
+            </div>
+          </li>
+          {/* Entregáveis do Estúdio (link público /entregavel/[token]) */}
+          {(studioDels ?? []).map((d) => (
+            <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0"><p className="truncate font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">{d.title}</p><p className="ds-small !mt-0">{d.kind}</p></div>
+              <div className="flex items-center gap-3">
+                <Badge tone={["aprovado", "entregue", "publicado"].includes(d.status) ? "success" : "neutral"}>{d.status}</Badge>
+                {d.public_token
+                  ? <Compartilhar orgId={id} url={`${baseUrl}/entregavel/${d.public_token}`} titulo={`a entrega “${d.title}”`} compact />
+                  : <span className="font-montserrat text-[11px] text-[color:var(--fg-4)]">aprovar no Estúdio p/ compartilhar</span>}
+              </div>
+            </li>
+          ))}
+          {(studioDels ?? []).length === 0 && <li className="px-4 py-4 ds-small">Nenhum entregável no Estúdio ainda. Gere um (ROI, proposta, dossiê…) e compartilhe por link.</li>}
+        </ul>
       </Card>
-      <Card>
-        <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow">Documentos executivos (Estúdio)</p><Link href="/admin/entregaveis" className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Novo →</Link></div>
-        {(studioDels ?? []).length === 0 ? <p className="ds-small">Nenhum documento gerado. Gere ROI, proposta ou dossiê no Estúdio.</p> : <ul className="space-y-2">{(studioDels ?? []).map((d) => <li key={d.id} className="flex items-center justify-between gap-2"><span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{d.title}</span><Badge tone={["aprovado", "entregue"].includes(d.status) ? "success" : "neutral"}>{d.status}</Badge></li>)}</ul>}
+
+      {delsList.length > 0 && (
+        <Card>
+          <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow">Marcos do programa</p>{project && <Link href={`/admin/programas/${project.id}/editar`} className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Editar →</Link>}</div>
+          <ul className="space-y-2">{delsList.map((d) => <li key={d.id} className="flex items-center justify-between gap-2 rounded-[10px] border border-hairline bg-[var(--bg-2)] px-4 py-2.5"><span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{d.title}</span><Badge tone={d.status.startsWith("entregue") ? "success" : d.status === "bloqueado" ? "danger" : "neutral"}>{DELIVERABLE_STATUS_LABELS[d.status] ?? d.status}</Badge></li>)}</ul>
+        </Card>
+      )}
+    </div>
+  );
+
+  const financeiro = (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <Kpi value={subscription ? brl(Number(subscription.monthly_amount) || 0) : "—"} label={subscription ? `Manutenção · ${subscription.status}` : "Sem assinatura"} />
+        <Kpi value={brl((invoices ?? []).filter((i) => i.status !== "paga").reduce((a, i) => a + (Number(i.amount) || 0), 0))} label="Em aberto" />
+        <Kpi value={String((invoices ?? []).length)} label="Faturas" />
+      </div>
+      <Card className="!p-0 overflow-hidden">
+        <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5"><p className="ds-eyebrow !mb-0">Faturas</p><Link href="/admin/financeiro" className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Financeiro completo →</Link></div>
+        {(invoices ?? []).length === 0 ? <p className="px-4 py-4 ds-small">Nenhuma fatura.</p> : (
+          <div className="overflow-x-auto"><table className="w-full border-collapse">
+            <thead><tr className="border-b border-hairline">{["Tipo", "Parcela", "Vencimento", "Status", "Valor"].map((h) => <th key={h} className="px-4 py-2.5 text-left font-jbmono text-[11px] uppercase tracking-[.08em] text-[color:var(--fg-3)]">{h}</th>)}</tr></thead>
+            <tbody>{(invoices ?? []).map((i, idx) => (
+              <tr key={idx} className="border-b border-hairline last:border-0">
+                <td className="px-4 py-2.5 font-montserrat text-[13px] text-[color:var(--fg-1)]">{i.kind === "manutencao" ? "Manutenção" : "Implantação"}</td>
+                <td className="px-4 py-2.5 font-jbmono text-[12px] text-[color:var(--fg-3)]">{i.installment_n ? `${i.installment_n}/${i.installments_total ?? "—"}` : "—"}</td>
+                <td className="px-4 py-2.5 font-jbmono text-[12px] text-[color:var(--fg-2)]">{fmtDate(i.due_date)}</td>
+                <td className="px-4 py-2.5"><Badge tone={i.status === "paga" ? "success" : i.status === "atrasada" ? "danger" : "warn"}>{i.status}</Badge></td>
+                <td className="px-4 py-2.5 text-right font-jbmono text-[12px] text-[color:var(--fg-1)]">{brl(Number(i.amount) || 0)}</td>
+              </tr>
+            ))}</tbody>
+          </table></div>
+        )}
       </Card>
     </div>
   );
@@ -271,16 +346,21 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
           <span className="inline-flex items-center gap-2 rounded-ds-input border border-hairline px-3 py-2"><span className="h-2 w-2 rounded-full" style={{ background: healthColor }} /><span className="font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{healthLabel}</span></span>
           <Link href={`/admin/clientes/${id}/caixa`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="chat" size={15} /> Caixa de e-mail</Link>
           <Link href={`/admin/clientes/${id}/diagnostico`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="fileText" size={15} /> Diagnóstico</Link>
+          <Compartilhar orgId={id} url={diagUrl} titulo="o diagnóstico digital" compact />
           <Link href="/admin/propostas" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="pen" size={15} /> Nova proposta</Link>
         </div>} />
 
+      {/* Cabeçalho da jornada (U3) */}
+      {journey && <JornadaHeader row={journey.row} states={journey.states} projectId={journey.row.projectId} ownerNome={ownerNome} isMine={isMine} />}
+
       <Tabs defaultTab="resumo" tabs={[
         { id: "resumo", label: "Resumo", content: resumo },
+        { id: "entregaveis", label: "Entregas", content: entregaveis },
+        { id: "relacionamento", label: "Relacionamento", content: relacionamento },
+        { id: "financeiro", label: "Financeiro", content: financeiro },
         { id: "programa", label: "Programa", content: programa },
         { id: "comercial", label: "Comercial", content: comercial },
-        { id: "relacionamento", label: "Relacionamento", content: relacionamento },
         { id: "sessoes", label: "Sessões", content: sessoes },
-        { id: "entregaveis", label: "Entregáveis", content: entregaveis },
         { id: "resultados", label: "Resultados", content: resultados },
         { id: "equipe", label: "Equipe", content: equipe },
         { id: "timeline", label: "Timeline", content: timeline },
