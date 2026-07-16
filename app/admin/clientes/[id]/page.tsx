@@ -11,6 +11,7 @@ import { CycleSteps } from "@/components/ds/CycleSteps";
 import { JornadaHeader } from "@/components/journey/JornadaHeader";
 import { Compartilhar } from "@/components/journey/Compartilhar";
 import { getJourney } from "@/lib/journey";
+import { tipoDef } from "@/lib/estudio/catalogo";
 import { getOrCreateIntakeForOrg } from "@/lib/diagnostico";
 import { ProgramTimeline } from "@/components/timeline/ProgramTimeline";
 import { AI_METHOD } from "@/lib/ds/method";
@@ -199,7 +200,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
       <Card className="!p-0 overflow-hidden">
         <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
           <p className="ds-eyebrow !mb-0">Entregas compartilháveis</p>
-          <Link href={`/admin/entregaveis?cliente=${id}`} className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">+ Entregável nesta etapa</Link>
+          <Link href={`/admin/entregaveis/novo?cliente=${id}&etapa=${journey?.row.etapaAtual ?? 3}`} className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">+ Entregável nesta etapa</Link>
         </div>
         <ul className="divide-y divide-[color:var(--border)]">
           {/* Diagnóstico como primeira entrega */}
@@ -213,7 +214,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
           {/* Entregáveis do Estúdio (link público /entregavel/[token]) */}
           {(studioDels ?? []).map((d) => (
             <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0"><p className="truncate font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">{d.title}</p><p className="ds-small !mt-0">{d.kind}</p></div>
+              <div className="min-w-0"><p className="truncate font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">{d.title}</p><p className="ds-small !mt-0">{tipoDef(d.kind).label}</p></div>
               <div className="flex items-center gap-3">
                 <Badge tone={["aprovado", "entregue", "publicado"].includes(d.status) ? "success" : "neutral"}>{d.status}</Badge>
                 {d.public_token

@@ -54,7 +54,10 @@ export default async function EntregaveisPage() {
       <PageHeader eyebrow="Estúdio · Produção" title="Estúdio de Entregáveis"
         subtitle="A IA rascunha · você aprova · o sistema publica — na identidade Salestrack AI."
         comoUsar={<HelpButton routeKey="/admin/entregaveis" />}
-        actions={<Link href="/admin/entregaveis/identidade" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-semibold text-[color:var(--fg-1)] hover:bg-[var(--bg-2)]"><Icon name="gem" size={15} /> Identidade do programa</Link>} />
+        actions={<div className="flex items-center gap-2">
+          <Link href="/admin/entregaveis/identidade" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-semibold text-[color:var(--fg-1)] hover:bg-[var(--bg-2)]"><Icon name="gem" size={15} /> Identidade do programa</Link>
+          <Link href="/admin/entregaveis/novo" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="fileText" size={15} /> Novo entregável</Link>
+        </div>} />
 
       {/* Catálogo por família — tudo que dá para produzir */}
       <section className="mb-6">
