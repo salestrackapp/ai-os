@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { currentMembership } from "@/lib/auth";
 import { auditService } from "@/lib/audit";
 import { getNumber } from "@/lib/settings/resolve";
-import { JOURNEY_STAGES, currentStage, journeyProgress, nextAction, isStageOverdue, seedStates, type StageState, type StageStatus } from "./stages";
+import { JOURNEY_STAGES, currentStage, nextStage, journeyProgress, nextAction, isStageOverdue, seedStates, type StageState, type StageStatus } from "./stages";
 
 export * from "./stages";
 
@@ -113,6 +113,21 @@ export async function setNextAction(projectId: string, etapa: number, texto: str
   const { orgId } = await requireTeam();
   await createServiceClient().from("journey_step_state").update({ next_action: texto, updated_at: new Date().toISOString() }).eq("project_id", projectId).eq("etapa", etapa);
   await auditService("journey.next_action", "projects", projectId, { etapa }, orgId);
+}
+
+/** Conclui a etapa atual e ativa a próxima (avançar inline no board). Idempotente na última. */
+export async function avancarJornada(projectId: string): Promise<{ de: number; para: number | null }> {
+  const { orgId } = await requireTeam();
+  const sb = createServiceClient();
+  await ensureJourneyStates(projectId);
+  const { data: states } = await sb.from("journey_step_state").select("etapa, status, next_action, owner, done_at, updated_at").eq("project_id", projectId).order("etapa");
+  const cur = currentStage((states ?? []) as StageState[]);
+  const prox = nextStage(cur);
+  const nowISO = new Date().toISOString();
+  await sb.from("journey_step_state").update({ status: "concluido", done_at: nowISO, updated_at: nowISO }).eq("project_id", projectId).eq("etapa", cur);
+  if (prox) await sb.from("journey_step_state").update({ status: "fazendo", updated_at: nowISO }).eq("project_id", projectId).eq("etapa", prox);
+  await auditService("journey.avancar", "projects", projectId, { de: cur, para: prox }, orgId);
+  return { de: cur, para: prox };
 }
 
 export async function setStageOwner(projectId: string, etapa: number, owner: string | null): Promise<void> {

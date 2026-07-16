@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ds";
 
 describe("IA das áreas do admin", () => {
   it("tem as áreas na ordem correta (incl. Relacionamento, série E)", () => {
-    expect(AREAS.map((a) => a.key)).toEqual(["hoje", "clientes", "comercial", "relacionamento", "estudio", "metodo", "plataforma"]);
+    expect(AREAS.map((a) => a.key)).toEqual(["jornadas", "hoje", "clientes", "comercial", "relacionamento", "estudio", "metodo", "plataforma"]);
   });
   it("resolve a área ativa de rotas legadas re-hospedadas", () => {
     expect(areaForPath("/admin/crm")).toBe("comercial");

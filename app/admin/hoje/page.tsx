@@ -66,7 +66,8 @@ export default async function Hoje() {
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Hoje" }]} className="mb-4" />
       <PageHeader eyebrow="Hoje" title={`Bom dia — ${top3.length ? `${top3.length} ${top3.length === 1 ? "ação" : "ações"} para agora` : "tudo sob controle"}`}
         subtitle="O cockpit do sistema: o que precisa de você, os alertas, o funil em movimento e a semana pela frente."
-        comoUsar={<HelpButton routeKey="/admin/hoje" />} />
+        comoUsar={<HelpButton routeKey="/admin/hoje" />}
+        actions={<Link href="/admin/jornadas" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="rocket" size={15} /> Painel de jornadas</Link>} />
 
       {guide && <FirstSteps surface="admin" guide={guide} />}
 

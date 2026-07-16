@@ -4,7 +4,7 @@
  * suas subseções apontando para as rotas existentes (não movemos os arquivos — escolha segura).
  * `areaForPath` resolve a área ativa; `isV5Path` distingue páginas v5 (claras) das legadas (frame escuro).
  */
-export type AreaKey = "hoje" | "clientes" | "comercial" | "relacionamento" | "estudio" | "metodo" | "plataforma";
+export type AreaKey = "jornadas" | "hoje" | "clientes" | "comercial" | "relacionamento" | "estudio" | "metodo" | "plataforma";
 
 export type SubSection = { label: string; href: string; icon: string; desc: string };
 
@@ -15,6 +15,15 @@ export type Area = {
 };
 
 export const AREAS: Area[] = [
+  {
+    key: "jornadas", label: "Jornadas", href: "/admin/jornadas", icon: "rocket",
+    tagline: "As transformações em andamento — do cadastro à entrega.",
+    primary: { label: "Nova jornada", href: "/admin/jornadas/nova" },
+    sections: [
+      { label: "Painel de jornadas", href: "/admin/jornadas", icon: "rocket", desc: "Todas em paralelo, por etapa, com a próxima ação." },
+      { label: "Nova jornada", href: "/admin/jornadas/nova", icon: "userPlus", desc: "Cadastro em 1 tela — já sai o link do diagnóstico." },
+    ],
+  },
   {
     key: "hoje", label: "Hoje", href: "/admin/hoje", icon: "dashboard",
     tagline: "O que precisa da sua atenção agora.", sections: [],
@@ -88,7 +97,7 @@ export const AREAS: Area[] = [
 ];
 
 /** Rotas cujo índice é v5 (renderiza claro). Todo o resto (legado) usa frame escuro. */
-const V5_EXTRA = ["/admin/sinais", "/admin/ofertas", "/admin/programas", "/admin/programas/novo", "/admin/entregaveis", "/admin/comunicacao", "/admin/ajuda"];   // telas migradas para o design v5
+const V5_EXTRA = ["/admin/jornadas", "/admin/jornadas/nova", "/admin/sinais", "/admin/ofertas", "/admin/programas", "/admin/programas/novo", "/admin/entregaveis", "/admin/comunicacao", "/admin/ajuda"];   // telas migradas para o design v5
 const V5_INDEX = new Set<string>(AREAS.map((a) => a.href).concat("/admin", "/admin/hoje", ...V5_EXTRA));
 export function isV5Path(path: string): boolean {
   if (V5_INDEX.has(path)) return true;
@@ -109,6 +118,7 @@ const ROUTE_AREA: [string, AreaKey][] = [
   ["/admin/entregaveis", "estudio"], ["/admin/estudio-area", "estudio"], ["/admin/comunicacao", "estudio"],
   ["/admin/estudio", "metodo"], ["/admin/biblioteca-templates", "metodo"],
   ["/admin/financeiro", "plataforma"], ["/admin/monetizacao", "plataforma"], ["/admin/operacoes", "plataforma"], ["/admin/configuracoes", "plataforma"], ["/admin/design-system", "plataforma"],
+  ["/admin/jornadas", "jornadas"],
   ["/admin/hoje", "hoje"], ["/admin/ajuda", "hoje"], ["/admin/clientes", "clientes"], ["/admin/comercial", "comercial"], ["/admin/metodo", "metodo"], ["/admin/plataforma", "plataforma"],
 ];
 export function areaForPath(path: string): AreaKey {
