@@ -13,6 +13,7 @@ import { Compartilhar } from "@/components/journey/Compartilhar";
 import { getJourney } from "@/lib/journey";
 import { tipoDef } from "@/lib/estudio/catalogo";
 import { getOrCreateIntakeForOrg } from "@/lib/diagnostico";
+import { viewPortalAs } from "@/app/admin/programas/actions";
 import { ProgramTimeline } from "@/components/timeline/ProgramTimeline";
 import { AI_METHOD } from "@/lib/ds/method";
 import { HelpButton } from "@/components/guidance/HelpButton";
@@ -348,6 +349,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
           <Link href={`/admin/clientes/${id}/caixa`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="chat" size={15} /> Caixa de e-mail</Link>
           <Link href={`/admin/clientes/${id}/diagnostico`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="fileText" size={15} /> Diagnóstico</Link>
           <Compartilhar orgId={id} url={diagUrl} titulo="o diagnóstico digital" compact />
+          <form action={viewPortalAs.bind(null, id)}><button className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="eye" size={15} /> Ver portal</button></form>
           <Link href="/admin/propostas" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="pen" size={15} /> Nova proposta</Link>
         </div>} />
 
