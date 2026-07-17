@@ -3,6 +3,7 @@
  * Casca do admin (Salestrack AI v2) — AppShell v5 + sidebar das 6 áreas.
  * Páginas v5 (Hoje + índices) renderizam claras; telas legadas abrem no LegacyFrame escuro.
  */
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell, Sidebar, SalestrackLogo } from "@/components/ds";
 import { Icon } from "@/components/ui/icons";
@@ -11,11 +12,11 @@ import { LegacyFrame } from "./LegacyFrame";
 import { TourProvider } from "@/components/tour/TourProvider";
 import { TourLink } from "@/components/tour/TourLink";
 
-// Alvos do tour nos itens de menu (por área).
-const NAV_TOUR: Record<string, string> = { clientes: "nav-clientes", comercial: "nav-comercial", estudio: "nav-estudio" };
+// Alvos do tour nos itens de menu (por destino).
+const NAV_TOUR: Record<string, string> = { jornadas: "nav-clientes", comercial: "nav-comercial", estudio: "nav-estudio" };
 
 function Brand() {
-  return <span data-tour="brand"><SalestrackLogo subtitle="AI OS · admin" /></span>;
+  return <Link href="/admin/hoje" data-tour="brand" className="ds-focus block"><SalestrackLogo subtitle="AI OS · admin" /></Link>;
 }
 
 function UserMenu({ email }: { email: string }) {
@@ -45,12 +46,16 @@ function UserMenu({ email }: { email: string }) {
 export function AdminChrome({ email, tourSeen, children }: { email: string; tourSeen: boolean; children: React.ReactNode }) {
   const path = usePathname();
   const active = areaForPath(path);
-  const groups = [{
-    items: AREAS.map((a) => ({
-      label: a.label, href: a.href, active: a.key === active,
-      icon: <Icon name={a.icon} size={18} />, dataTour: NAV_TOUR[a.key],
-    })),
-  }];
+  const noHoje = path === "/admin/hoje" || path === "/admin";
+  const groups = [
+    { items: [{ label: "Hoje", href: "/admin/hoje", active: noHoje, icon: <Icon name="dashboard" size={18} /> }] },
+    {
+      items: AREAS.map((a) => ({
+        label: a.label, href: a.href, active: !noHoje && a.key === active,
+        icon: <Icon name={a.icon} size={18} />, dataTour: NAV_TOUR[a.key],
+      })),
+    },
+  ];
   const sidebar = <Sidebar groups={groups} brand={<Brand />} footer={<UserMenu email={email} />} />;
   return (
     <AppShell sidebar={sidebar}>

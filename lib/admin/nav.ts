@@ -1,10 +1,10 @@
 /**
- * Arquitetura de informação do admin — 6 áreas (Salestrack AI v2).
- * As telas legadas (M1–M17) são RE-HOSPEDADAS sob as áreas: cada índice de área lista
- * suas subseções apontando para as rotas existentes (não movemos os arquivos — escolha segura).
- * `areaForPath` resolve a área ativa; `isV5Path` distingue páginas v5 (claras) das legadas (frame escuro).
+ * Arquitetura de informação do admin (U5) — 4 destinos por JORNADA (não por função).
+ * As telas legadas são RE-HOSPEDADAS sob os destinos (não movemos arquivos; `isV5Path` intacto).
+ * "Hoje" é o cockpit/landing, acessível pelo topo (logo) e por um atalho — não é um dos 4 destinos.
+ * `areaForPath` resolve o destino ativo; `isV5Path` distingue páginas v5 (claras) das legadas (frame escuro).
  */
-export type AreaKey = "jornadas" | "hoje" | "clientes" | "comercial" | "relacionamento" | "estudio" | "metodo" | "plataforma";
+export type AreaKey = "jornadas" | "comercial" | "estudio" | "config";
 
 export type SubSection = { label: string; href: string; icon: string; desc: string };
 
@@ -22,26 +22,17 @@ export const AREAS: Area[] = [
     sections: [
       { label: "Painel de jornadas", href: "/admin/jornadas", icon: "rocket", desc: "Todas em paralelo, por etapa, com a próxima ação." },
       { label: "Nova jornada", href: "/admin/jornadas/nova", icon: "userPlus", desc: "Cadastro em 1 tela — já sai o link do diagnóstico." },
-    ],
-  },
-  {
-    key: "hoje", label: "Hoje", href: "/admin/hoje", icon: "dashboard",
-    tagline: "O que precisa da sua atenção agora.", sections: [],
-  },
-  {
-    key: "clientes", label: "Clientes", href: "/admin/clientes", icon: "team",
-    tagline: "A entrega e a saúde de cada cliente, em um lugar.",
-    primary: { label: "Novo cliente", href: "/admin/onboarding/novo" },
-    sections: [
+      { label: "Relacionamento", href: "/admin/relacionamento", icon: "chat", desc: "E-mail + WhatsApp da equipe, ligados à timeline." },
       { label: "Programas", href: "/admin/programas", icon: "rocket", desc: "Entrega, fases e ativação por cliente." },
       { label: "Onboarding", href: "/admin/onboarding", icon: "userPlus", desc: "Provisionar e ativar novos clientes." },
       { label: "Consultor", href: "/admin/consultor", icon: "chat", desc: "Conversas do copiloto com o cliente." },
       { label: "ROI / Sucesso", href: "/admin/roi", icon: "trending", desc: "Relatórios de valor e retenção." },
+      { label: "Financeiro do cliente", href: "/admin/financeiro", icon: "wallet", desc: "Faturas e recebíveis das ofertas vendidas." },
     ],
   },
   {
     key: "comercial", label: "Comercial", href: "/admin/comercial", icon: "target",
-    tagline: "Do sinal ao cliente — o funil inteiro.",
+    tagline: "Do sinal ao cliente — captação e fechamento.",
     primary: { label: "Nova proposta", href: "/admin/propostas" },
     sections: [
       { label: "CRM", href: "/admin/crm", icon: "crm", desc: "Pipeline, contas e contatos." },
@@ -49,60 +40,49 @@ export const AREAS: Area[] = [
       { label: "Propostas", href: "/admin/propostas", icon: "pen", desc: "Gerar, enviar e acompanhar." },
       { label: "Contratos", href: "/admin/contratos", icon: "scroll", desc: "Minutas, assinatura e kickoff." },
       { label: "Tarefas", href: "/admin/tarefas", icon: "tasks", desc: "Follow-ups e pendências." },
-      { label: "Catálogo de ofertas", href: "/admin/catalogo", icon: "gem", desc: "O que você vende e entrega — alimenta as propostas (Diagnose, Sprint, engajamento, Mentoria, workshops)." },
-      { label: "Sinais de prospecção", href: "/admin/sinais", icon: "target", desc: "Gatilhos que somam no score — criar, editar, duplicar e excluir." },
+      { label: "Catálogo de ofertas", href: "/admin/catalogo", icon: "gem", desc: "O que você vende e entrega — alimenta as propostas." },
+      { label: "Sinais de prospecção", href: "/admin/sinais", icon: "target", desc: "Gatilhos que somam no score." },
     ],
   },
   {
-    key: "relacionamento", label: "Relacionamento", href: "/admin/relacionamento", icon: "chat",
-    tagline: "A caixa de e-mail e as mensagens de WhatsApp da equipe, em um lugar.",
+    key: "estudio", label: "Estúdio", href: "/admin/entregaveis", icon: "fileText",
+    tagline: "A fábrica de entregáveis — de curso a app.",
+    primary: { label: "Novo entregável", href: "/admin/entregaveis/novo" },
     sections: [
-      { label: "Caixa de entrada", href: "/admin/relacionamento", icon: "chat", desc: "E-mails da Salestrack — ler, atribuir, responder." },
-      { label: "Mensagens", href: "/admin/relacionamento", icon: "chat", desc: "WhatsApp — conversas 2 vias com opt-in." },
-      { label: "Templates & regras", href: "/admin/relacionamento/config", icon: "layers", desc: "Respostas reutilizáveis e roteamento automático." },
-      { label: "Relatórios", href: "/admin/relacionamento/relatorios", icon: "trending", desc: "Volume, SLA, tempo de resposta e carga por membro." },
-    ],
-  },
-  {
-    key: "estudio", label: "Estúdio", href: "/admin/estudio-area", icon: "fileText",
-    tagline: "A fábrica de entregáveis executivos.",
-    primary: { label: "Novo entregável", href: "/admin/entregaveis" },
-    sections: [
-      { label: "Estúdio de Entregáveis", href: "/admin/entregaveis", icon: "fileText", desc: "Propostas, ROI, dossiês e apresentações." },
-      { label: "Comunicação (régua)", href: "/admin/comunicacao", icon: "sparkles", desc: "A régua que conduz o cliente ao longo do ciclo — consome ativos aprovados." },
-    ],
-  },
-  {
-    key: "metodo", label: "Método", href: "/admin/metodo", icon: "book",
-    tagline: "O AI Operating Method — catálogo, templates e trilhas.",
-    primary: { label: "Estúdio do Método", href: "/admin/estudio" },
-    sections: [
+      { label: "Novo entregável", href: "/admin/entregaveis/novo", icon: "fileText", desc: "Escolha o formato — a IA rascunha." },
+      { label: "Entregáveis", href: "/admin/entregaveis", icon: "fileText", desc: "Catálogo multiformato: curso, vídeo, doc, app…" },
+      { label: "Comunicação (régua)", href: "/admin/comunicacao", icon: "sparkles", desc: "A régua que conduz o cliente — consome ativos aprovados." },
       { label: "Estúdio do Método", href: "/admin/estudio", icon: "book", desc: "Receitas, trilhas e sessões." },
       { label: "Templates", href: "/admin/biblioteca-templates", icon: "layers", desc: "Blueprints multi-vertical." },
-      // "Catálogo" consolidado com "Ofertas" → agora vive em Comercial como "Catálogo de ofertas" (mesma fonte catalog_items).
+      { label: "Identidade", href: "/admin/entregaveis/identidade", icon: "gem", desc: "A identidade visual dos entregáveis." },
     ],
   },
   {
-    key: "plataforma", label: "Plataforma", href: "/admin/plataforma", icon: "settings",
-    tagline: "Configuração, cobrança, operação e governança.",
-    primary: { label: "Configurações", href: "/admin/configuracoes" },
+    key: "config", label: "Configurar", href: "/admin/configuracoes", icon: "settings",
+    tagline: "Integrações, equipe, operação e governança.",
+    primary: { label: "Integrações", href: "/admin/configuracoes/parametros?cat=integracoes" },
     sections: [
-      { label: "Financeiro", href: "/admin/financeiro", icon: "wallet", desc: "Faturas e recebíveis das ofertas vendidas." },
-      // "Monetização" (planos/mensalidade de plataforma) arquivada — modelo atual sem assinatura de plataforma.
+      { label: "Parâmetros & integrações", href: "/admin/configuracoes/parametros", icon: "settings", desc: "Chaves (Gmail, Z-API, ASAAS…), gate de envio, SLA." },
+      { label: "Equipe", href: "/admin/configuracoes/equipe", icon: "team", desc: "Quem opera o AI OS do lado Salestrack." },
+      { label: "Auditoria", href: "/admin/configuracoes/auditoria", icon: "shield", desc: "Registro do que aconteceu." },
       { label: "Operações", href: "/admin/operacoes", icon: "activity", desc: "FinOps interno, saúde e alertas." },
-      { label: "Configurações", href: "/admin/configuracoes", icon: "settings", desc: "Parâmetros, integrações e segurança." },
       { label: "Design system", href: "/admin/design-system", icon: "sparkles", desc: "Linguagem visual Salestrack AI v2." },
     ],
   },
 ];
 
 /** Rotas cujo índice é v5 (renderiza claro). Todo o resto (legado) usa frame escuro. */
-const V5_EXTRA = ["/admin/jornadas", "/admin/jornadas/nova", "/admin/sinais", "/admin/ofertas", "/admin/programas", "/admin/programas/novo", "/admin/entregaveis", "/admin/comunicacao", "/admin/ajuda"];   // telas migradas para o design v5
+const V5_EXTRA = [
+  "/admin/jornadas", "/admin/jornadas/nova", "/admin/clientes", "/admin/relacionamento", "/admin/relacionamento/config", "/admin/relacionamento/relatorios",
+  "/admin/sinais", "/admin/ofertas", "/admin/catalogo", "/admin/programas", "/admin/programas/novo", "/admin/entregaveis", "/admin/entregaveis/novo", "/admin/comunicacao", "/admin/ajuda",
+  // ex-índices de área (absorvidos) que ainda existem — mantêm o frame claro:
+  "/admin/estudio-area", "/admin/metodo", "/admin/plataforma",
+];
 const V5_INDEX = new Set<string>(AREAS.map((a) => a.href).concat("/admin", "/admin/hoje", ...V5_EXTRA));
 export function isV5Path(path: string): boolean {
   if (V5_INDEX.has(path)) return true;
   if (/^\/admin\/programas\/[^/]+\/editar$/.test(path)) return true;   // editor v5 do programa
-  if (/^\/admin\/clientes\/[^/]+$/.test(path)) return true;            // ficha 360 do cliente
+  if (/^\/admin\/clientes\/[^/]+$/.test(path)) return true;            // ficha-jornada do cliente
   if (/^\/admin\/clientes\/[^/]+\/caixa$/.test(path)) return true;     // caixa de e-mail do cliente (Gmail)
   if (/^\/admin\/clientes\/[^/]+\/diagnostico$/.test(path)) return true; // formulário de diagnóstico do cliente
   if (/^\/admin\/relacionamento\/[^/]+$/.test(path)) return true;      // leitura da thread (Relacionamento E1)
@@ -110,22 +90,22 @@ export function isV5Path(path: string): boolean {
   return false;
 }
 
-/** Mapa rota-legada → área (para destacar a área ativa e o breadcrumb). */
+/** Mapa rota-legada → destino (para destacar o destino ativo e o breadcrumb). */
 const ROUTE_AREA: [string, AreaKey][] = [
-  ["/admin/programas", "clientes"], ["/admin/onboarding", "clientes"], ["/admin/consultor", "clientes"], ["/admin/roi", "clientes"],
-  ["/admin/crm", "comercial"], ["/admin/prospeccao", "comercial"], ["/admin/propostas", "comercial"], ["/admin/contratos", "comercial"], ["/admin/tarefas", "comercial"], ["/admin/sinais", "comercial"], ["/admin/ofertas", "comercial"], ["/admin/catalogo", "comercial"],
-  ["/admin/relacionamento", "relacionamento"],
-  ["/admin/entregaveis", "estudio"], ["/admin/estudio-area", "estudio"], ["/admin/comunicacao", "estudio"],
-  ["/admin/estudio", "metodo"], ["/admin/biblioteca-templates", "metodo"],
-  ["/admin/financeiro", "plataforma"], ["/admin/monetizacao", "plataforma"], ["/admin/operacoes", "plataforma"], ["/admin/configuracoes", "plataforma"], ["/admin/design-system", "plataforma"],
-  ["/admin/jornadas", "jornadas"],
-  ["/admin/hoje", "hoje"], ["/admin/ajuda", "hoje"], ["/admin/clientes", "clientes"], ["/admin/comercial", "comercial"], ["/admin/metodo", "metodo"], ["/admin/plataforma", "plataforma"],
+  // Jornadas absorve clientes/relacionamento/programas/onboarding/consultor/roi/financeiro
+  ["/admin/jornadas", "jornadas"], ["/admin/clientes", "jornadas"], ["/admin/relacionamento", "jornadas"],
+  ["/admin/programas", "jornadas"], ["/admin/onboarding", "jornadas"], ["/admin/consultor", "jornadas"], ["/admin/roi", "jornadas"], ["/admin/financeiro", "jornadas"],
+  // Comercial
+  ["/admin/comercial", "comercial"], ["/admin/crm", "comercial"], ["/admin/prospeccao", "comercial"], ["/admin/propostas", "comercial"], ["/admin/contratos", "comercial"], ["/admin/tarefas", "comercial"], ["/admin/sinais", "comercial"], ["/admin/ofertas", "comercial"], ["/admin/catalogo", "comercial"],
+  // Estúdio (entregáveis + método + comunicação)
+  ["/admin/entregaveis", "estudio"], ["/admin/estudio-area", "estudio"], ["/admin/comunicacao", "estudio"], ["/admin/estudio", "estudio"], ["/admin/biblioteca-templates", "estudio"], ["/admin/metodo", "estudio"],
+  // Configurar
+  ["/admin/configuracoes", "config"], ["/admin/operacoes", "config"], ["/admin/design-system", "config"], ["/admin/plataforma", "config"], ["/admin/monetizacao", "config"],
 ];
 export function areaForPath(path: string): AreaKey {
-  if (path === "/admin") return "hoje";
-  // caminho mais específico primeiro
+  if (path === "/admin" || path === "/admin/hoje" || path === "/admin/ajuda") return "jornadas";
   const hit = ROUTE_AREA.filter(([r]) => path === r || path.startsWith(r + "/")).sort((a, b) => b[0].length - a[0].length)[0];
-  return hit?.[1] ?? "hoje";
+  return hit?.[1] ?? "jornadas";
 }
 
 /** Rótulo curto da subseção legada atual (breadcrumb). */

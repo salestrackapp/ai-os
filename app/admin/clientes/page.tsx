@@ -1,3 +1,4 @@
-import { AreaIndex } from "@/components/admin/AreaIndex";
+import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
-export default function Page() { return <AreaIndex area="clientes" />; }
+// Clientes foi absorvido por Jornadas (o painel de jornadas é a lista de clientes).
+export default function Page() { redirect("/admin/jornadas"); }

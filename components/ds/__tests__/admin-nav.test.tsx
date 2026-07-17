@@ -5,18 +5,21 @@ import { areaForPath, isV5Path, AREAS } from "@/lib/admin/nav";
 import { PageHeader } from "@/components/ds";
 
 describe("IA das áreas do admin", () => {
-  it("tem as áreas na ordem correta (incl. Relacionamento, série E)", () => {
-    expect(AREAS.map((a) => a.key)).toEqual(["jornadas", "hoje", "clientes", "comercial", "relacionamento", "estudio", "metodo", "plataforma"]);
+  it("tem 4 destinos por jornada (U5)", () => {
+    expect(AREAS.map((a) => a.key)).toEqual(["jornadas", "comercial", "estudio", "config"]);
   });
-  it("resolve a área ativa de rotas legadas re-hospedadas", () => {
+  it("resolve o destino ativo das rotas legadas re-hospedadas", () => {
     expect(areaForPath("/admin/crm")).toBe("comercial");
     expect(areaForPath("/admin/crm/123")).toBe("comercial");
-    expect(areaForPath("/admin/programas")).toBe("clientes");
+    expect(areaForPath("/admin/programas")).toBe("jornadas");
+    expect(areaForPath("/admin/clientes")).toBe("jornadas");
+    expect(areaForPath("/admin/relacionamento")).toBe("jornadas");
     expect(areaForPath("/admin/entregaveis")).toBe("estudio");
-    expect(areaForPath("/admin/relacionamento")).toBe("relacionamento");
-    expect(areaForPath("/admin/estudio")).toBe("metodo");        // Estúdio do Método → Método
-    expect(areaForPath("/admin/configuracoes")).toBe("plataforma");
-    expect(areaForPath("/admin")).toBe("hoje");
+    expect(areaForPath("/admin/estudio")).toBe("estudio");        // Estúdio do Método → Estúdio
+    expect(areaForPath("/admin/comunicacao")).toBe("estudio");
+    expect(areaForPath("/admin/configuracoes")).toBe("config");
+    expect(areaForPath("/admin/financeiro")).toBe("jornadas");    // Financeiro do cliente → Jornadas
+    expect(areaForPath("/admin")).toBe("jornadas");               // landing → Hoje (destaque Jornadas)
   });
   it("distingue páginas v5 (claras) de legadas (frame escuro)", () => {
     expect(isV5Path("/admin/hoje")).toBe(true);

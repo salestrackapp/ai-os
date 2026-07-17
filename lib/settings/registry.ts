@@ -40,7 +40,7 @@ export const SETTINGS: SettingDef[] = [
   // Governança
   { key: "sales_offer", label: "Posicionamento comercial (oferta)", category: "governanca", type: "json", help: "Ancora os agentes de prospecção. Ver Fase 5.5." },
   // Relacionamento (E2) — gate de envio da caixa de equipe
-  { key: "rel_send_policy", label: "Política de envio da caixa", category: "governanca", type: "string", default: "aprovar_sempre",
+  { key: "rel_send_policy", label: "Política de envio da caixa", category: "governanca", type: "string", default: "direto_autorizado",
     options: [{ value: "aprovar_sempre", label: "Aprovar sempre (rascunho vai à fila de aprovação)" }, { value: "direto_autorizado", label: "Direto para membro autorizado (sensíveis ainda pedem aprovação)" }],
     help: "IA rascunha → humano aprova → sistema envia. Default: aprovar sempre." },
   { key: "rel_email_signature", label: "Assinatura de e-mail da equipe", category: "governanca", type: "string",
