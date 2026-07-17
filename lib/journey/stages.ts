@@ -25,6 +25,11 @@ export const JOURNEY_STAGES: StageDef[] = [
 ];
 
 export const STAGE_LABELS: Record<number, string> = Object.fromEntries(JOURNEY_STAGES.map((s) => [s.etapa, s.titulo]));
+
+/** Rótulos das etapas na linguagem do cliente (portal). */
+export const STAGE_CLIENTE: Record<number, string> = {
+  1: "Contratado", 2: "Diagnóstico", 3: "Construção", 4: "No ar", 5: "Acompanhamento", 6: "Recorrência",
+};
 export const STAGE_BY_ETAPA = (etapa: number): StageDef | undefined => JOURNEY_STAGES.find((s) => s.etapa === etapa);
 export const TOTAL_STAGES = JOURNEY_STAGES.length; // 6
 

@@ -1,9 +1,9 @@
 /**
- * Navegação do portal do cliente — kit "ai-operating-system" (Salestrack AI v2).
- * 5 áreas: Jornada principal · Visão geral · Copilotos · Automações · Configurações.
- * Re-hospeda as telas existentes do portal sob as áreas (aditivo; não movemos arquivos).
+ * Navegação do portal do cliente (U4) — 3 destinos: Minha Jornada · Entregas · Conta.
+ * As telas avançadas (Playbook, Sessões, ROI, Stack, Governança, Consultor…) continuam existindo e
+ * são reveladas conforme a etapa na home "Minha Jornada" (revelação progressiva); aqui só a espinha.
  */
-export type PortalAreaKey = "jornada" | "visao" | "copilotos" | "automacoes" | "config";
+export type PortalAreaKey = "jornada" | "entregas" | "conta";
 
 export type PortalSub = { label: string; href: string; icon: string; desc: string };
 export type PortalArea = {
@@ -13,36 +13,11 @@ export type PortalArea = {
 };
 
 export const PORTAL_AREAS: PortalArea[] = [
-  { key: "jornada", label: "Jornada principal", href: "/portal", icon: "rocket", tagline: "Seu método de IA, etapa por etapa.", sections: [] },
+  { key: "jornada", label: "Minha Jornada", href: "/portal", icon: "rocket", tagline: "Onde você está e o próximo passo.", sections: [] },
+  { key: "entregas", label: "Entregas", href: "/portal/entregaveis", icon: "fileText", tagline: "Cursos, vídeos, documentos — no seu ritmo.", sections: [] },
   {
-    key: "visao", label: "Visão geral", href: "/portal/visao", icon: "chart",
-    tagline: "Os resultados e materiais do seu programa.",
-    sections: [
-      { label: "ROI do programa", href: "/portal/roi", icon: "trending", desc: "O valor gerado, mês a mês." },
-      { label: "Entregáveis", href: "/portal/entregaveis", icon: "fileText", desc: "Documentos executivos prontos para baixar." },
-      { label: "Biblioteca", href: "/portal/biblioteca", icon: "folder", desc: "Materiais e recursos do programa." },
-    ],
-  },
-  {
-    key: "copilotos", label: "Copilotos", href: "/portal/copilotos", icon: "sparkles",
-    tagline: "Seus assistentes de IA, sempre à mão.",
-    primary: { label: "Falar com o Consultor", href: "/portal/consultor" },
-    sections: [
-      { label: "Consultor do Programa", href: "/portal/consultor", icon: "chat", desc: "Resume o andamento e guia pelas Receitas." },
-      { label: "Playbook", href: "/portal/playbook", icon: "graduation", desc: "Receitas práticas para aplicar com IA." },
-    ],
-  },
-  {
-    key: "automacoes", label: "Automações", href: "/portal/automacoes", icon: "activity",
-    tagline: "O que roda por você — stack e sessões ao vivo.",
-    sections: [
-      { label: "Meu Stack de IA", href: "/portal/stack", icon: "layers", desc: "As ferramentas e agentes do seu programa." },
-      { label: "Sessões ao Vivo", href: "/portal/sessoes", icon: "calendar", desc: "Mentorias e workshops agendados." },
-    ],
-  },
-  {
-    key: "config", label: "Configurações", href: "/portal/config", icon: "settings",
-    tagline: "Equipe, financeiro e governança.",
+    key: "conta", label: "Conta", href: "/portal/conta", icon: "settings",
+    tagline: "Dados, financeiro e acesso.",
     sections: [
       { label: "Equipe", href: "/portal/equipe", icon: "team", desc: "Quem acessa o portal do seu lado." },
       { label: "Financeiro", href: "/portal/financeiro", icon: "creditCard", desc: "Faturas e situação da assinatura." },
@@ -57,11 +32,11 @@ export function isV5PortalPath(path: string): boolean {
 }
 
 const ROUTE_AREA: [string, PortalAreaKey][] = [
-  ["/portal/roi", "visao"], ["/portal/entregaveis", "visao"], ["/portal/biblioteca", "visao"],
-  ["/portal/consultor", "copilotos"], ["/portal/playbook", "copilotos"],
-  ["/portal/stack", "automacoes"], ["/portal/sessoes", "automacoes"],
-  ["/portal/equipe", "config"], ["/portal/financeiro", "config"], ["/portal/governanca", "config"],
-  ["/portal/visao", "visao"], ["/portal/copilotos", "copilotos"], ["/portal/automacoes", "automacoes"], ["/portal/config", "config"],
+  ["/portal/entregaveis", "entregas"],
+  ["/portal/conta", "conta"], ["/portal/equipe", "conta"], ["/portal/financeiro", "conta"], ["/portal/governanca", "conta"], ["/portal/config", "conta"],
+  // avançadas reveladas na home ficam sob "jornada" para o destaque do menu
+  ["/portal/roi", "jornada"], ["/portal/biblioteca", "jornada"], ["/portal/consultor", "jornada"], ["/portal/playbook", "jornada"],
+  ["/portal/stack", "jornada"], ["/portal/sessoes", "jornada"], ["/portal/visao", "jornada"], ["/portal/copilotos", "jornada"], ["/portal/automacoes", "jornada"],
 ];
 export function areaForPortalPath(path: string): PortalAreaKey {
   if (path === "/portal") return "jornada";

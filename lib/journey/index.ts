@@ -96,6 +96,26 @@ export async function listJourneys(filtro: "todas" | "minhas" = "todas"): Promis
   return filtro === "minhas" ? rows.filter((r) => r.owner === userId) : rows;
 }
 
+/** Jornada da org do cliente logado (portal) — escopo pela sessão, sem requireTeam. */
+export async function getJourneyForClient(): Promise<{ row: JourneyRow; states: StageState[] } | null> {
+  const { resolvePortalOrg } = await import("@/lib/portal");
+  const ctx = await resolvePortalOrg();
+  if (!ctx?.orgId) return null;
+  const orgId = ctx.orgId;
+  const sb = createServiceClient();
+  const { data: proj } = await sb.from("projects").select("id, org_id, status").eq("org_id", orgId).is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!proj) return null;
+  await ensureJourneyStates(proj.id);
+  const [{ data: org }, { data: contato }, { data: states }] = await Promise.all([
+    sb.from("organizations").select("name").eq("id", orgId).maybeSingle(),
+    sb.from("contacts").select("name, phone").eq("org_id", orgId).order("created_at").limit(1).maybeSingle(),
+    sb.from("journey_step_state").select("etapa, status, next_action, owner, done_at, updated_at").eq("project_id", proj.id).order("etapa"),
+  ]);
+  const slaHoras = await getJourneySlaHoras();
+  const st = (states ?? []) as StageState[];
+  return { row: montaRow(proj, org?.name ?? "—", contato ?? null, st, slaHoras, new Date().toISOString()), states: st };
+}
+
 /** Muda o status de uma etapa (upsert) e marca updated_at/done_at. Auditado. */
 export async function advanceStage(projectId: string, etapa: number, status: StageStatus): Promise<void> {
   const { orgId } = await requireTeam();

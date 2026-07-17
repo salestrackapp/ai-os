@@ -1,38 +1,80 @@
-import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ds";
+/** Portal · Minhas entregas (U4) — multiformato, consumo passo a passo (reusa /entregavel/[token] do UC). */
+import Link from "next/link";
+import { createServiceClient } from "@/lib/supabase/service";
+import { ContentArea, PageHeader, Card, Badge, EmptyState } from "@/components/ds";
+import { Icon } from "@/components/ui/icons";
 import { resolvePortalOrg } from "@/lib/portal";
-import { KIND_LABELS, STATUS_LABELS, type DeliverableKind } from "@/lib/deliverables/types";
-import { PortalDownloadButton } from "@/components/deliverables/PortalDownloadButton";
+import { tipoDef, familiaLabel, progressoModulos, isPassoAPasso } from "@/lib/estudio/catalogo";
+import { aceitarEntregaAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function PortalEntregaveis() {
-  const m = await resolvePortalOrg();
-  const orgId = m!.orgId!;
-  const supabase = await createClient();
-  // RLS já restringe a org + status aprovado/entregue.
-  const { data: list } = await supabase.from("studio_deliverables")
-    .select("id, title, kind, status, format, delivered_at, created_at")
-    .eq("org_id", orgId).in("status", ["aprovado", "entregue"]).order("created_at", { ascending: false });
+export default async function MinhasEntregas() {
+  const ctx = await resolvePortalOrg();
+  const orgId = ctx?.orgId ?? null;
+  if (!orgId) return <ContentArea><PageHeader eyebrow="Minhas entregas" title="Entregas" /><Card><EmptyState icon={<Icon name="fileText" size={22} />} title="Sem acesso" description="Faça login para ver suas entregas." /></Card></ContentArea>;
+
+  const sb = createServiceClient();
+  const { data: list } = await sb.from("studio_deliverables")
+    .select("id, title, kind, status, public_token, external_url, delivered_at")
+    .eq("org_id", orgId).in("status", ["aprovado", "entregue", "publicado"]).is("deleted_at", null)
+    .order("created_at", { ascending: false });
+  const dels = list ?? [];
+
+  // progresso dos passo-a-passo (módulos totais + concluídos por org)
+  const idsPasso = dels.filter((d) => isPassoAPasso(d.kind)).map((d) => d.id);
+  const totalMod = new Map<string, number>(), feitosMod = new Map<string, number>();
+  if (idsPasso.length) {
+    const [{ data: mods }, { data: prog }] = await Promise.all([
+      sb.from("studio_modules").select("deliverable_id").in("deliverable_id", idsPasso),
+      sb.from("deliverable_progress").select("deliverable_id").in("deliverable_id", idsPasso).eq("subject_type", "org").eq("subject_id", orgId),
+    ]);
+    for (const m of mods ?? []) totalMod.set(m.deliverable_id, (totalMod.get(m.deliverable_id) ?? 0) + 1);
+    for (const p of prog ?? []) feitosMod.set(p.deliverable_id, (feitosMod.get(p.deliverable_id) ?? 0) + 1);
+  }
 
   return (
-    <div>
-      <PageHeader eyebrow="Meu programa" title="Entregáveis" />
-      <p className="text-sm text-muted mb-6">Documentos executivos do seu programa — relatórios de ROI, propostas e materiais, prontos para baixar.</p>
+    <ContentArea>
+      <PageHeader eyebrow="Minhas entregas" title="O que a Salestrack já entregou"
+        subtitle="Cursos, vídeos, documentos e mais — acesse e acompanhe no seu ritmo." />
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        {(list ?? []).map((d) => (
-          <div key={d.id} className="card p-5 flex flex-col justify-between gap-3">
-            <div>
-              <p className="text-[11px] uppercase tracking-[.16em] text-gold mb-1">{KIND_LABELS[d.kind as DeliverableKind] ?? d.kind}</p>
-              <p className="font-serif text-xl font-semibold">{d.title}</p>
-              <p className="text-xs text-muted2 mt-1">{STATUS_LABELS[d.status]} · {String(d.format).toUpperCase()}{d.delivered_at ? ` · ${new Date(d.delivered_at).toLocaleDateString("pt-BR")}` : ""}</p>
-            </div>
-            <div><PortalDownloadButton id={d.id} /></div>
-          </div>
-        ))}
-        {(list ?? []).length === 0 && <div className="card p-6 sm:col-span-2"><p className="text-sm text-muted2">Nenhum documento disponível ainda. Assim que a Salestrack publicar um entregável, ele aparece aqui.</p></div>}
-      </div>
-    </div>
+      {dels.length === 0 ? (
+        <Card><EmptyState icon={<Icon name="fileText" size={22} />} title="Nada por aqui ainda" description="Assim que a Salestrack liberar uma entrega, ela aparece aqui para você acessar." /></Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {dels.map((d) => {
+            const def = tipoDef(d.kind);
+            const passo = isPassoAPasso(d.kind);
+            const pct = passo ? progressoModulos(totalMod.get(d.id) ?? 0, feitosMod.get(d.id) ?? 0) : null;
+            const url = d.public_token ? `/entregavel/${d.public_token}` : d.external_url;
+            return (
+              <Card key={d.id} className="flex flex-col justify-between gap-3">
+                <div>
+                  <div className="mb-1 flex items-center gap-2">
+                    <Badge tone="brand">{def.label}</Badge>
+                    <span className="font-montserrat text-[11px] text-[color:var(--fg-4)]">{familiaLabel(def.familia)}</span>
+                  </div>
+                  <p className="font-montserrat text-[16px] font-semibold text-[color:var(--fg-1)]">{d.title}</p>
+                  {pct !== null && (
+                    <div className="mt-2">
+                      <div className="mb-1 flex justify-between font-montserrat text-[11px] text-[color:var(--fg-3)]"><span>Seu progresso</span><span>{pct}%</span></div>
+                      <div className="h-2 w-full rounded-full bg-[var(--bg-2)]"><div className="h-2 rounded-full bg-[var(--brand)]" style={{ width: `${pct}%` }} /></div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {url
+                    ? <a href={url} target={d.public_token ? "_self" : "_blank"} rel="noopener noreferrer" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="activity" size={14} /> {passo ? (pct && pct > 0 ? "Continuar" : "Começar") : "Acessar"}</a>
+                    : <span className="font-montserrat text-[12px] text-[color:var(--fg-4)]">em preparação</span>}
+                  <form action={aceitarEntregaAction.bind(null, d.id)}>
+                    <button className="ds-focus inline-flex h-10 items-center rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Aprovar entrega</button>
+                  </form>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </ContentArea>
   );
 }

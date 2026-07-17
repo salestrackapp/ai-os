@@ -1,3 +1,3 @@
-import { PortalAreaIndex } from "@/components/portal/PortalAreaIndex";
+import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
-export default function Page() { return <PortalAreaIndex area="config" />; }
+export default function Page() { redirect("/portal/conta"); }
