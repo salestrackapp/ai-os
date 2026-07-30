@@ -9,6 +9,29 @@ Legenda: 🔴 destrava função · 🟡 melhora/recomendado · 🟢 opcional.
 
 ---
 
+## 0-A. ✅ CRON_SECRET — RESOLVIDO em 2026-07-28
+**O que era:** as cinco rotas de cron respondiam `503 cron_not_configured` no ar. A variável nunca
+foi definida na Vercel, então **nenhum job agendado jamais rodou** — inclusive o motor de cadências
+de prospecção (`/api/cron/cadence`), que é função central do comercial.
+
+**Reconferido em 2026-07-29**, contra produção, na rota `tarefas`:
+sem token → `401` · token errado → `401` · token correto → `200`. Fechada e funcionando.
+
+Rotas afetadas: `cadence` (cadências), `ops` (operações), `orchestrate` (orquestração de comunicação),
+`relacionamento` (inbox), `tarefas` (avisos de tarefa vencendo/atrasada).
+
+**Nota de segurança:** até 2026-07-28 a rota `orchestrate` era **fail-open** — a guarda era
+`if (secret && ...)`, então sem a variável ela rodava sem autenticação nenhuma e podia ser acionada
+por qualquer um, disparando o agendador de comunicação. Corrigida para fail-closed e publicada.
+
+**Como foi feito** (deixado aqui para o dia em que a chave precisar ser rotacionada):
+1. Gerar um valor forte: `openssl rand -hex 32`.
+2. Vercel → projeto `ai-os` → Settings → Environment Variables → **`CRON_SECRET`** (Production).
+3. Redeploy — variável nova só vale a partir do próximo build.
+4. Conferir: `curl -s -o /dev/null -w "%{http_code}" https://ai-os-sable.vercel.app/api/cron/cadence`
+   deve dar `401` (fechada e configurada); com `-H "Authorization: Bearer <chave>"`, `200`.
+   Se voltar `503`, a variável não chegou no build.
+
 ## 0. 🔴 Ativar os agentes de IA (Consultor + ROI) — Fase 5
 **Por que:** o Consultor do Programa (chat no portal/WhatsApp/Slack) e a narrativa de ROI rodam na API Anthropic da Salestrack. Sem a chave, respondem "temporariamente indisponível" (o resto do app funciona).
 **Quem faz:** você (gera a chave em console.anthropic.com).
@@ -27,14 +50,37 @@ Legenda: 🔴 destrava função · 🟡 melhora/recomendado · 🟢 opcional.
 3. Aguarde a propagação (minutos a algumas horas). A Vercel emite o SSL sozinha.
 4. Quando abrir no domínio, faça o item 2 abaixo (Supabase Auth).
 
-## 2. 🔴 Liberar o domínio no Supabase Auth
+## 2. ✅ Liberar o domínio no Supabase Auth — FEITO em 2026-07-29
 **Por que:** sem isso, os e-mails de login/recuperação de senha apontam para a URL errada e o acesso quebra.
 **Quem faz:** você, no painel Supabase (não há automação para isso).
-**Passo a passo:**
-1. Supabase → projeto `ai-os` → **Authentication → URL Configuration**.
-2. **Site URL:** `https://ai-os.salestrack.com.br` (enquanto o domínio não sobe, use `https://ai-os-sable.vercel.app`).
-3. **Redirect URLs:** adicione `https://ai-os-sable.vercel.app/**` **e** `https://ai-os.salestrack.com.br/**`.
-4. Salvar.
+
+**Estava quebrado em produção.** O Site URL continuava `http://localhost:3000` e nenhum domínio de
+produção estava na lista, então todo e-mail de "Esqueci minha senha" e de link mágico devolvia a
+pessoa em `localhost` — sem saída para qualquer cliente ou aluno que perdesse a senha.
+
+**Configuração aplicada** (Supabase → projeto `ai-os` → Authentication → URL Configuration):
+- **Site URL:** `https://ai-os-sable.vercel.app`
+- **Redirect URLs:**
+  - `https://ai-os-sable.vercel.app/**` — produção de hoje
+  - `https://ai-os.salestrack.com.br/**` — domínio definitivo, já liberado para quando o DNS subir
+  - `https://*-salestrack-ai.vercel.app/**` — previews da Vercel, que ganham endereço aleatório a cada deploy
+  - `http://localhost:3000/**` — desenvolvimento; agora é um item da lista, não mais o padrão de todos
+
+O app devolve o usuário em duas rotas, ambas cobertas pelo curinga `/**`:
+`/entrar` (link mágico, `app/login/page.tsx:30`) e `/reset` (senha, `app/login/page.tsx:40`).
+
+**Como verificar** (roda contra produção, não altera nada — `generateLink` só monta o link):
+```js
+const { data } = await sb.auth.admin.generateLink({
+  type: "recovery", email: "<um e-mail real>",
+  options: { redirectTo: "https://ai-os-sable.vercel.app/reset" },
+});
+new URL(data.properties.action_link).searchParams.get("redirect_to");
+// honrado → a lista está certa. Voltou outra coisa → o destino não está liberado.
+```
+Teste também um destino **fora** da lista (ex.: `https://exemplo-invalido.com/x`): tem de cair no
+Site URL. Se ele for honrado, a lista não está filtrando — e aí qualquer um poderia disparar um
+e-mail de recuperação da Salestrack com um link que entrega o token de sessão em servidor alheio.
 
 ## 3. 🔴 Ligar as Sessões ao Vivo (Read AI + Calendly)
 **Por que:** o app já **recebe** (webhooks no ar, com token, testados). Falta cada plataforma começar a **enviar**.
@@ -97,14 +143,172 @@ Legenda: 🔴 destrava função · 🟡 melhora/recomendado · 🟢 opcional.
 1. Cadastre seu 2º fator em **Admin → Configurações** (Segurança).
 2. Só depois, para **exigir** MFA de todos os admins: Vercel → env **`MFA_ENFORCE=true`** → redeploy.
 
-## 10. 🟢 Opcionais (só se precisar)
-- **WhatsApp (Z-API):** notificações por WhatsApp. Envs `WHATSAPP_PROVIDER`, credenciais Z-API e `WHATSAPP_WEBHOOK_KEY`. Sem isso, o canal fica em modo degradado (não envia).
+## 10. 🔴 ASAAS está em SANDBOX — o financeiro nunca falou com a conta real
+**Descoberto em 2026-07-30.** A chave configurada é de **homologação** (`$aact_hmlg_…`), e o
+sandbox está vazio. A conta é a certa (SALESTRACK INTELIGENCIA DIGITAL LTDA, CNPJ 51807376000143),
+só o ambiente é o de teste.
+
+**O que isso causa hoje:**
+- As 5 faturas da IMAGO (R$ 12.100, sendo R$ 3.000 vencidos) existem **só no banco do AI OS**.
+  As cobranças reais estão na conta de produção do ASAAS, e as duas pontas não se enxergam.
+- O webhook de pagamento aponta para o sandbox: quando o cliente pagar de verdade, **o AI OS não
+  fica sabendo** e a fatura continua "aberta" para sempre.
+- A régua de cobrança está construída e **não roda** até isto ser resolvido — de propósito: com o
+  ambiente errado ela geraria boletos duplicados ou cobraria quem já pagou.
+
+**Quem faz:** você.
+
+**Passo a passo:**
+1. ASAAS (produção) → Configurações → Integrações → **copiar a API Key de produção**
+   (começa com `$aact_prod_`).
+2. `npx vercel env rm ASAAS_API_KEY production` e depois
+   `npx vercel env add ASAAS_API_KEY production` com a chave nova.
+3. `npx vercel env rm ASAAS_ENV production` → `npx vercel env add ASAAS_ENV production` →
+   valor **`production`**.
+4. Ainda no ASAAS: Integrações → **Webhooks** → URL
+   `https://ai-os-sable.vercel.app/api/asaas/webhook`, com token → mesmo valor de
+   `ASAAS_WEBHOOK_TOKEN` (item 2 desta lista).
+5. Redeploy e conferir com:
+   `curl "https://ai-os-sable.vercel.app/api/admin/asaas-diag?key=$CRON_SECRET"` —
+   deve dizer `ambiente_configurado: production` e mostrar os pagamentos.
+6. Só então rodar a sincronização, que **espelha** o ASAAS sem criar nada:
+   `curl "https://ai-os-sable.vercel.app/api/cron/cobranca?so_sincronizar=1&key=$CRON_SECRET"`
+
+**Ordem importa:** sincronize antes de deixar a régua enviar. A primeira execução é a que mais
+pode constranger — com o painel local desatualizado, ela cobraria quem já pagou.
+
+## 11. 🔴 RH — o banco existe, o AI OS ainda não fala com ele
+**Criado em 2026-07-30:** projeto Supabase **`salestrack-rh`** (ref `tsuejfuwpxqydtkwtwqd`), em
+**sa-east-1 (São Paulo)**, com schema, RLS e criptografia prontos. A tela `/admin/rh` já existe e
+explica a pendência a quem entrar.
+
+**Quem faz:** você. São 4 variáveis.
+
+**Passo a passo:**
+1. Painel do RH → Settings → API → copie a **service_role key** (a secreta, não a anon):
+   `https://supabase.com/dashboard/project/tsuejfuwpxqydtkwtwqd/settings/api`
+2. Gere duas chaves aleatórias (guarde num gerenciador de senhas — **perdê-las torna os dados
+   cifrados ilegíveis para sempre**):
+   ```bash
+   openssl rand -base64 32   # RH_ENCRYPTION_KEY
+   openssl rand -base64 24   # RH_CPF_SALT
+   ```
+3. Cadastre as quatro na Vercel:
+   ```bash
+   npx vercel env add RH_SUPABASE_URL production      # https://tsuejfuwpxqydtkwtwqd.supabase.co
+   npx vercel env add RH_SERVICE_ROLE_KEY production
+   npx vercel env add RH_ENCRYPTION_KEY production
+   npx vercel env add RH_CPF_SALT production
+   ```
+4. **Dê acesso a si mesmo.** Ser admin do AI OS não abre o RH — de propósito. No SQL Editor do
+   banco de RH:
+   ```sql
+   insert into rh_papeis (user_id, email, papel)
+   values (gen_random_uuid(), 'andre.kachan@salestrack.com.br', 'rh_admin');
+   ```
+5. Redeploy.
+
+**Sobre as chaves de cifra:** CPF e salário são cifrados com elas. Se forem perdidas, o dado não
+volta — não há recuperação. Se forem trocadas, o que foi cifrado com a anterior deixa de ser
+legível. Guarde antes de cadastrar.
+
+**Falta também:** apagar o projeto antigo da academy, que continua sendo cobrado (~US$10/mês) e
+está vazio: `https://supabase.com/dashboard/project/ynyqfbngitodmkoloays/settings/general` →
+Delete project. Enquanto não apagar, você paga dois.
+
+## 12. 🟡 Histórico de execuções de IA (agent-control)
+**Construído em 2026-07-30.** Toda chamada ao Claude passa a registrar entrada, saída, tokens,
+custo, tempo e erro no **agent-control** — que é outro projeto Supabase (`mktjwqchdclqjxzabpow`).
+A tela está em **Configurar → Custo de IA** e já explica a pendência.
+
+**O que isso resolve:** hoje a fatura da Anthropic vem num número só. Com o registro, dá para
+responder "quanto de IA gastamos com a IMAGO?" e "por que aquele agente falhou ontem?".
+
+**Quem faz:** você. Duas variáveis.
+```bash
+npx vercel env add AGENT_CONTROL_URL production          # https://mktjwqchdclqjxzabpow.supabase.co
+npx vercel env add AGENT_CONTROL_SERVICE_KEY production  # service_role do agent-control
+```
+A service_role está em:
+`https://supabase.com/dashboard/project/mktjwqchdclqjxzabpow/settings/api`
+
+**Sem isso os agentes funcionam normalmente** — o que falta é o histórico, não a execução. O
+registro nunca derruba a resposta ao usuário: se o agent-control estiver fora do ar, a IA responde
+igual e só o traço se perde.
+
+**Não confundir com delegação de execução.** A execução continua no AI OS. Mover o processamento
+para o agent-control depende do Trigger.dev, que ainda não está configurado — a ponte está pronta
+para quando isso existir.
+
+## 13. 🟡 Coleta externa no LinkedIn (Apify) — pendente de configuração
+**Por que:** a coleta de curtidas/comentários em posts de terceiros, publicações e grupos está
+**construída e desligada**. Ela não roda até a chave e os actors entrarem.
+
+**Quem faz:** você.
+
+**Passo a passo:**
+1. Crie conta em [apify.com](https://apify.com) e copie o **API token** (Settings → Integrations).
+2. No AI OS: **Configurar → Parâmetros e integrações** → provedor **`apify`** → cole o token.
+3. No marketplace do Apify, escolha os actors e copie o ID de cada um (formato `usuario/nome`):
+   - **quem reagiu a um post** — o mais eficiente, um post rende dezenas de pessoas
+   - **atividade de um perfil** — curtidas e comentários da pessoa em posts de terceiros
+   - **perfil completo** — usado para grupos
+4. Cole os IDs em **Prospecção → Coleta externa**.
+5. **Decida sobre a sessão:** actors que leem só conteúdo público **não** usam sua conta e não a
+   arriscam. Se escolher usar, salve o cookie **`li_at`** em Parâmetros com o provedor
+   **`linkedin_li_at`** — ele é a sua sessão inteira, quem o tiver entra na sua conta.
+6. Cadastre as fontes (perfis que publicam sobre IA) e **ligue** a coleta.
+
+**Antes de ligar:** a raspagem contraria os termos de uso do LinkedIn e o risco é o bloqueio da
+conta configurada, que é a sua pessoal. O balanceamento está em `docs/LIA_PROSPECCAO.md` §6, e o
+sistema tem teto diário, pausa variável e parada automática — mas nenhum deles elimina o risco.
+
+**O que já funciona sem isto:** Apollo (buscas automáticas), reações aos seus próprios posts
+(ingestão por colagem) e suas mensagens (exportação oficial). Nenhum depende do Apify.
+
+## 14. 🔴 WhatsApp (Z-API) — construído por inteiro, nunca ligado
+
+**Por que subiu de "opcional" para pendência:** o AI OS tem o canal completo — envio, recebimento em
+tempo real, inbox unificada com e-mail, templates, fila de aprovação e agora a **resposta assistida**
+(o agente escreve o rascunho, você revisa e envia). Sem a credencial, tudo isso existe e não roda.
+O número mostra o tamanho: **204 conversas de e-mail ativas contra 1 de WhatsApp, parada em 07/07**.
+
+**Quem faz:** você. Leva menos de 10 minutos.
+
+**Passo a passo:**
+1. Em [z-api.io](https://z-api.io), abra a instância e copie **ID da instância**, **Token** e, se a
+   sua conta exigir, o **Client-Token**.
+2. No AI OS: **Configurar → Parâmetros e integrações** → provedor **`zapi`** → cole
+   `instance_id`, `token` e (se houver) `client_token`.
+3. Na Vercel, defina `WHATSAPP_WEBHOOK_KEY` com um valor aleatório e longo. **Enquanto estiver
+   vazio, o webhook aceita qualquer chamada** — qualquer um que descubra a URL consegue inserir uma
+   mensagem falsa na sua inbox.
+4. Faça o deploy e, na inbox (**Relacionamento**), clique em **Ativar recebimento** — o AI OS
+   registra o webhook na Z-API sozinho, já com a chave.
+5. Mande uma mensagem para o número e confirme que a conversa aparece.
+
+**Ligar a resposta assistida (opcional, depois que o canal funcionar):**
+Em **Configurar → Agentes de IA**, o agente **`resposta_whatsapp`** existe e está **desligado de
+propósito** — um agente que começa a escrever no WhatsApp sem ninguém ter pedido é surpresa no canal
+errado. Ligue quando quiser: ele passa a preparar um rascunho a cada mensagem recebida, e o rascunho
+espera na conversa. **Nada é enviado sem alguém clicar em enviar.** A tela de Agentes mostra quantos
+rascunhos saíram como estavam, quantos foram editados e quantos foram descartados.
+
+## 15. 🟢 Opcionais (só se precisar)
 - **Stripe:** cobrança internacional (alternativa à ASAAS). Envs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` e `PAYMENT_PROVIDER=stripe`. Só se for cobrar fora do Brasil.
 
 ---
 
 ## Referência rápida de status dos envs (Vercel Production)
 **Já configurado:** Supabase (URL/anon/service), NEXT_PUBLIC_SITE_URL, RESEND_API_KEY, MAILERLITE_API_KEY/GROUP_ID, ADMIN_EMAILS, ASAAS_API_KEY/ENV, PAYMENT_PROVIDER, DOCUSIGN_USER_ID/ACCOUNT_ID/BASE_URL, **CALENDLY_WEBHOOK_TOKEN**, **READAI_WEBHOOK_TOKEN**.
-**Falta setar:** `ASAAS_WEBHOOK_TOKEN`, `EMAIL_FROM`, `DOCUSIGN_INTEGRATION_KEY`, `DOCUSIGN_PRIVATE_KEY`, `SALESTRACK_CNPJ`, `SALESTRACK_ENDERECO`. (Opcionais: `DOCUSIGN_CONNECT_SECRET`, WhatsApp/Z-API, Stripe, `MFA_ENFORCE`.)
+**Falta setar:** `ASAAS_WEBHOOK_TOKEN`, `EMAIL_FROM`, `DOCUSIGN_INTEGRATION_KEY`, `DOCUSIGN_PRIVATE_KEY`, `SALESTRACK_CNPJ`, `SALESTRACK_ENDERECO`, **`WHATSAPP_WEBHOOK_KEY`** (item 14). (Opcionais: `DOCUSIGN_CONNECT_SECRET`, Stripe, `MFA_ENFORCE`, `LINKEDIN_ACCESS_TOKEN`.)
+
+**Segredos que ficam na tabela `integration_secrets`, não em env:** `apollo` (✅ configurado),
+`zapi` (⏳ pendente — item 14), `apify` (⏳ pendente — item 13), `linkedin_li_at` (⏳ opcional, item 13).
+
+**agent-control (projeto separado):** `AGENT_CONTROL_URL`, `AGENT_CONTROL_SERVICE_KEY` — item 12.
+
+**Banco de RH (projeto separado):** `RH_SUPABASE_URL`, `RH_SERVICE_ROLE_KEY`, `RH_ENCRYPTION_KEY`,
+`RH_CPF_SALT` — todas pendentes, item 11.
 
 **Como setar um env:** `npx vercel env add NOME production` (cola o valor) → depois `npx vercel deploy --prod --yes`. Posso fazer isso por você quando me passar os valores.

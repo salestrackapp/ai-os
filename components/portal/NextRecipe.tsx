@@ -18,7 +18,7 @@ export function NextRecipe() {
   }
 
   return (
-    <div className="card p-5 border-goldline bg-[rgba(79, 31, 255,.06)]">
+    <div className="card p-5 border-goldline bg-[rgba(0, 122, 148,.06)]">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-gold"><Icon name="sparkles" size={16} /></span>

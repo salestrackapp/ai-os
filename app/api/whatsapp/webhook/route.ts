@@ -1,8 +1,9 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { runConsultorTurn } from "@/lib/agents/channel";
 import { sendToContact } from "@/lib/whatsapp";
 import { ingestWhatsAppInbound } from "@/lib/relacionamento/sync-whatsapp";
+import { gerarSugestao } from "@/lib/relacionamento/sugestao";
 
 /** Extrai uma referência de mídia do payload Z-API, se houver (imagem/áudio/vídeo/documento). */
 function extractMedia(body: Record<string, unknown>): { tipo: string; url?: string | null } | null {
@@ -69,11 +70,25 @@ export async function POST(req: NextRequest) {
 
     // E3: ingesta na inbox de EQUIPE (rel_conversas/rel_mensagens, channel=whatsapp). Nunca quebra o webhook.
     try {
-      await ingestWhatsAppInbound({
+      const ing = await ingestWhatsAppInbound({
         phone: String(fromPhone ?? ""), name: body?.senderName ?? body?.chatName ?? null,
         text: text ? String(text) : null, providerRef, media: extractMedia(body ?? {}),
         at: body?.momment ? new Date(Number(body.momment)).toISOString() : null,
       });
+
+      /**
+       * Resposta assistida: o agente escreve um rascunho e ele espera na inbox. Ninguém recebe nada
+       * por causa disto — quem envia é a pessoa que abrir a conversa.
+       *
+       * Roda DEPOIS da resposta (`after`): uma chamada ao Claude leva segundos, e webhook lento faz a
+       * Z-API reentregar. A reentrega, quando acontece, é inofensiva — a sugestão é única por mensagem.
+       */
+      if (ing.conversaId && ing.mensagemId && text) {
+        after(async () => {
+          try { await gerarSugestao({ conversaId: ing.conversaId!, mensagemId: ing.mensagemId }); }
+          catch (e) { console.error("[whatsapp] sugestão falhou:", (e as Error).message); }
+        });
+      }
     } catch { /* inbox de equipe é aditiva; não derruba o consultor/webhook */ }
 
     // Consultor do Programa via WhatsApp: só contato identificado de uma org E com opt-in.

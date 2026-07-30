@@ -16,10 +16,12 @@ describe("IA do portal (U4 · 3 destinos)", () => {
     expect(areaForPortalPath("/portal/roi")).toBe("jornada");
     expect(areaForPortalPath("/portal/consultor")).toBe("jornada");
   });
-  it("os 3 destinos são v5 (claros)", () => {
-    expect(isV5PortalPath("/portal")).toBe(true);
-    expect(isV5PortalPath("/portal/entregaveis")).toBe(true);
-    expect(isV5PortalPath("/portal/conta")).toBe(true);
-    expect(isV5PortalPath("/portal/roi")).toBe(false);
+  it("TODA tela do portal usa a casca do DS — o frame legado não existe mais", () => {
+    // Antes só os 3 destinos eram v5, e as outras 15 telas passavam pelo PortalLegacyFrame
+    // (que dava o padding). Agora cada tela traz o próprio <ContentArea>, então o frame saiu.
+    for (const r of ["/portal", "/portal/entregaveis", "/portal/conta", "/portal/roi",
+                     "/portal/playbook/como-vender", "/portal/equipe", "/portal/sessoes"]) {
+      expect(isV5PortalPath(r), `${r} deveria renderizar na casca do DS`).toBe(true);
+    }
   });
 });

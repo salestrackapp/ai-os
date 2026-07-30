@@ -6,12 +6,17 @@ export const maxDuration = 60;
 
 /**
  * Scheduler da orquestração (R4.3): avalia programas ativos (tempo) + processa itens automáticos due.
- * Protegido por CRON_SECRET. Configure em vercel.json (schedule). Graceful: sem cron, roda sob demanda.
+ * Protegido por CRON_SECRET, no mesmo padrão fail-closed das demais rotas de cron.
+ *
+ * A guarda anterior era `if (secret && ...)`: sem CRON_SECRET definido a condição curto-circuitava
+ * e a rota rodava SEM autenticação. Como ela dispara o agendador de comunicação e processa itens
+ * automáticos, qualquer chamada externa acionava envios. Verificado aberto em produção em 2026-07-28.
  */
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
+  if (!secret) return NextResponse.json({ error: "cron_not_configured" }, { status: 503 });
   const auth = req.headers.get("authorization") ?? req.nextUrl.searchParams.get("secret") ?? "";
-  if (secret && auth !== `Bearer ${secret}` && auth !== secret) {
+  if (auth !== `Bearer ${secret}` && auth !== secret) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const evalRes = await runScheduler();

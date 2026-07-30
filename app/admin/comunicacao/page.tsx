@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { ContentArea, PageHeader, Card, Badge, EmptyState, Input, Select } from "@/components/ds";
+import { ContentArea, PageHeader, Card, Badge, EmptyState, Input, Select, botaoClasses } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
@@ -9,7 +9,7 @@ import { ASSET_TYPES, assetTypeLabel, stepCompleteness, type ReguaStep } from "@
 import { seedDefaultTemplateAction, addStepAction, toggleStepAction, removeStepAction, bindAssetAction, aprovarEnvioAction, cancelarItemAction, retryEnvioAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-const lbl = "mb-1.5 block font-montserrat text-[12px] font-medium text-[color:var(--fg-2)]";
+const lbl = "mb-1.5 block font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]";
 
 type Step = ReguaStep & { id: string; asset_ref: string | null; ativo: boolean };
 type Asset = { id: string; title: string; line: string; status: string; comm_eligible: boolean | null };
@@ -38,7 +38,7 @@ export default async function ComunicacaoPage() {
         <Breadcrumbs items={[{ label: "Comunicação", href: "/admin/comunicacao" }, { label: "Régua" }]} className="mb-4" />
         <PageHeader eyebrow="Comunicação · Régua" title="O motor que conduz" subtitle="A régua define o que comunicar, por qual gatilho e quando — ao longo do ciclo do método, consumindo ativos aprovados do Estúdio." />
         <EmptyState icon={<Icon name="sparkles" size={22} />} title="Nenhuma régua ainda" description="Crie a régua-template padrão (engajamento AI Operating System) para começar a desenhar a jornada de comunicação." guiaHref="/admin/ajuda"
-          action={<form action={seedDefaultTemplateAction}><button className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="sparkles" size={15} /> Criar régua padrão</button></form>} />
+          action={<form action={seedDefaultTemplateAction}><button className={botaoClasses()}><Icon name="sparkles" size={15} /> Criar régua padrão</button></form>} />
       </ContentArea>
     );
   }
@@ -61,12 +61,12 @@ export default async function ComunicacaoPage() {
             {aguardando.map((q) => (
               <li key={q.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-hairline bg-[var(--bg-2)] px-4 py-2.5">
                 <div className="min-w-0">
-                  <p className="truncate font-montserrat text-[13px] text-[color:var(--fg-1)]">{projName[q.program_id] ?? "Programa"} · {q.canal}</p>
+                  <p className="truncate font-montserrat text-[14px] text-[color:var(--fg-1)]">{projName[q.program_id] ?? "Programa"} · {q.canal}</p>
                   <p className="ds-small !mt-0.5">para {q.recipient?.nome ?? q.recipient?.email ?? q.recipient?.phone ?? "destinatário"}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <form action={aprovarEnvioAction.bind(null, q.id)}><button className="ds-focus rounded-ds-input bg-brand px-3 py-1.5 font-montserrat text-[12px] font-semibold text-white shadow-ds-brand hover:bg-brand-hover">Aprovar envio</button></form>
-                  <form action={cancelarItemAction.bind(null, q.id)}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1.5 font-montserrat text-[12px] text-[color:var(--fg-2)] hover:bg-[var(--bg-1)]">Cancelar</button></form>
+                  <form action={aprovarEnvioAction.bind(null, q.id)}><button className={botaoClasses({ size: "sm" })}>Aprovar envio</button></form>
+                  <form action={cancelarItemAction.bind(null, q.id)}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1.5 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-1)]">Cancelar</button></form>
                 </div>
               </li>
             ))}
@@ -80,7 +80,7 @@ export default async function ComunicacaoPage() {
                 <span className="ds-small !mt-0 truncate">{projName[q.program_id] ?? "Programa"} · {q.canal} · {q.recipient?.nome ?? q.recipient?.email ?? q.recipient?.phone ?? "—"}</span>
                 <div className="flex items-center gap-2">
                   <Badge tone={q.status === "enviado" ? "success" : q.status === "falhou" ? "danger" : "neutral"}>{q.status}</Badge>
-                  {q.status === "falhou" && q.tentativas < 3 && <form action={retryEnvioAction.bind(null, q.id)}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2 py-0.5 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Retry</button></form>}
+                  {q.status === "falhou" && q.tentativas < 3 && <form action={retryEnvioAction.bind(null, q.id)}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2 py-0.5 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Retry</button></form>}
                 </div>
               </div>
             ))}
@@ -93,7 +93,7 @@ export default async function ComunicacaoPage() {
         return (
           <section key={ci} className="mb-6">
             <div className="mb-3 flex items-center gap-2">
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--tile)] font-jbmono text-[11px] text-[color:var(--brand)]">{ci + 1}</span>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--tile)] font-jbmono text-[13px] text-[color:var(--brand)]">{ci + 1}</span>
               <p className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">{phase.title}</p>
               <span className="ds-small !mt-0">· {phase.objective}</span>
             </div>
@@ -113,16 +113,16 @@ export default async function ComunicacaoPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge tone={comp.status === "completo" ? "success" : "warn"}>{comp.status === "completo" ? "completo" : "incompleto"}</Badge>
-                          <form action={toggleStepAction.bind(null, s.id, !s.ativo)}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">{s.ativo ? "Desativar" : "Ativar"}</button></form>
-                          <form action={removeStepAction.bind(null, s.id)}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-3)] hover:bg-[var(--bg-2)]">Remover</button></form>
+                          <form action={toggleStepAction.bind(null, s.id, !s.ativo)}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">{s.ativo ? "Desativar" : "Ativar"}</button></form>
+                          <form action={removeStepAction.bind(null, s.id)}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-3)] hover:bg-[var(--bg-2)]">Remover</button></form>
                         </div>
                       </div>
                       <form action={bindAssetAction.bind(null, s.id)} className="mt-3 flex items-center gap-2">
-                        <select name="asset_ref" defaultValue={s.asset_ref ?? ""} className="h-9 flex-1 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-2 font-montserrat text-[12px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]">
+                        <select name="asset_ref" defaultValue={s.asset_ref ?? ""} className="h-9 flex-1 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-2 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]">
                           <option value="">— vincular material aprovado ({assetTypeLabel(s.asset_type)}) —</option>
                           {opts.map((a) => <option key={a.id} value={a.id}>{a.title} [{a.status}]</option>)}
                         </select>
-                        <button className="ds-focus rounded-ds-input border border-hairline-strong px-3 py-1.5 font-montserrat text-[12px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Vincular</button>
+                        <button className="ds-focus rounded-ds-input border border-hairline-strong px-3 py-1.5 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Vincular</button>
                       </form>
                       {comp.motivo && comp.status === "incompleto" && <p className="ds-small !mt-2 text-[color:var(--warn)]">{comp.motivo} Um passo incompleto nunca dispara.</p>}
                     </div>
@@ -155,7 +155,7 @@ export default async function ComunicacaoPage() {
             </div>
             <input type="hidden" name="g_quando" value="apos_inicio_fase" /><input type="hidden" name="g_condicao" value="inatividade" />
           </div>
-            <div className="sm:col-span-2"><button className="ds-focus inline-flex h-10 items-center rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover">Adicionar passo</button></div>
+            <div className="sm:col-span-2"><button className={botaoClasses()}>Adicionar passo</button></div>
           </form>
         </details>
         <p className="ds-small mt-3">Aqui você só desenha a régua. O envio acontece na hora certa, sempre com a sua aprovação.</p>

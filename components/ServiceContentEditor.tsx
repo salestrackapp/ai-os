@@ -59,7 +59,7 @@ export function ServiceContentEditor({ defaultValue }: { defaultValue?: string |
             </div>
           ))}
         </div>
-        <p className="text-[11px] text-muted2 mt-2">Cada linha vira um item ✓ na Prévia do catálogo e no “Escopo e entregas” da proposta.</p>
+        <p className="text-[13px] text-muted2 mt-2">Cada linha vira um item ✓ na Prévia do catálogo e no “Escopo e entregas” da proposta.</p>
       </div>
     </div>
   );

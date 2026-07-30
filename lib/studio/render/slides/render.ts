@@ -1,14 +1,14 @@
 import "server-only";
 import type { Deck, DeckSlide } from "@/lib/deliverables/types";
-import { isV2Accent } from "@/lib/deliverables/types";
+import { isAccentPermitido } from "@/lib/deliverables/types";
 import { normalizeDeck } from "./layouts";
 
 export type DeckRenderOpts = { accent?: string | null; logo?: string | null; programName?: string | null; footer?: string; eyebrow?: string };
 
 /** Tema v2 do deck (ink/Montserrat/violeta + faísca lime). Accent só da paleta v2. */
 function theme(accent?: string | null) {
-  const acc = isV2Accent(accent) ? accent! : "#8B5CFF";
-  return { bg: "#0B0B16", surf: "#14141F", fg: "#F4F4FA", muted: "#AFAFC6", muted2: "#7A7A95", accent: acc, lime: "#EBF212", line: "rgba(255,255,255,.08)" };
+  const acc = isAccentPermitido(accent) ? accent! : "#00B4D8";
+  return { bg: "#1A1A2E", surf: "#141C24", fg: "#F7F8FA", muted: "#93A1B3", muted2: "#6B7A8D", accent: acc, lime: "#00E5FF", line: "rgba(255,255,255,.08)" };
 }
 function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));

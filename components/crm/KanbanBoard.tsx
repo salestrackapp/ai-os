@@ -22,13 +22,13 @@ function CardInner({ d, overlay = false, tc, prop }: { d: Deal; overlay?: boolea
       <div className="mt-2 flex flex-wrap gap-1.5">
         {d.icp && <span className="badge-muted">ICP {d.icp}</span>}
         <span className={d.score >= 20 ? "badge-teal" : "badge-muted"}>score {d.score}</span>
-        {stagnant && <span className="badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-amber-400 border-amber-500/40 bg-amber-500/10">estagnado</span>}
+        {stagnant && <span className="badge inline-flex text-[11px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-amber-400 border-amber-500/40 bg-amber-500/10">estagnado</span>}
         {tc && tc.open > 0 && <span className="badge-muted">✓ {tc.open} tarefa(s)</span>}
         {prop && <span className={proposalStatusBadge(prop.status)}><Icon name="fileText" size={11} /> {PROPOSAL_STATUS_LABELS[prop.status] ?? prop.status}{prop.count > 1 ? ` (${prop.count})` : ""}</span>}
       </div>
-      <p className="mt-2 text-[11px] text-muted2">{BRAND_LABELS[d.brand] ?? d.brand} · {brl(d.value_estimated)}</p>
-      {d.next_step && <p className="mt-1 text-[11px] text-muted truncate">→ {d.next_step}</p>}
-      {days !== null && <p className="mt-1 text-[10px] text-muted2">{days === 0 ? "atividade hoje" : `${days} d sem atividade`}</p>}
+      <p className="mt-2 text-[13px] text-muted2">{BRAND_LABELS[d.brand] ?? d.brand} · {brl(d.value_estimated)}</p>
+      {d.next_step && <p className="mt-1 text-[13px] text-muted truncate">→ {d.next_step}</p>}
+      {days !== null && <p className="mt-1 text-[11px] text-muted2">{days === 0 ? "atividade hoje" : `${days} d sem atividade`}</p>}
     </div>
   );
 }
@@ -56,7 +56,7 @@ function DraggableCard({ d, tc, prop }: { d: Deal; tc?: TaskCount; prop?: PropIn
           <button className="text-gold text-xs px-1" disabled={pending} onClick={add}>ok</button>
         </div>
       ) : (
-        <button className="mt-1 text-[10px] text-muted2 hover:text-gold" onClick={() => setAdding(true)}>+ tarefa</button>
+        <button className="mt-1 text-[11px] text-muted2 hover:text-gold" onClick={() => setAdding(true)}>+ tarefa</button>
       )}
     </div>
   );
@@ -68,8 +68,8 @@ function Column({ id, label, deals, taskCounts, proposals }: { id: string; label
   return (
     <div ref={setNodeRef} className={`card p-3 ${isOver ? "ring-1 ring-goldline" : ""}`}>
       <div className="px-1 mb-3">
-        <p className="text-[10px] uppercase tracking-[.18em] text-gold">{label} <span className="text-muted2">· {deals.length}</span></p>
-        <p className="text-[10px] text-muted2 font-mono">{brl(sum)}</p>
+        <p className="text-[11px] uppercase tracking-[.18em] text-gold">{label} <span className="text-muted2">· {deals.length}</span></p>
+        <p className="text-[11px] text-muted2 font-mono">{brl(sum)}</p>
       </div>
       <div className="space-y-2 min-h-12">
         {deals.map((d) => <DraggableCard key={d.id} d={d} tc={taskCounts[d.id]} prop={proposals[d.id]} />)}
@@ -177,7 +177,7 @@ function PerdidoZone({ deals }: { deals: Deal[] }) {
   return (
     <div ref={setNodeRef}
       className={`mt-3 card p-3 border-dashed ${isOver ? "ring-1 ring-amber-500/60 border-amber-500/60" : ""}`}>
-      <p className="text-[10px] uppercase tracking-[.18em] text-muted2 px-1">
+      <p className="text-[11px] uppercase tracking-[.18em] text-muted2 px-1">
         Perdido <span>· {deals.length}{sum ? ` · ${brl(sum)}` : ""}</span>
         <span className="ml-2 normal-case tracking-normal text-muted2">— arraste um card aqui para registrar a perda</span>
       </p>

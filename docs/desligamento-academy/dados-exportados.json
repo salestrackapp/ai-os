@@ -1,0 +1,36 @@
+{
+  "_leia_antes": "Exportação do banco da academy antiga (projeto Supabase ynyqfbngitodmkoloays, região us-east-2), feita em 2026-07-30 antes do desligamento. Os hashes de senha (bcrypt) foram DELIBERADAMENTE omitidos: não há para que guardá-los, e guardá-los criaria a mesma exposição que o desligamento resolve. Os tokens de sessão também não foram exportados, pelo mesmo motivo.",
+  "exportado_em": "2026-07-30T00:20:57.813536+00:00",
+  "projeto": "ynyqfbngitodmkoloays (salestrack-ai-academy, us-east-2)",
+
+  "academy_users": [
+    {
+      "id": "4e1401f1-eb63-4604-ac45-7d5ca043abdd",
+      "email": "andre.kachan@salestrack.com.br",
+      "name": "André Kachan",
+      "role": "admin",
+      "active": true,
+      "created_at": "2026-07-28T15:16:03.306938+00:00",
+      "last_login": "2026-07-28T15:16:15.484+00:00"
+    },
+    {
+      "id": "21b36d7d-3a26-4e02-a208-0ae044b59d45",
+      "email": "andre@salestrack.ai",
+      "name": "André Kachan",
+      "role": "admin",
+      "active": false,
+      "created_at": "2026-07-27T17:41:32.245062+00:00",
+      "last_login": "2026-07-28T15:15:32.61+00:00"
+    }
+  ],
+
+  "academy_progress": [],
+  "academy_agents": [],
+  "academy_content": [],
+  "academy_sessions": {
+    "_nota": "4 sessões, todas com validade até 2026-08-04. Tokens não exportados de propósito — são credenciais vivas.",
+    "contagem": 4
+  },
+
+  "_conclusao": "Nenhum dado de aluno a preservar: as duas contas são do André, ambas admin, e as tabelas de progresso, agentes e conteúdo estão vazias. O conteúdo do curso nunca esteve no banco — vivia no HTML do repositório, e já foi migrado para o AI OS (ver verificacao-conteudo.md)."
+}

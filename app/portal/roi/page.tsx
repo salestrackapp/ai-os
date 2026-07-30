@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ds";
+import { PageHeader, ContentArea } from "@/components/ds";
 import { resolvePortalOrg } from "@/lib/portal";
 import { RoiView, } from "@/components/RoiView";
 import type { RoiMetrics } from "@/lib/agents/roi";
@@ -25,22 +25,24 @@ export default async function PortalRoiPage() {
   const list = (data as Roi[]) ?? [];
 
   return (
-    <div>
-      <PageHeader eyebrow="Seu retorno" title="ROI do Programa" />
-      <p className="text-sm text-muted mb-6 max-w-2xl">A cada mês, um retrato do valor gerado: adoção do Playbook, sessões, entregáveis e a evolução do seu programa.</p>
+    <ContentArea>
+      <div>
+        <PageHeader eyebrow="Seu retorno" title="ROI do Programa" />
+        <p className="text-sm text-muted mb-6 max-w-2xl">A cada mês, um retrato do valor gerado: adoção do Playbook, sessões, entregáveis e a evolução do seu programa.</p>
 
-      {list.length === 0 ? (
-        <div className="card p-8"><p className="text-sm text-muted2">Seu primeiro relatório de ROI aparecerá aqui assim que o mês fechar.</p></div>
-      ) : (
-        <div className="space-y-6">
-          {list.map((r) => (
-            <div key={r.id} className="card p-6">
-              <p className="font-serif text-xl font-semibold capitalize mb-4">{mesLabel(r.periodo)}</p>
-              <RoiView metricas={r.metricas} narrativa={r.narrativa} />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+        {list.length === 0 ? (
+          <div className="card p-8"><p className="text-sm text-muted2">Seu primeiro relatório de ROI aparecerá aqui assim que o mês fechar.</p></div>
+        ) : (
+          <div className="space-y-6">
+            {list.map((r) => (
+              <div key={r.id} className="card p-6">
+                <p className="font-serif text-xl font-semibold capitalize mb-4">{mesLabel(r.periodo)}</p>
+                <RoiView metricas={r.metricas} narrativa={r.narrativa} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </ContentArea>
   );
 }

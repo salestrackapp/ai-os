@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Label, Input, Select } from "@/components/ds";
+import { Label, Input, Select, botaoClasses } from "@/components/ds";
 import { createBlankPrograma } from "@/lib/crud/programa-actions";
 
 export function BlankProgramForm({ orgs }: { orgs: { id: string; name: string }[] }) {
@@ -25,8 +25,8 @@ export function BlankProgramForm({ orgs }: { orgs: { id: string; name: string }[
       <div><Label htmlFor="np-name" required>Nome do programa</Label>
         <Input id="np-name" name="name" placeholder="Ex.: Programa de IA — Clínica" required />
       </div>
-      {error && <p className="rounded-ds-input border border-[color:rgba(229,104,95,0.3)] bg-[var(--danger-tint)] px-3 py-2 text-[13px] text-[color:var(--danger)]">{error}</p>}
-      <button type="submit" disabled={busy} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover disabled:opacity-45">{busy ? "Criando…" : "Criar e abrir editor"}</button>
+      {error && <p className="rounded-ds-input border border-[color:rgba(229,104,95,0.3)] bg-[var(--danger-tint)] px-3 py-2 text-[14px] text-[color:var(--danger)]">{error}</p>}
+      <button type="submit" disabled={busy} className={botaoClasses({ className: "disabled:opacity-45" })}>{busy ? "Criando…" : "Criar e abrir editor"}</button>
     </form>
   );
 }

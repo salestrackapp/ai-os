@@ -14,9 +14,11 @@ async function ctx(surface: Surface): Promise<{ userId: string; orgId: string } 
 /**
  * O tour da superfície já foi visto (concluído/pulado/fechado) por este usuário?
  * Usado no layout para decidir a auto-abertura no 1º acesso.
+ * `pre` permite reaproveitar o contexto já resolvido no layout (evita re-resolver
+ * a membership — economiza uma ida ao Supabase Auth por navegação).
  */
-export async function tourSeen(surface: Surface): Promise<boolean> {
-  const c = await ctx(surface);
+export async function tourSeen(surface: Surface, pre?: { userId: string; orgId: string } | null): Promise<boolean> {
+  const c = pre !== undefined ? pre : await ctx(surface);
   if (!c) return true; // sem contexto → não auto-abre
   const { data } = await createServiceClient()
     .from("onboarding_progress")

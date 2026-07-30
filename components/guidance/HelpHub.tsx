@@ -5,6 +5,7 @@ import Link from "next/link";
 import { searchGuides } from "@/lib/guidance/registry";
 import { Icon } from "@/components/ui/icons";
 import { TourLink } from "@/components/tour/TourLink";
+import { botaoClasses } from "@/components/ds";
 
 export function HelpHub({ surface }: { surface: "admin" | "portal" }) {
   const [q, setQ] = useState("");
@@ -14,7 +15,7 @@ export function HelpHub({ surface }: { surface: "admin" | "portal" }) {
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-ds-card border border-hairline bg-[var(--tile)] p-4">
         <p className="font-montserrat text-[13.5px] text-[color:var(--brand-deep)]">Prefere um passo a passo guiado? Faça o tour da tela — leva 1 minuto.</p>
-        <TourLink entryPath={surface === "admin" ? "/admin/hoje" : "/portal"} className="ds-focus inline-flex items-center gap-1.5 rounded-ds-input bg-brand px-4 py-2 font-montserrat text-[13px] font-semibold text-white shadow-ds-brand hover:bg-brand-hover" />
+        <TourLink surface={surface} entryPath={surface === "admin" ? "/admin/hoje" : "/portal"} className={botaoClasses()} />
       </div>
       <div className="relative mb-6 max-w-xl">
         <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--fg-4)]"><Icon name="target" size={16} /></span>
@@ -35,10 +36,10 @@ export function HelpHub({ surface }: { surface: "admin" | "portal" }) {
               <p className="ds-small !mt-0 mb-2">{g.help.oQueE}</p>
               <ul className="space-y-1">
                 {g.help.passos.slice(0, 3).map((p, i) => (
-                  <li key={i} className="flex gap-2 font-montserrat text-[12px] text-[color:var(--fg-3)]"><span className="font-jbmono text-[color:var(--brand)]">{i + 1}</span> {p}</li>
+                  <li key={i} className="flex gap-2 font-montserrat text-[13px] text-[color:var(--fg-3)]"><span className="font-jbmono text-[color:var(--brand)]">{i + 1}</span> {p}</li>
                 ))}
               </ul>
-              <p className="mt-2.5 inline-flex items-center gap-1 font-montserrat text-[12px] font-medium text-[color:var(--brand)] group-hover:underline">Abrir a tela →</p>
+              <p className="mt-2.5 inline-flex items-center gap-1 font-montserrat text-[13px] font-medium text-[color:var(--brand)] group-hover:underline">Abrir a tela →</p>
             </Link>
           ))}
         </div>

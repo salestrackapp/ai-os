@@ -19,10 +19,10 @@ export const maxDuration = 60;
 const ST_TONE: Record<string, "neutral" | "brand" | "warn" | "success"> = {
   rascunho: "neutral", gerando: "brand", em_revisao: "warn", aprovado: "brand", entregue: "success", publicado: "success",
 };
-const BRAND_BG: Record<string, string> = { salestrack: "#0B0B16", andre_kachan: "#0F1A24", tenant: "#0F1A24" };
+const BRAND_BG: Record<string, string> = { salestrack: "#1A1A2E", andre_kachan: "#0F1A24", tenant: "#0F1A24" };
 
-const btnPrimary = "ds-focus inline-flex h-9 items-center gap-1.5 rounded-ds-input bg-brand px-3.5 font-montserrat text-[13px] font-semibold text-white shadow-ds-brand transition-colors hover:bg-brand-hover";
-const btnGhost = "ds-focus inline-flex h-9 items-center gap-1.5 rounded-ds-input border border-hairline-strong px-3.5 font-montserrat text-[13px] font-medium text-[color:var(--fg-2)] transition-colors hover:bg-[var(--bg-2)]";
+const btnPrimary = "ds-focus inline-flex h-9 items-center gap-1.5 rounded-ds-input bg-brand px-3.5 font-montserrat text-[14px] font-semibold text-white shadow-ds-brand transition-colors hover:bg-brand-hover";
+const btnGhost = "ds-focus inline-flex h-9 items-center gap-1.5 rounded-ds-input border border-hairline-strong px-3.5 font-montserrat text-[14px] font-medium text-[color:var(--fg-2)] transition-colors hover:bg-[var(--bg-2)]";
 
 export default async function DeliverableDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -69,7 +69,7 @@ export default async function DeliverableDetail({ params }: { params: Promise<{ 
         <Card className="!p-0 overflow-hidden">
           <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
             <p className="ds-eyebrow !mb-0">Pré-visualização executiva</p>
-            <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{BRAND_LABELS[brand_scope]}</span>
+            <span className="font-jbmono text-[13px] text-[color:var(--fg-4)]">{BRAND_LABELS[brand_scope]}</span>
           </div>
           <iframe srcDoc={previewHtml} className="w-full" style={{ height: 760, border: 0, background: BRAND_BG[brand_scope] ?? "#0F1A24" }} title="preview" />
         </Card>
@@ -84,7 +84,7 @@ export default async function DeliverableDetail({ params }: { params: Promise<{ 
               {d.status === "em_revisao" && <><form action={approveStudioAction.bind(null, id)}><button className={btnPrimary}>Aprovar</button></form><form action={statusAction.bind(null, id, "rascunho")}><button className={btnGhost}>Voltar a rascunho</button></form></>}
               {d.status === "aprovado" && <><form action={publishStudioAction.bind(null, id)}><button className={btnPrimary}><Icon name="rocket" size={14} /> Publicar</button></form>{d.line === "proposta_doc" && <form action={enviarPropostaAoComercialAction.bind(null, id)}><button className={btnGhost}>Enviar ao Comercial</button></form>}<form action={statusAction.bind(null, id, "em_revisao")}><button className={btnGhost}>Reabrir revisão</button></form></>}
               {["publicado", "entregue"].includes(d.status) && <>
-                <span className="inline-flex items-center gap-1.5 font-montserrat text-[13px] font-medium text-[color:var(--success)]">✓ {STATUS_LABELS[d.status]}{d.delivered_at ? ` · ${new Date(d.delivered_at).toLocaleDateString("pt-BR")}` : ""}</span>
+                <span className="inline-flex items-center gap-1.5 font-montserrat text-[14px] font-medium text-[color:var(--success)]">✓ {STATUS_LABELS[d.status]}{d.delivered_at ? ` · ${new Date(d.delivered_at).toLocaleDateString("pt-BR")}` : ""}</span>
                 {d.public_token && <Link href={`/entregavel/${d.public_token}`} target="_blank" className={btnGhost}>Link público</Link>}
                 <form action={newVersionStudioAction.bind(null, id)}><button className={btnGhost}>Nova versão</button></form>
               </>}
@@ -101,8 +101,8 @@ export default async function DeliverableDetail({ params }: { params: Promise<{ 
               </div>
             ) : (
               <form action={saveContentAction.bind(null, id)} className="space-y-3">
-                <div><label className="mb-1.5 block font-montserrat text-[12px] font-medium text-[color:var(--fg-2)]">Título</label><input name="title" defaultValue={d.title} className="h-10 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-sm text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" /></div>
-                <div><label className="mb-1.5 block font-montserrat text-[12px] font-medium text-[color:var(--fg-2)]">Conteúdo (JSON)</label><textarea name="content_json" rows={12} defaultValue={JSON.stringify(d.content, null, 2)} className="w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] p-3 font-jbmono text-[12px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" /></div>
+                <div><label className="mb-1.5 block font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]">Título</label><input name="title" defaultValue={d.title} className="h-10 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-sm text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" /></div>
+                <div><label className="mb-1.5 block font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]">Conteúdo (JSON)</label><textarea name="content_json" rows={12} defaultValue={JSON.stringify(d.content, null, 2)} className="w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] p-3 font-jbmono text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" /></div>
                 <button className={btnGhost}>Salvar e re-renderizar</button>
               </form>
             )}
@@ -117,12 +117,12 @@ export default async function DeliverableDetail({ params }: { params: Promise<{ 
                 <form action={enviarTesteAction.bind(null, id)} className="space-y-2">
                   <input type="hidden" name="canal" value={canalDoAtivo} />
                   <div className="grid grid-cols-2 gap-2">
-                    <input name="nome" aria-label="Nome do destinatário" placeholder="Nome" className="h-9 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
-                    <input name="empresa" aria-label="Empresa do destinatário" placeholder="Empresa" className="h-9 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+                    <input name="nome" aria-label="Nome do destinatário" placeholder="Nome" className="h-9 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[14px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+                    <input name="empresa" aria-label="Empresa do destinatário" placeholder="Empresa" className="h-9 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[14px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
                   </div>
                   {canalDoAtivo === "email"
-                    ? <input name="email" type="email" aria-label="E-mail do destinatário" placeholder="E-mail do destinatário" required className="h-9 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
-                    : <input name="phone" aria-label="Telefone do destinatário" placeholder="Telefone (WhatsApp)" required className="h-9 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />}
+                    ? <input name="email" type="email" aria-label="E-mail do destinatário" placeholder="E-mail do destinatário" required className="h-9 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[14px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+                    : <input name="phone" aria-label="Telefone do destinatário" placeholder="Telefone (WhatsApp)" required className="h-9 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[14px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />}
                   <label className="flex items-center gap-2 ds-small !mt-1"><input type="checkbox" name="opt_in" className="accent-[var(--brand)]" /> O destinatário concordou em receber por este canal</label>
                   <button className={btnPrimary}>Enviar teste</button>
                 </form>
@@ -182,10 +182,10 @@ export default async function DeliverableDetail({ params }: { params: Promise<{ 
               {["aprovado", "publicado"].includes(d.status) ? (
                 <form action={emitirCertificadoAction.bind(null, id)} className="mt-4 space-y-2 border-t border-hairline pt-3">
                   <p className="ds-small !mt-0 font-medium text-[color:var(--fg-2)]">Emitir certificado</p>
-                  <input name="participante" aria-label="Nome do participante" placeholder="Nome do participante" required className="h-9 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+                  <input name="participante" aria-label="Nome do participante" placeholder="Nome do participante" required className="h-9 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[14px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
                   <div className="flex gap-2">
-                    <input name="email" placeholder="E-mail (opcional)" className="h-9 flex-1 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
-                    <input name="nota" aria-label="Nota do teste" placeholder="Nota" className="h-9 w-20 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+                    <input name="email" placeholder="E-mail (opcional)" className="h-9 flex-1 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[14px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+                    <input name="nota" aria-label="Nota do teste" placeholder="Nota" className="h-9 w-20 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-[14px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
                   </div>
                   <button className={btnPrimary}>Emitir certificado (PDF)</button>
                 </form>
@@ -197,7 +197,7 @@ export default async function DeliverableDetail({ params }: { params: Promise<{ 
           <Card>
             <p className="mb-2 font-montserrat text-[15px] font-semibold text-[color:var(--fg-1)]">Versões</p>
             <ul className="space-y-1.5">
-              {(versions ?? []).map((v) => <li key={v.version} className="flex justify-between font-montserrat text-[13px]"><span className="text-[color:var(--fg-2)]">v{v.version}</span><span className="text-[color:var(--fg-4)]">{new Date(v.created_at).toLocaleString("pt-BR")}</span></li>)}
+              {(versions ?? []).map((v) => <li key={v.version} className="flex justify-between font-montserrat text-[14px]"><span className="text-[color:var(--fg-2)]">v{v.version}</span><span className="text-[color:var(--fg-4)]">{new Date(v.created_at).toLocaleString("pt-BR")}</span></li>)}
               {(versions ?? []).length === 0 && <li className="ds-small !mt-0">Ainda não renderizado.</li>}
             </ul>
           </Card>

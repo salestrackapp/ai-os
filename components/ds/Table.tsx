@@ -24,7 +24,7 @@ export function Table<T extends Record<string, unknown>>({ columns, rows, getKey
         <thead>
           <tr className="border-b border-hairline">
             {columns.map((c) => (
-              <th key={c.key} className={cn("px-4 py-3 font-jbmono text-[11px] font-normal uppercase tracking-[0.08em] text-[color:var(--fg-3)]",
+              <th key={c.key} className={cn("px-4 py-3 font-jbmono text-[13px] font-normal uppercase tracking-[0.08em] text-[color:var(--fg-3)]",
                 c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left")}>{c.header}</th>
             ))}
           </tr>

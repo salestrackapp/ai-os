@@ -13,6 +13,7 @@ import {
 import { generateAction } from "@/app/admin/entregaveis/actions";
 import { Icon } from "@/components/ui/icons";
 import { platformSubscriptionEnabled } from "@/lib/config";
+import { ContentArea } from "@/components/ds";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -81,82 +82,84 @@ export default async function PropostaPage({ params }: { params: Promise<{ id: s
   };
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6"><Link href="/admin/propostas" className="text-muted2 hover:text-gold text-sm">← Propostas</Link></div>
-      <div className="grid lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2"><ProposalDocument p={docData} /></div>
-        <div className="space-y-5">
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-serif text-xl font-semibold">Status</h3>
-              <span className={proposalStatusBadge(p.status)}>{PROPOSAL_STATUS_LABELS[p.status]}</span>
-            </div>
-            <p className="text-xs text-muted2 mb-1">v{p.version}{p.sent_at ? ` · enviada ${new Date(p.sent_at).toLocaleDateString("pt-BR")}` : ""}</p>
-            <p className="text-sm text-muted mb-3">Conta: {org ? <Link href={`/admin/crm/contas/${org.id}`} className="text-gold hover:underline">{org.name}</Link> : <span className="text-muted2">nenhuma</span>}{p.client_name ? ` · ${p.client_name}` : ""}</p>
-            <ProposalActions id={id} status={p.status} link={link} />
-            {p.org_id && (
-              <form action={generateAction.bind(null, "proposta", id)} className="mt-3 pt-3 border-t border-line">
-                <button className="btn-ghost w-full justify-center text-sm"><Icon name="fileText" size={14} /> Gerar no Estúdio de Entregáveis →</button>
-                <p className="text-[11px] text-muted2 mt-1">Versão executiva (PDF) com colunas André Kachan × Salestrack e portão de aprovação.</p>
-              </form>
-            )}
-            {p.status === "aprovada" && p.org_id && platformSubscriptionEnabled() && (
-              <form action={subscriptionFromProposal.bind(null, id)} className="mt-3 pt-3 border-t border-line">
-                <button className="btn-gold w-full justify-center text-sm"><Icon name="creditCard" size={14} /> Criar assinatura (Plataforma AI OS)</button>
-                <p className="text-[11px] text-muted2 mt-1">Liga o que foi vendido à cobrança: plano Professional + mensalidade {p.monthly_platform_fee ? brl(p.monthly_platform_fee) : "da proposta"}.</p>
-              </form>
-            )}
-          </div>
-
-          {(versions ?? []).length > 1 && (
+    <ContentArea>
+      <div>
+        <div className="flex items-center gap-3 mb-6"><Link href="/admin/propostas" className="text-muted2 hover:text-gold text-sm">← Propostas</Link></div>
+        <div className="grid lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2"><ProposalDocument p={docData} /></div>
+          <div className="space-y-5">
             <div className="card p-6">
-              <h3 className="font-serif text-lg font-semibold mb-3">Versões</h3>
-              <div className="space-y-1">
-                {(versions ?? []).map((v: { id: string; version: number; status: string }) => (
-                  <Link key={v.id} href={`/admin/propostas/${v.id}`} className={`flex justify-between text-sm px-2 py-1 rounded ${v.id === id ? "bg-navy3 text-gold" : "text-muted hover:text-cream"}`}>
-                    <span>v{v.version}</span><span className="text-xs text-muted2">{PROPOSAL_STATUS_LABELS[v.status]}</span>
-                  </Link>
-                ))}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-serif text-xl font-semibold">Status</h3>
+                <span className={proposalStatusBadge(p.status)}>{PROPOSAL_STATUS_LABELS[p.status]}</span>
               </div>
+              <p className="text-xs text-muted2 mb-1">v{p.version}{p.sent_at ? ` · enviada ${new Date(p.sent_at).toLocaleDateString("pt-BR")}` : ""}</p>
+              <p className="text-sm text-muted mb-3">Conta: {org ? <Link href={`/admin/crm/contas/${org.id}`} className="text-gold hover:underline">{org.name}</Link> : <span className="text-muted2">nenhuma</span>}{p.client_name ? ` · ${p.client_name}` : ""}</p>
+              <ProposalActions id={id} status={p.status} link={link} />
+              {p.org_id && (
+                <form action={generateAction.bind(null, "proposta", id)} className="mt-3 pt-3 border-t border-line">
+                  <button className="btn-ghost w-full justify-center text-sm"><Icon name="fileText" size={14} /> Gerar no Estúdio de Entregáveis →</button>
+                  <p className="text-[13px] text-muted2 mt-1">Versão executiva (PDF) com colunas André Kachan × Salestrack e portão de aprovação.</p>
+                </form>
+              )}
+              {p.status === "aprovada" && p.org_id && platformSubscriptionEnabled() && (
+                <form action={subscriptionFromProposal.bind(null, id)} className="mt-3 pt-3 border-t border-line">
+                  <button className="btn-gold w-full justify-center text-sm"><Icon name="creditCard" size={14} /> Criar assinatura (Plataforma AI OS)</button>
+                  <p className="text-[13px] text-muted2 mt-1">Liga o que foi vendido à cobrança: plano Professional + mensalidade {p.monthly_platform_fee ? brl(p.monthly_platform_fee) : "da proposta"}.</p>
+                </form>
+              )}
             </div>
-          )}
 
-          <div className="card p-6">
-            <h3 className="font-serif text-lg font-semibold mb-3">Leitura por seção</h3>
-            {Object.keys(secTotals).length === 0 ? <p className="text-sm text-muted2">Sem leitura registrada ainda.</p> : (
-              <div className="space-y-2">
-                {Object.entries(secTotals).sort((a, b) => b[1] - a[1]).map(([s, secs]) => (
-                  <div key={s} className="flex items-center gap-2 text-sm">
-                    <span className="w-24 text-muted">{SECTION_LABELS[s] ?? s}</span>
-                    <div className="flex-1 h-2 rounded-full bg-navy3 overflow-hidden"><div className="h-full bg-gold" style={{ width: `${(secs / maxSec) * 100}%` }} /></div>
-                    <span className="w-16 text-right font-mono text-xs text-cream">{fmtSecs(secs)}</span>
-                  </div>
-                ))}
+            {(versions ?? []).length > 1 && (
+              <div className="card p-6">
+                <h3 className="font-serif text-lg font-semibold mb-3">Versões</h3>
+                <div className="space-y-1">
+                  {(versions ?? []).map((v: { id: string; version: number; status: string }) => (
+                    <Link key={v.id} href={`/admin/propostas/${v.id}`} className={`flex justify-between text-sm px-2 py-1 rounded ${v.id === id ? "bg-navy3 text-gold" : "text-muted hover:text-cream"}`}>
+                      <span>v{v.version}</span><span className="text-xs text-muted2">{PROPOSAL_STATUS_LABELS[v.status]}</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
 
-          {decision && (
             <div className="card p-6">
-              <h3 className="font-serif text-lg font-semibold mb-2">Decisão</h3>
-              <p className="text-sm text-cream">{decision.kind === "approved" ? "Aprovada" : decision.kind === "adjust_requested" ? "Ajuste solicitado" : "Recusada"}</p>
-              {decision.payload?.name && <p className="text-xs text-muted2">{String(decision.payload.name)}{decision.payload?.role ? ` · ${decision.payload.role}` : ""}</p>}
-              {decision.payload?.note && <p className="text-sm text-muted mt-2">“{String(decision.payload.note)}”</p>}
-              {p.content_hash && <p className="text-[10px] text-muted2 mt-3 font-mono break-all">hash: {p.content_hash}</p>}
+              <h3 className="font-serif text-lg font-semibold mb-3">Leitura por seção</h3>
+              {Object.keys(secTotals).length === 0 ? <p className="text-sm text-muted2">Sem leitura registrada ainda.</p> : (
+                <div className="space-y-2">
+                  {Object.entries(secTotals).sort((a, b) => b[1] - a[1]).map(([s, secs]) => (
+                    <div key={s} className="flex items-center gap-2 text-sm">
+                      <span className="w-24 text-muted">{SECTION_LABELS[s] ?? s}</span>
+                      <div className="flex-1 h-2 rounded-full bg-navy3 overflow-hidden"><div className="h-full bg-gold" style={{ width: `${(secs / maxSec) * 100}%` }} /></div>
+                      <span className="w-16 text-right font-mono text-xs text-cream">{fmtSecs(secs)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="card p-6">
-            <h3 className="font-serif text-lg font-semibold mb-3">Eventos</h3>
-            <ul className="space-y-2">
-              {(events ?? []).slice(0, 12).map((e) => (
-                <li key={e.id} className="flex justify-between text-xs"><span className="text-muted">{e.kind}</span><span className="text-muted2">{new Date(e.created_at).toLocaleString("pt-BR")}</span></li>
-              ))}
-              {(events ?? []).length === 0 && <li className="text-sm text-muted2">Sem eventos.</li>}
-            </ul>
+            {decision && (
+              <div className="card p-6">
+                <h3 className="font-serif text-lg font-semibold mb-2">Decisão</h3>
+                <p className="text-sm text-cream">{decision.kind === "approved" ? "Aprovada" : decision.kind === "adjust_requested" ? "Ajuste solicitado" : "Recusada"}</p>
+                {decision.payload?.name && <p className="text-xs text-muted2">{String(decision.payload.name)}{decision.payload?.role ? ` · ${decision.payload.role}` : ""}</p>}
+                {decision.payload?.note && <p className="text-sm text-muted mt-2">“{String(decision.payload.note)}”</p>}
+                {p.content_hash && <p className="text-[11px] text-muted2 mt-3 font-mono break-all">hash: {p.content_hash}</p>}
+              </div>
+            )}
+
+            <div className="card p-6">
+              <h3 className="font-serif text-lg font-semibold mb-3">Eventos</h3>
+              <ul className="space-y-2">
+                {(events ?? []).slice(0, 12).map((e) => (
+                  <li key={e.id} className="flex justify-between text-xs"><span className="text-muted">{e.kind}</span><span className="text-muted2">{new Date(e.created_at).toLocaleString("pt-BR")}</span></li>
+                ))}
+                {(events ?? []).length === 0 && <li className="text-sm text-muted2">Sem eventos.</li>}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </ContentArea>
   );
 }

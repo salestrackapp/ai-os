@@ -10,7 +10,7 @@ import { criarTemplateAction, removerTemplateAction, criarRegraAction, removerRe
 export const dynamic = "force-dynamic";
 
 const input = "h-10 w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-sm text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]";
-const lbl = "mb-1 block font-montserrat text-[11px] font-medium uppercase tracking-[.12em] text-[color:var(--fg-3)]";
+const lbl = "mb-1 block font-montserrat text-[13px] font-medium uppercase tracking-[.12em] text-[color:var(--fg-3)]";
 const primary = "ds-focus inline-flex h-10 items-center rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover";
 
 export default async function RelConfig() {
@@ -50,10 +50,10 @@ export default async function RelConfig() {
                 {templates.map((t) => (
                   <li key={t.id} className="flex items-start justify-between gap-3 px-4 py-3">
                     <div className="min-w-0">
-                      <p className="font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">{t.nome} {t.atalho && <Badge tone="neutral">{t.atalho}</Badge>}</p>
-                      <p className="mt-0.5 line-clamp-2 font-montserrat text-[12px] text-[color:var(--fg-3)]">{t.corpo}</p>
+                      <p className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">{t.nome} {t.atalho && <Badge tone="neutral">{t.atalho}</Badge>}</p>
+                      <p className="mt-0.5 line-clamp-2 font-montserrat text-[13px] text-[color:var(--fg-3)]">{t.corpo}</p>
                     </div>
-                    <form action={removerTemplateAction.bind(null, t.id)}><button className="ds-focus shrink-0 rounded-ds-input border border-hairline-strong px-2.5 py-1.5 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Remover</button></form>
+                    <form action={removerTemplateAction.bind(null, t.id)}><button className="ds-focus shrink-0 rounded-ds-input border border-hairline-strong px-2.5 py-1.5 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Remover</button></form>
                   </li>
                 ))}
               </ul>
@@ -91,10 +91,10 @@ export default async function RelConfig() {
                 {regras.map((r) => (
                   <li key={r.id} className="flex items-start justify-between gap-3 px-4 py-3">
                     <div className="min-w-0">
-                      <p className="font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">{r.nome}</p>
-                      <p className="mt-0.5 font-montserrat text-[12px] text-[color:var(--fg-3)]">Se <b>{r.match_campo}</b> contém “{r.match_valor}” → {r.acao_rotulo ? <>rótulo <Badge tone="brand">{r.acao_rotulo}</Badge> </> : ""}{r.acao_assign_to ? <>atribui a <b>{nomeMembro(r.acao_assign_to)}</b></> : ""}{!r.acao_rotulo && !r.acao_assign_to ? "(sem ação)" : ""}</p>
+                      <p className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">{r.nome}</p>
+                      <p className="mt-0.5 font-montserrat text-[13px] text-[color:var(--fg-3)]">Se <b>{r.match_campo}</b> contém “{r.match_valor}” → {r.acao_rotulo ? <>rótulo <Badge tone="brand">{r.acao_rotulo}</Badge> </> : ""}{r.acao_assign_to ? <>atribui a <b>{nomeMembro(r.acao_assign_to)}</b></> : ""}{!r.acao_rotulo && !r.acao_assign_to ? "(sem ação)" : ""}</p>
                     </div>
-                    <form action={removerRegraAction.bind(null, r.id)}><button className="ds-focus shrink-0 rounded-ds-input border border-hairline-strong px-2.5 py-1.5 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Remover</button></form>
+                    <form action={removerRegraAction.bind(null, r.id)}><button className="ds-focus shrink-0 rounded-ds-input border border-hairline-strong px-2.5 py-1.5 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Remover</button></form>
                   </li>
                 ))}
               </ul>

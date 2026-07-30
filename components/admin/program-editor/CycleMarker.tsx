@@ -22,8 +22,8 @@ export function CycleMarker({ projectId, current }: { projectId: string; current
           <button key={s.key} onClick={() => pick(i)} disabled={busy} aria-pressed={on}
             className="ds-focus rounded-ds-card border p-3 text-left transition-colors disabled:opacity-60"
             style={on ? { background: "var(--grad-brand)", borderColor: "transparent", color: "#fff" } : { background: "var(--bg-1)", borderColor: "var(--border)" }}>
-            <span className={`block font-jbmono text-[10px] ${on ? "text-white/75" : "text-[color:var(--fg-3)]"}`}>etapa {i + 1}/5</span>
-            <span className={`block font-montserrat text-[13px] font-semibold ${on ? "text-white" : "text-[color:var(--fg-1)]"}`}>{s.title}</span>
+            <span className={`block font-jbmono text-[11px] ${on ? "text-white/75" : "text-[color:var(--fg-3)]"}`}>etapa {i + 1}/5</span>
+            <span className={`block font-montserrat text-[14px] font-semibold ${on ? "text-white" : "text-[color:var(--fg-1)]"}`}>{s.title}</span>
           </button>
         );
       })}

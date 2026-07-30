@@ -20,7 +20,7 @@ import { idempotencyKey, isDue } from "@/lib/comms/orchestrate";
 import { dicaLine, dicaSchema } from "@/lib/studio/lines/dica";
 import "@/lib/studio/lines"; // registra o catálogo
 import { buildDeliverableHtml } from "@/lib/deliverables/render/html";
-import { brandSignature, isV2Accent } from "@/lib/deliverables/types";
+import { brandSignature, isAccentPermitido } from "@/lib/deliverables/types";
 
 const goodDica = {
   titulo: "Padronize os prompts de atendimento",
@@ -130,12 +130,12 @@ describe("R3.4 · Apresentações (motor de slides reutilizável)", () => {
     expect(c.deck?.slides[0].notes).toContain("Cumprimente");
     expect(c.deck?.slides[1].stat?.value).toBe("12");
   });
-  it("preview HTML do deck sai em v2 (slides + estatística lime + Montserrat)", () => {
+  it("preview HTML do deck sai em v6 (slides + estatística em faísca + Montserrat)", () => {
     const html = buildDeliverableHtml({ kind: "apresentacao", brand_scope: "salestrack", format: "pptx", content: apresentacaoLine.toContent(sample as never, ctx), title: "Deck" });
     expect(html).toContain("l-capa");
     expect(html).toContain("s-stat");
     expect(html).toContain("Montserrat");
-    expect(html).toContain("#EBF212"); // faísca lime na estatística
+    expect(html).toContain("#00E5FF"); // faísca na estatística
   });
 });
 
@@ -204,8 +204,16 @@ describe("R3.6 · Mensagens & Copy (regras por canal + merge fields + PII)", () 
     expect(e.email?.assunto).toBe("Novidade");
   });
   it("e-mail HTML é MailerLite-ready (inline + descadastro); mensagem destaca {{var}}", () => {
+    // Contrato do descadastro: TODO e-mail sai com via de saída. Com token, o link real; sem
+    // token, o endereço de privacidade. Um "Descadastrar" que aponta para placeholder não
+    // resolvido chega ao destinatário como link quebrado — pior que não oferecer.
     const html = buildEmailHtml({ assunto: "Oi", corpo: ["Olá {{nome}}"], cta: { label: "Ver" }, attribution: "salestrack" });
-    expect(html).toContain("{{unsubscribe}}");
+    expect(html).not.toContain("{{unsubscribe}}");
+    expect(html).toContain("andre.kachan@salestrack.com.br");
+    const comLink = buildEmailHtml({ assunto: "Oi", corpo: ["Olá"], attribution: "salestrack",
+      unsubscribeUrl: "https://ai-os-sable.vercel.app/descadastro/abc-123" });
+    expect(comLink).toContain("/descadastro/abc-123");
+    expect(comLink).toContain("Descadastrar");
     expect(html).toContain("style=");
     expect(html).toContain("width:600px");
     const msg = buildMessageHtml({ canal: "whatsapp", texto: "Oi {{nome}}!", variaveis: ["nome"] });
@@ -229,11 +237,11 @@ describe("R3.7 · Arte & Criativos (template v2 → PNG)", () => {
     const c = getLine("criativo_post")!.toContent({ tamanho: "1:1", slides: [{ headline: "A" }, { headline: "B" }, { headline: "C" }] } as never, ctx);
     expect(creativeSlides(c.creative!).length).toBe(3);
   });
-  it("slide renderiza no tamanho do preset, em v2 (número em lime)", () => {
-    const html = buildCreativeSlideHtml("numero", { dado: { value: "12", label: "horas/sem" } }, "1:1", { accent: "#4F1FFF" });
+  it("slide renderiza no tamanho do preset, em v6 (número em faísca)", () => {
+    const html = buildCreativeSlideHtml("numero", { dado: { value: "12", label: "horas/sem" } }, "1:1", { accent: "#007A94" });
     expect(html).toContain("1080px");   // preset 1:1
     expect(html).toContain("Montserrat");
-    expect(html).toContain("#EBF212");  // número em lime = prova
+    expect(html).toContain("#00E5FF");  // número em faísca = prova
   });
   it("par com post: creativeFromPost gera criativo com postRef", () => {
     const c = creativeFromPost("Card ink com número grande", "9:16", "post-123", ctx);
@@ -262,13 +270,13 @@ describe("R3.8 · Vídeo (roteiro + storyboard; render graceful)", () => {
     expect(c.video?.roteiro.narracao.length).toBe(2);
     expect(c.video?.tipo).toBe("explainer");
   });
-  it("storyboard renderiza em v2 com abertura/encerramento e dado lime", () => {
+  it("storyboard renderiza em v6 com abertura/encerramento e dado em faísca", () => {
     const c = getLine("video_roteiro")!.toContent(sample as never, ctx);
-    const html = buildStoryboardHtml(c.video!, { accent: "#4F1FFF" });
+    const html = buildStoryboardHtml(c.video!, { accent: "#007A94" });
     expect(html).toContain("Montserrat");
     expect(html).toContain("Abertura");
     expect(html).toContain("Encerramento");
-    expect(html).toContain("#EBF212"); // frame de dado (número como prova)
+    expect(html).toContain("#00E5FF"); // frame de dado (número como prova)
     expect(html).toContain("Narração");
   });
   it("render é graceful: sem credencial de ferramenta → null (storyboard é o entregável)", () => {
@@ -349,10 +357,10 @@ describe("R3.2 · design ÚNICO v2 (marca é só atribuição, nunca troca o des
   const st = buildDeliverableHtml({ kind: "one_pager", brand_scope: "salestrack", format: "pdf", content, title: goodDica.titulo });
   const ak = buildDeliverableHtml({ kind: "one_pager", brand_scope: "andre_kachan", format: "pdf", content, title: goodDica.titulo });
 
-  it("AMBAS as marcas usam o design v2 (Montserrat + violeta), sem navy/gold/Cormorant", () => {
+  it("AMBAS as marcas usam o design v6 (Montserrat + ciano), sem dourado nem Cormorant", () => {
     for (const html of [st, ak]) {
       expect(html).toContain("Montserrat");
-      expect(html).toContain("#8B5CFF");
+      expect(html).toContain("#00B4D8");
       expect(html).not.toContain("Cormorant");
       expect(html).not.toContain("#C89B3C");
     }
@@ -361,12 +369,13 @@ describe("R3.2 · design ÚNICO v2 (marca é só atribuição, nunca troca o des
     expect(brandSignature("salestrack").footer).not.toBe(brandSignature("andre_kachan").footer);
     expect(ak).toContain("André Kachan"); // atribuição na assinatura
   });
-  it("accent da identidade só entra se for da paleta v2", () => {
-    expect(isV2Accent("#EBF212")).toBe(true);
-    expect(isV2Accent("#C89B3C")).toBe(false); // gold do André Kachan é rejeitado
+  it("accent da identidade só entra se for da paleta permitida", () => {
+    expect(isAccentPermitido("#00E5FF")).toBe(true);
+    expect(isAccentPermitido("#C89B3C")).toBe(false); // o dourado da identidade antiga é rejeitado
+    expect(isAccentPermitido("#4F1FFF")).toBe(false); // e o violeta do v5 também
     const withGold = buildDeliverableHtml({ kind: "one_pager", brand_scope: "salestrack", format: "pdf", content, title: "x", accent: "#C89B3C" });
-    expect(withGold).not.toContain("#C89B3C"); // ignorado → cai no violeta
-    const withLime = buildDeliverableHtml({ kind: "one_pager", brand_scope: "salestrack", format: "pdf", content, title: "x", accent: "#4F1FFF" });
-    expect(withLime).toContain("#4F1FFF");
+    expect(withGold).not.toContain("#C89B3C"); // ignorado → cai no ciano
+    const comAccent = buildDeliverableHtml({ kind: "one_pager", brand_scope: "salestrack", format: "pdf", content, title: "x", accent: "#007A94" });
+    expect(comAccent).toContain("#007A94");
   });
 });

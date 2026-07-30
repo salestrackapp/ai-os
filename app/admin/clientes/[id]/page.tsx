@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { currentMembership } from "@/lib/auth";
 import { emailMap } from "@/lib/supabase/admin";
-import { ContentArea, PageHeader, Card, Kpi, CopilotCard, EmptyState, Badge, StatusDot } from "@/components/ds";
+import { ContentArea, PageHeader, Card, Kpi, CopilotCard, EmptyState, Badge, StatusDot, botaoClasses } from "@/components/ds";
 import { Breadcrumbs, Tabs } from "@/components/ds/nav";
 import { CycleSteps } from "@/components/ds/CycleSteps";
 import { JornadaHeader } from "@/components/journey/JornadaHeader";
@@ -114,9 +114,9 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
       {acoes.length > 1 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {acoes.slice(1, 4).map((a, i) => (
-            <Link key={i} href={a.href} className="group flex items-center gap-3 rounded-ds-card border border-hairline bg-[var(--bg-1)] p-4 shadow-ds-xs hover:-translate-y-0.5 hover:border-[color:rgba(79,31,255,0.28)] hover:shadow-ds-md transition-all">
+            <Link key={i} href={a.href} className="group flex items-center gap-3 rounded-ds-card border border-hairline bg-[var(--bg-1)] p-4 shadow-ds-xs hover:-translate-y-0.5 hover:border-[color:rgba(0, 122, 148,0.28)] hover:shadow-ds-md transition-all">
               <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name="sparkles" size={16} /></span>
-              <span className="min-w-0 flex-1"><span className="block font-montserrat text-[13px] font-medium leading-snug text-[color:var(--fg-1)]">{a.finding}</span><span className="mt-1 inline-flex items-center gap-1 font-montserrat text-[12px] font-semibold text-[color:var(--brand)]">{a.label} →</span></span>
+              <span className="min-w-0 flex-1"><span className="block font-montserrat text-[14px] font-medium leading-snug text-[color:var(--fg-1)]">{a.finding}</span><span className="mt-1 inline-flex items-center gap-1 font-montserrat text-[13px] font-semibold text-[color:var(--brand)]">{a.label} →</span></span>
             </Link>
           ))}
         </div>
@@ -134,7 +134,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <p className="ds-eyebrow">Ciclo do método</p>
-        <Link href={`/admin/programas/${project.id}/editar`} className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">Editar programa →</Link>
+        <Link href={`/admin/programas/${project.id}/editar`} className="font-montserrat text-[14px] font-semibold text-[color:var(--brand)] hover:underline">Editar programa →</Link>
       </div>
       <CycleSteps currentStep={step} />
       <Card>
@@ -142,36 +142,36 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
         {phases.length === 0 ? <p className="ds-small">Sem fases definidas. Adicione no editor do programa.</p> : (
           <ol className="space-y-2">
             {phases.map((ph, i) => (
-              <li key={i} className="flex items-baseline gap-3"><span className="font-jbmono text-[12px] text-[color:var(--fg-3)]">{i + 1}</span><span><span className="font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{ph.titulo}</span> <span className="ds-small">· {ph.meses} {ph.meses === 1 ? "mês" : "meses"} — {ph.descricao}</span></span></li>
+              <li key={i} className="flex items-baseline gap-3"><span className="font-jbmono text-[13px] text-[color:var(--fg-3)]">{i + 1}</span><span><span className="font-montserrat text-[14px] font-medium text-[color:var(--fg-1)]">{ph.titulo}</span> <span className="ds-small">· {ph.meses} {ph.meses === 1 ? "mês" : "meses"} — {ph.descricao}</span></span></li>
             ))}
           </ol>
         )}
       </Card>
     </div>
-  ) : <EmptyState icon={<Icon name="rocket" size={22} />} title="Sem programa ainda" description="Ao fechar uma proposta, o programa é provisionado e aparece aqui." action={<Link href="/admin/programas/novo" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="rocket" size={15} /> Criar programa</Link>} />;
+  ) : <EmptyState icon={<Icon name="rocket" size={22} />} title="Sem programa ainda" description="Ao fechar uma proposta, o programa é provisionado e aparece aqui." action={<Link href="/admin/programas/novo" className={botaoClasses()}><Icon name="rocket" size={15} /> Criar programa</Link>} />;
 
   const comercial = (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="ds-small !mt-0">Ofertas vendidas em propostas e entregues pelo AI OS — <b>não</b> é plano de plataforma.</p>
-        <Link href="/admin/propostas" className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">Nova proposta →</Link>
+        <Link href="/admin/propostas" className="font-montserrat text-[14px] font-semibold text-[color:var(--brand)] hover:underline">Nova proposta →</Link>
       </div>
       {(proposals ?? []).length === 0 ? (
-        <EmptyState icon={<Icon name="pen" size={22} />} title="Nenhuma proposta ainda" description="As ofertas propostas a este cliente (Diagnose, Sprint, engajamento, Mentoria) aparecem aqui." action={<Link href="/admin/propostas" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="pen" size={15} /> Nova proposta</Link>} />
+        <EmptyState icon={<Icon name="pen" size={22} />} title="Nenhuma proposta ainda" description="As ofertas propostas a este cliente (Diagnose, Sprint, engajamento, Mentoria) aparecem aqui." action={<Link href="/admin/propostas" className={botaoClasses()}><Icon name="pen" size={15} /> Nova proposta</Link>} />
       ) : (
         <div className="overflow-x-auto rounded-ds-card border border-hairline bg-[var(--bg-1)] shadow-ds-xs">
           <table className="w-full border-collapse">
-            <thead><tr className="border-b border-hairline">{["Oferta / proposta", "Status", "Itens", "Valor"].map((h) => <th key={h} className="px-4 py-3 text-left font-jbmono text-[11px] uppercase tracking-[0.08em] text-[color:var(--fg-3)]">{h}</th>)}</tr></thead>
+            <thead><tr className="border-b border-hairline">{["Oferta / proposta", "Status", "Itens", "Valor"].map((h) => <th key={h} className="px-4 py-3 text-left font-jbmono text-[13px] uppercase tracking-[0.08em] text-[color:var(--fg-3)]">{h}</th>)}</tr></thead>
             <tbody>
               {(proposals ?? []).map((p) => {
                 const items = (p.items as ProposalItem[]) ?? [];
                 const total = items.reduce((a, it) => a + (Number(it.qty) || 0) * (Number(it.price) || 0), 0);
                 return (
                   <tr key={p.id} className="border-b border-hairline last:border-0 hover:bg-[var(--bg-2)]">
-                    <td className="px-4 py-3"><Link href={`/admin/propostas/${p.id}`} className="font-montserrat text-[13px] text-[color:var(--fg-1)] hover:text-[color:var(--brand)]">{p.title}</Link></td>
+                    <td className="px-4 py-3"><Link href={`/admin/propostas/${p.id}`} className="font-montserrat text-[14px] text-[color:var(--fg-1)] hover:text-[color:var(--brand)]">{p.title}</Link></td>
                     <td className="px-4 py-3"><span className={proposalStatusBadge(p.status)}>{PROPOSAL_STATUS_LABELS[p.status] ?? p.status}</span></td>
-                    <td className="px-4 py-3 font-jbmono text-[12px] text-[color:var(--fg-2)]">{items.length}</td>
-                    <td className="px-4 py-3 text-right font-jbmono text-[12px] text-[color:var(--fg-1)]">{brl(total)}</td>
+                    <td className="px-4 py-3 font-jbmono text-[13px] text-[color:var(--fg-2)]">{items.length}</td>
+                    <td className="px-4 py-3 text-right font-jbmono text-[13px] text-[color:var(--fg-1)]">{brl(total)}</td>
                   </tr>
                 );
               })}
@@ -186,12 +186,12 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
   const sessoes = (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
-        <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow">Próximas sessões</p>{project && <Link href={`/admin/programas/${project.id}`} className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Agendar →</Link>}</div>
-        {upcoming.length === 0 ? <p className="ds-small">Nenhuma sessão agendada.</p> : <ul className="space-y-2">{upcoming.map((s) => <li key={s.id} className="border-b border-hairline pb-2 last:border-0"><p className="font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{s.title || "Sessão"}</p><p className="ds-small !mt-0">{fmtDateTime(s.scheduled_at)}</p></li>)}</ul>}
+        <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow">Próximas sessões</p>{project && <Link href={`/admin/programas/${project.id}`} className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">Agendar →</Link>}</div>
+        {upcoming.length === 0 ? <p className="ds-small">Nenhuma sessão agendada.</p> : <ul className="space-y-2">{upcoming.map((s) => <li key={s.id} className="border-b border-hairline pb-2 last:border-0"><p className="font-montserrat text-[14px] font-medium text-[color:var(--fg-1)]">{s.title || "Sessão"}</p><p className="ds-small !mt-0">{fmtDateTime(s.scheduled_at)}</p></li>)}</ul>}
       </Card>
       <Card>
         <p className="ds-eyebrow mb-3">Histórico</p>
-        {past.length === 0 ? <p className="ds-small">Sem sessões realizadas ainda.</p> : <ul className="space-y-2">{past.slice(0, 8).map((s) => <li key={s.id} className="flex items-center justify-between gap-2 border-b border-hairline pb-2 last:border-0"><span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{s.title || "Sessão"}</span><span className="ds-small !mt-0">{fmtDate(s.scheduled_at)}</span></li>)}</ul>}
+        {past.length === 0 ? <p className="ds-small">Sem sessões realizadas ainda.</p> : <ul className="space-y-2">{past.slice(0, 8).map((s) => <li key={s.id} className="flex items-center justify-between gap-2 border-b border-hairline pb-2 last:border-0"><span className="font-montserrat text-[14px] text-[color:var(--fg-1)]">{s.title || "Sessão"}</span><span className="ds-small !mt-0">{fmtDate(s.scheduled_at)}</span></li>)}</ul>}
       </Card>
     </div>
   );
@@ -201,12 +201,12 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
       <Card className="!p-0 overflow-hidden">
         <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
           <p className="ds-eyebrow !mb-0">Entregas compartilháveis</p>
-          <Link href={`/admin/entregaveis/novo?cliente=${id}&etapa=${journey?.row.etapaAtual ?? 3}`} className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">+ Entregável nesta etapa</Link>
+          <Link href={`/admin/entregaveis/novo?cliente=${id}&etapa=${journey?.row.etapaAtual ?? 3}`} className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">+ Entregável nesta etapa</Link>
         </div>
         <ul className="divide-y divide-[color:var(--border)]">
           {/* Diagnóstico como primeira entrega */}
           <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-            <div className="min-w-0"><p className="font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">Diagnóstico Digital</p><p className="ds-small !mt-0">Formulário do cliente</p></div>
+            <div className="min-w-0"><p className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">Diagnóstico Digital</p><p className="ds-small !mt-0">Formulário do cliente</p></div>
             <div className="flex items-center gap-3">
               <Badge tone={intake.status === "enviado" ? "success" : "warn"}>{intake.status === "enviado" ? "preenchido" : "aguardando"}</Badge>
               <Compartilhar orgId={id} url={diagUrl} titulo="o diagnóstico digital" compact />
@@ -215,12 +215,12 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
           {/* Entregáveis do Estúdio (link público /entregavel/[token]) */}
           {(studioDels ?? []).map((d) => (
             <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0"><p className="truncate font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">{d.title}</p><p className="ds-small !mt-0">{tipoDef(d.kind).label}</p></div>
+              <div className="min-w-0"><p className="truncate font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">{d.title}</p><p className="ds-small !mt-0">{tipoDef(d.kind).label}</p></div>
               <div className="flex items-center gap-3">
                 <Badge tone={["aprovado", "entregue", "publicado"].includes(d.status) ? "success" : "neutral"}>{d.status}</Badge>
                 {d.public_token
                   ? <Compartilhar orgId={id} url={`${baseUrl}/entregavel/${d.public_token}`} titulo={`a entrega “${d.title}”`} compact />
-                  : <span className="font-montserrat text-[11px] text-[color:var(--fg-4)]">aprovar no Estúdio p/ compartilhar</span>}
+                  : <span className="font-montserrat text-[13px] text-[color:var(--fg-4)]">aprovar no Estúdio p/ compartilhar</span>}
               </div>
             </li>
           ))}
@@ -230,8 +230,8 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
 
       {delsList.length > 0 && (
         <Card>
-          <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow">Marcos do programa</p>{project && <Link href={`/admin/programas/${project.id}/editar`} className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Editar →</Link>}</div>
-          <ul className="space-y-2">{delsList.map((d) => <li key={d.id} className="flex items-center justify-between gap-2 rounded-[10px] border border-hairline bg-[var(--bg-2)] px-4 py-2.5"><span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{d.title}</span><Badge tone={d.status.startsWith("entregue") ? "success" : d.status === "bloqueado" ? "danger" : "neutral"}>{DELIVERABLE_STATUS_LABELS[d.status] ?? d.status}</Badge></li>)}</ul>
+          <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow">Marcos do programa</p>{project && <Link href={`/admin/programas/${project.id}/editar`} className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">Editar →</Link>}</div>
+          <ul className="space-y-2">{delsList.map((d) => <li key={d.id} className="flex items-center justify-between gap-2 rounded-[10px] border border-hairline bg-[var(--bg-2)] px-4 py-2.5"><span className="font-montserrat text-[14px] text-[color:var(--fg-1)]">{d.title}</span><Badge tone={d.status.startsWith("entregue") ? "success" : d.status === "bloqueado" ? "danger" : "neutral"}>{DELIVERABLE_STATUS_LABELS[d.status] ?? d.status}</Badge></li>)}</ul>
         </Card>
       )}
     </div>
@@ -245,17 +245,17 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
         <Kpi value={String((invoices ?? []).length)} label="Faturas" />
       </div>
       <Card className="!p-0 overflow-hidden">
-        <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5"><p className="ds-eyebrow !mb-0">Faturas</p><Link href="/admin/financeiro" className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Financeiro completo →</Link></div>
+        <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5"><p className="ds-eyebrow !mb-0">Faturas</p><Link href="/admin/financeiro" className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">Financeiro completo →</Link></div>
         {(invoices ?? []).length === 0 ? <p className="px-4 py-4 ds-small">Nenhuma fatura.</p> : (
           <div className="overflow-x-auto"><table className="w-full border-collapse">
-            <thead><tr className="border-b border-hairline">{["Tipo", "Parcela", "Vencimento", "Status", "Valor"].map((h) => <th key={h} className="px-4 py-2.5 text-left font-jbmono text-[11px] uppercase tracking-[.08em] text-[color:var(--fg-3)]">{h}</th>)}</tr></thead>
+            <thead><tr className="border-b border-hairline">{["Tipo", "Parcela", "Vencimento", "Status", "Valor"].map((h) => <th key={h} className="px-4 py-2.5 text-left font-jbmono text-[13px] uppercase tracking-[.08em] text-[color:var(--fg-3)]">{h}</th>)}</tr></thead>
             <tbody>{(invoices ?? []).map((i, idx) => (
               <tr key={idx} className="border-b border-hairline last:border-0">
-                <td className="px-4 py-2.5 font-montserrat text-[13px] text-[color:var(--fg-1)]">{i.kind === "manutencao" ? "Manutenção" : "Implantação"}</td>
-                <td className="px-4 py-2.5 font-jbmono text-[12px] text-[color:var(--fg-3)]">{i.installment_n ? `${i.installment_n}/${i.installments_total ?? "—"}` : "—"}</td>
-                <td className="px-4 py-2.5 font-jbmono text-[12px] text-[color:var(--fg-2)]">{fmtDate(i.due_date)}</td>
+                <td className="px-4 py-2.5 font-montserrat text-[14px] text-[color:var(--fg-1)]">{i.kind === "manutencao" ? "Manutenção" : "Implantação"}</td>
+                <td className="px-4 py-2.5 font-jbmono text-[13px] text-[color:var(--fg-3)]">{i.installment_n ? `${i.installment_n}/${i.installments_total ?? "—"}` : "—"}</td>
+                <td className="px-4 py-2.5 font-jbmono text-[13px] text-[color:var(--fg-2)]">{fmtDate(i.due_date)}</td>
                 <td className="px-4 py-2.5"><Badge tone={i.status === "paga" ? "success" : i.status === "atrasada" ? "danger" : "warn"}>{i.status}</Badge></td>
-                <td className="px-4 py-2.5 text-right font-jbmono text-[12px] text-[color:var(--fg-1)]">{brl(Number(i.amount) || 0)}</td>
+                <td className="px-4 py-2.5 text-right font-jbmono text-[13px] text-[color:var(--fg-1)]">{brl(Number(i.amount) || 0)}</td>
               </tr>
             ))}</tbody>
           </table></div>
@@ -271,15 +271,15 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
       <Kpi value={String(metricas.sessoes?.realizadas_mes ?? 0)} label="Sessões realizadas" />
       <Kpi value={`${metricas.programa?.progresso_pct ?? 0}%`} label="Progresso" />
     </div>
-  ) : <EmptyState icon={<Icon name="chart" size={22} />} title="Sem resultados ainda" description="Gere um relatório de ROI para mostrar o valor entregue em números." action={<Link href="/admin/roi" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="chart" size={15} /> Abrir ROI</Link>} />;
+  ) : <EmptyState icon={<Icon name="chart" size={22} />} title="Sem resultados ainda" description="Gere um relatório de ROI para mostrar o valor entregue em números." action={<Link href="/admin/roi" className={botaoClasses()}><Icon name="chart" size={15} /> Abrir ROI</Link>} />;
 
   const equipe = (
     <Card>
       <p className="ds-eyebrow mb-3">Pessoas do cliente</p>
       {(members ?? []).length === 0 && (invites ?? []).length === 0 ? <p className="ds-small">Nenhum membro. O cliente convida o time pelo portal.</p> : (
         <ul className="space-y-2">
-          {(members ?? []).map((mm) => <li key={mm.user_id} className="flex items-center justify-between gap-2 border-b border-hairline pb-2 last:border-0"><span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{emails[mm.user_id] ?? "—"}</span><Badge>{mm.role}</Badge></li>)}
-          {(invites ?? []).map((iv, i) => <li key={`i${i}`} className="flex items-center justify-between gap-2"><span className="font-montserrat text-[13px] text-[color:var(--fg-2)]">{iv.email}</span><Badge tone="warn">convite pendente</Badge></li>)}
+          {(members ?? []).map((mm) => <li key={mm.user_id} className="flex items-center justify-between gap-2 border-b border-hairline pb-2 last:border-0"><span className="font-montserrat text-[14px] text-[color:var(--fg-1)]">{emails[mm.user_id] ?? "—"}</span><Badge>{mm.role}</Badge></li>)}
+          {(invites ?? []).map((iv, i) => <li key={`i${i}`} className="flex items-center justify-between gap-2"><span className="font-montserrat text-[14px] text-[color:var(--fg-2)]">{iv.email}</span><Badge tone="warn">convite pendente</Badge></li>)}
         </ul>
       )}
     </Card>
@@ -287,7 +287,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
 
   const timeline = project
     ? <ProgramTimeline projectId={project.id} mode="conducao" />
-    : <EmptyState icon={<Icon name="rocket" size={22} />} title="Sem linha do tempo ainda" description="A jornada aparece quando o programa ganhar marcos." action={<Link href="/admin/programas/novo" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="rocket" size={15} /> Criar programa</Link>} />;
+    : <EmptyState icon={<Icon name="rocket" size={22} />} title="Sem linha do tempo ainda" description="A jornada aparece quando o programa ganhar marcos." action={<Link href="/admin/programas/novo" className={botaoClasses()}><Icon name="rocket" size={15} /> Criar programa</Link>} />;
 
   // Relacionamento UNIFICADO (E5): conversas dos DOIS canais (e-mail + WhatsApp) deste cliente + timeline vinculada.
   const [{ data: relConvs }, { data: relEvents }] = await Promise.all([
@@ -302,7 +302,7 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
       <Card className="!p-0 overflow-hidden">
         <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
           <p className="ds-eyebrow !mb-0">Conversas · e-mail {nEmail} · WhatsApp {nWa}</p>
-          <Link href="/admin/relacionamento?canal=todos" className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Abrir central →</Link>
+          <Link href="/admin/relacionamento?canal=todos" className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">Abrir central →</Link>
         </div>
         {convs.length === 0 ? <p className="px-4 py-4 ds-small">Nenhuma conversa vinculada ainda — veja a história abaixo.</p> : (
           <ul className="divide-y divide-[color:var(--border)]">
@@ -312,10 +312,10 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
                   <span className={`h-2 w-2 shrink-0 rounded-full ${c.unread ? "bg-[var(--brand)]" : "bg-transparent"}`} />
                   <Badge tone={c.channel === "whatsapp" ? "success" : "neutral"}>{c.channel === "whatsapp" ? "WhatsApp" : "E-mail"}</Badge>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-montserrat text-[13px] text-[color:var(--fg-1)]">{c.assunto || c.contato_nome || c.contato_email || c.contato_phone || "conversa"}</span>
-                    <span className="block truncate font-montserrat text-[12px] text-[color:var(--fg-3)]">{c.contato_nome || c.contato_email || c.contato_phone || ""}</span>
+                    <span className="block truncate font-montserrat text-[14px] text-[color:var(--fg-1)]">{c.assunto || c.contato_nome || c.contato_email || c.contato_phone || "conversa"}</span>
+                    <span className="block truncate font-montserrat text-[13px] text-[color:var(--fg-3)]">{c.contato_nome || c.contato_email || c.contato_phone || ""}</span>
                   </span>
-                  <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{c.last_message_at ? new Date(c.last_message_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—"}</span>
+                  <span className="font-jbmono text-[13px] text-[color:var(--fg-4)]">{c.last_message_at ? new Date(c.last_message_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—"}</span>
                 </Link>
               </li>
             ))}
@@ -329,14 +329,14 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
             {(relEvents ?? []).map((e) => (
               <li key={e.id} className="flex items-start gap-3 px-4 py-3">
                 <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name="chat" size={14} /></span>
-                <span className="min-w-0 flex-1"><span className="block font-montserrat text-[13px] text-[color:var(--fg-1)]">{e.summary}</span><span className="font-jbmono text-[10px] text-[color:var(--fg-4)]">{e.source} · {new Date(e.occurred_at).toLocaleString("pt-BR")}</span></span>
+                <span className="min-w-0 flex-1"><span className="block font-montserrat text-[14px] text-[color:var(--fg-1)]">{e.summary}</span><span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{e.source} · {new Date(e.occurred_at).toLocaleString("pt-BR")}</span></span>
               </li>
             ))}
           </ul>
         </Card>
       )}
     </div>
-  ) : <EmptyState icon={<Icon name="chat" size={22} />} title="Sem conversas vinculadas" description="No Relacionamento, vincule uma thread de e-mail ou WhatsApp a este cliente — ela aparece aqui na timeline." action={<Link href="/admin/relacionamento" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="chat" size={15} /> Abrir caixa</Link>} />;
+  ) : <EmptyState icon={<Icon name="chat" size={22} />} title="Sem conversas vinculadas" description="No Relacionamento, vincule uma thread de e-mail ou WhatsApp a este cliente — ela aparece aqui na timeline." action={<Link href="/admin/relacionamento" className={botaoClasses()}><Icon name="chat" size={15} /> Abrir caixa</Link>} />;
 
   return (
     <ContentArea>
@@ -345,12 +345,12 @@ export default async function ClienteFicha({ params }: { params: Promise<{ id: s
         subtitle={project ? `${PROJECT_STATUS_LABELS[project.status] ?? project.status} · passo ${step + 1}/5 (${AI_METHOD[step].title})` : "Sem programa provisionado"}
         comoUsar={<HelpButton routeKey="/admin/clientes" />}
         actions={<div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-ds-input border border-hairline px-3 py-2"><span className="h-2 w-2 rounded-full" style={{ background: healthColor }} /><span className="font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{healthLabel}</span></span>
+          <span className="inline-flex items-center gap-2 rounded-ds-input border border-hairline px-3 py-2"><span className="h-2 w-2 rounded-full" style={{ background: healthColor }} /><span className="font-montserrat text-[14px] font-medium text-[color:var(--fg-1)]">{healthLabel}</span></span>
           <Link href={`/admin/clientes/${id}/caixa`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="chat" size={15} /> Caixa de e-mail</Link>
           <Link href={`/admin/clientes/${id}/diagnostico`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="fileText" size={15} /> Diagnóstico</Link>
           <Compartilhar orgId={id} url={diagUrl} titulo="o diagnóstico digital" compact />
           <form action={viewPortalAs.bind(null, id)}><button className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="eye" size={15} /> Ver portal</button></form>
-          <Link href="/admin/propostas" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="pen" size={15} /> Nova proposta</Link>
+          <Link href="/admin/propostas" className={botaoClasses()}><Icon name="pen" size={15} /> Nova proposta</Link>
         </div>} />
 
       {/* Cabeçalho da jornada (U3) */}

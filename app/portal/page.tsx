@@ -6,7 +6,7 @@ import { resolvePortalOrg } from "@/lib/portal";
 import { getJourneyForClient } from "@/lib/journey";
 import { JOURNEY_STAGES, STAGE_CLIENTE } from "@/lib/journey/stages";
 import { getOrCreateIntakeForOrg } from "@/lib/diagnostico";
-import { ContentArea, PageHeader, Card, Badge, EmptyState } from "@/components/ds";
+import { ContentArea, PageHeader, Card, Badge, EmptyState, botaoClasses } from "@/components/ds";
 import { Icon } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +61,7 @@ export default async function MinhaJornada() {
         subtitle={`Etapa atual: ${STAGE_CLIENTE[row.etapaAtual]} · ${row.progresso}% concluído`} />
 
       {/* stepper das 6 etapas (linguagem do cliente) */}
+      <div data-tour="portal-jornada">
       <Card className="mb-6" bloom>
         <div className="flex items-stretch gap-1.5 overflow-x-auto pb-1">
           {JOURNEY_STAGES.map((s) => {
@@ -70,7 +71,7 @@ export default async function MinhaJornada() {
             return (
               <div key={s.etapa} className="min-w-[100px] flex-1">
                 <div className="h-1.5 rounded-full" style={{ background: cor }} />
-                <p className={`mt-2 font-montserrat text-[12px] ${atual ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-3)]"}`}>{STAGE_CLIENTE[s.etapa]}</p>
+                <p className={`mt-2 font-montserrat text-[13px] ${atual ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-3)]"}`}>{STAGE_CLIENTE[s.etapa]}</p>
                 <p className="font-montserrat text-[10.5px] text-[color:var(--fg-4)]">{st === "concluido" ? "concluído" : atual ? "em andamento" : "em breve"}</p>
               </div>
             );
@@ -79,21 +80,22 @@ export default async function MinhaJornada() {
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-4">
           <p className="font-montserrat text-[14px] text-[color:var(--fg-1)]"><span className="text-[color:var(--fg-4)]">Próximo passo:</span> <b>{row.proximaAcao}</b></p>
           {cta.externo
-            ? <a href={cta.href} target="_blank" rel="noopener noreferrer" className="ds-focus inline-flex h-10 items-center rounded-ds-input bg-brand px-5 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover">{cta.label}</a>
-            : <Link href={cta.href} className="ds-focus inline-flex h-10 items-center rounded-ds-input bg-brand px-5 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover">{cta.label}</Link>}
+            ? <a href={cta.href} target="_blank" rel="noopener noreferrer" className={botaoClasses()}>{cta.label}</a>
+            : <Link href={cta.href} className={botaoClasses()}>{cta.label}</Link>}
         </div>
       </Card>
+      </div>
 
       {/* atalhos principais */}
       <div className="mb-6 grid gap-3 sm:grid-cols-2">
         <Link href="/portal/entregaveis" className="group flex items-center gap-3 rounded-ds-card border border-hairline bg-[var(--bg-1)] p-4 shadow-ds-xs transition-all hover:-translate-y-0.5 hover:border-[color:var(--brand-light)]">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name="fileText" size={17} /></span>
-          <span className="min-w-0 flex-1"><span className="block font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">Minhas entregas</span><span className="font-montserrat text-[12px] text-[color:var(--fg-3)]">{nEntregas ? `${nEntregas} pronta(s) para acessar` : "Suas entregas aparecerão aqui"}</span></span>
+          <span className="min-w-0 flex-1"><span className="block font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">Minhas entregas</span><span className="font-montserrat text-[13px] text-[color:var(--fg-3)]">{nEntregas ? `${nEntregas} pronta(s) para acessar` : "Suas entregas aparecerão aqui"}</span></span>
           {nEntregas > 0 && <Badge tone="brand">{nEntregas}</Badge>}
         </Link>
         <Link href="/portal/conta" className="group flex items-center gap-3 rounded-ds-card border border-hairline bg-[var(--bg-1)] p-4 shadow-ds-xs transition-all hover:-translate-y-0.5 hover:border-[color:var(--brand-light)]">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name="settings" size={17} /></span>
-          <span className="min-w-0 flex-1"><span className="block font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">Minha conta</span><span className="font-montserrat text-[12px] text-[color:var(--fg-3)]">Dados, financeiro e acesso</span></span>
+          <span className="min-w-0 flex-1"><span className="block font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">Minha conta</span><span className="font-montserrat text-[13px] text-[color:var(--fg-3)]">Dados, financeiro e acesso</span></span>
         </Link>
       </div>
 
@@ -105,7 +107,7 @@ export default async function MinhaJornada() {
             {extras.map((e) => (
               <Link key={e.href} href={e.href} className="flex items-center gap-2.5 rounded-ds-card border border-hairline bg-[var(--bg-1)] p-3.5 shadow-ds-xs transition-all hover:border-[color:var(--brand-light)]">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name={e.icon} size={15} /></span>
-                <span className="font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{e.label}</span>
+                <span className="font-montserrat text-[14px] font-medium text-[color:var(--fg-1)]">{e.label}</span>
               </Link>
             ))}
           </div>

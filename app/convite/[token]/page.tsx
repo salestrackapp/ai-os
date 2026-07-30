@@ -7,7 +7,7 @@ function Invalido({ msg }: { msg: string }) {
   return (
     <main className="min-h-screen flex items-center justify-center px-6 bg-navy text-cream">
       <div className="card p-10 text-center max-w-md">
-        <p className="text-[11px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
+        <p className="text-[13px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
         <h1 className="font-serif text-3xl font-semibold mb-2">Convite indisponível</h1>
         <p className="text-sm text-muted">{msg}</p>
       </div>
@@ -32,7 +32,7 @@ export default async function ConvitePage({ params }: { params: Promise<{ token:
   return (
     <main className="min-h-screen flex items-center justify-center px-6 bg-navy text-cream">
       <div className="card w-full max-w-md p-9">
-        <p className="text-[11px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
+        <p className="text-[13px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
         <h1 className="font-serif text-3xl font-semibold mb-1">Bem-vindo(a)</h1>
         <p className="text-sm text-muted mb-6">Você foi convidado a acessar o portal de <b className="text-cream">{org?.name ?? "seu programa"}</b>{inviterEmail ? ` por ${inviterEmail}` : ""}. Crie sua senha para entrar.</p>
         <AcceptInvite token={token} email={inv.email} />

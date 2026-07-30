@@ -104,7 +104,7 @@ export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks
           <div className="space-y-2">
             {signalDefs.map((s) => (
               <label key={s.id} className="flex items-start gap-3 text-sm text-muted hover:text-cream cursor-pointer">
-                <input type="checkbox" className="accent-[#4F1FFF] mt-0.5" checked={signals.includes(s.id)} onChange={() => toggle(s.id)} />
+                <input type="checkbox" className="accent-[#007A94] mt-0.5" checked={signals.includes(s.id)} onChange={() => toggle(s.id)} />
                 <span className="flex-1">{s.label}</span>
                 <span className="text-muted2 font-mono text-xs">+{s.weight}</span>
               </label>
@@ -127,7 +127,7 @@ export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks
                 <span className="badge-muted shrink-0 self-start">{a.kind}</span>
                 <div className="flex-1">
                   <p className="text-cream">{actText(a)}</p>
-                  <p className="text-[11px] text-muted2">{new Date(a.created_at).toLocaleString("pt-BR")}</p>
+                  <p className="text-[13px] text-muted2">{new Date(a.created_at).toLocaleString("pt-BR")}</p>
                 </div>
               </li>
             ))}
@@ -154,7 +154,7 @@ export function DealDetail({ deal, signalDefs, activities, contacts, orgs, tasks
               <div key={c.id} className="flex items-center justify-between gap-2 text-sm">
                 <div className="min-w-0">
                   <p className="text-cream truncate">{c.name}{deal.contact_id === c.id && <span className="text-gold text-xs"> · principal</span>}</p>
-                  {c.email && <p className="text-[11px] text-muted2 truncate">{c.email}</p>}
+                  {c.email && <p className="text-[13px] text-muted2 truncate">{c.email}</p>}
                 </div>
                 {deal.contact_id === c.id
                   ? <button className="text-muted2 hover:text-cream text-xs" onClick={() => linkContact(deal.id, "")}>desvincular</button>

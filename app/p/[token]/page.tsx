@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/service";
+import { registrarSinal, prospectDoDeal, prospectDoEmail } from "@/lib/prospecting/engajamento";
+import { dispararGatilho } from "@/lib/agents/gatilhos";
 import { notifyAdmin } from "@/lib/whatsapp";
 import { ProposalDocument } from "@/components/proposals/ProposalDocument";
 import { ReadTracker } from "@/components/proposals/ReadTracker";
@@ -12,7 +14,7 @@ function Indisponivel({ msg }: { msg: string }) {
   return (
     <main className="min-h-screen flex items-center justify-center px-6 bg-navy text-cream">
       <div className="card p-10 text-center max-w-md">
-        <p className="text-[11px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
+        <p className="text-[13px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
         <h1 className="font-serif text-3xl font-semibold mb-2">Proposta indisponível</h1>
         <p className="text-sm text-muted">{msg}</p>
       </div>
@@ -37,6 +39,14 @@ export default async function PublicProposal({ params }: { params: Promise<{ tok
     await sb.from("proposal_events").insert({ proposal_id: prop.id, kind: "viewed", ip });
     if (prop.status === "enviada") await sb.from("proposals").update({ status: "em_leitura" }).eq("id", prop.id);
     await notifyAdmin(`👀 ${prop.client_name ?? "O cliente"} abriu a proposta "${prop.title}".`);
+    // O mesmo evento que já disparava a notificação agora também alimenta o engajamento: abrir a
+    // proposta é dos sinais mais fortes que existem, e até aqui não pesava em nada.
+    const prospectId = await prospectDoDeal(prop.deal_id as string | null)
+      ?? await prospectDoEmail(prop.client_email as string | null);
+    await registrarSinal({ tipo: "proposta_vista", prospectId, detalhe: { proposta: prop.title }, fonte: "proposta" });
+    await dispararGatilho("proposta_aberta", {
+      cliente: prop.client_name, proposta: prop.title, valor: prop.monthly_platform_fee,
+    }, { tipo: "proposal", id: prop.id as string, orgId: prop.org_id as string | null });
   }
 
   const doc = {

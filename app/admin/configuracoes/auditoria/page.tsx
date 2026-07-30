@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { emailMap } from "@/lib/supabase/admin";
 import { ConfigNav } from "@/components/config/ConfigNav";
 import { AuditView } from "@/components/config/AuditView";
+import { ContentArea } from "@/components/ds";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +20,13 @@ export default async function AuditoriaPage() {
   }));
 
   return (
-    <div>
-      <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">A Fortaleza · Auditoria imutável</p>
-      <h1 className="font-serif text-4xl font-semibold mb-6">Auditoria</h1>
-      <ConfigNav />
-      <AuditView rows={rows} />
-    </div>
+    <ContentArea>
+      <div>
+        <p className="text-[13px] uppercase tracking-[.24em] text-muted2 mb-1">A Fortaleza · Auditoria imutável</p>
+        <h1 className="font-serif text-4xl font-semibold mb-6">Auditoria</h1>
+        <ConfigNav />
+        <AuditView rows={rows} />
+      </div>
+    </ContentArea>
   );
 }

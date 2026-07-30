@@ -44,10 +44,10 @@ export function CycleSteps({ steps = AI_METHOD, currentStep = 2, onEdit }: {
               <div key={s.key} className="relative overflow-hidden rounded-ds-card p-5 text-white shadow-ds-brand" style={{ background: "var(--grad-brand)" }}>
                 <span aria-hidden className="absolute right-3 top-3 text-spark">✳</span>
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-[11px] bg-white/15"><StepIcon i={i} /></span>
-                <p className="mt-3 font-jbmono text-[11px] text-white/70">etapa {i + 1}/5 · em curso</p>
+                <p className="mt-3 font-jbmono text-[13px] text-white/70">etapa {i + 1}/5 · em curso</p>
                 <p className="font-montserrat text-lg font-bold tracking-[-0.02em]">{s.title}</p>
-                <p className="mt-1 text-[13px] leading-snug text-white/85">{s.objective}</p>
-                {onEdit && <button onClick={() => onEdit(s.key)} className="ds-focus mt-3 text-[12px] font-semibold text-spark underline-offset-2 hover:underline">Editar etapa</button>}
+                <p className="mt-1 text-[14px] leading-snug text-white/85">{s.objective}</p>
+                {onEdit && <button onClick={() => onEdit(s.key)} className="ds-focus mt-3 text-[13px] font-semibold text-spark underline-offset-2 hover:underline">Editar etapa</button>}
               </div>
             );
           }
@@ -57,10 +57,10 @@ export function CycleSteps({ steps = AI_METHOD, currentStep = 2, onEdit }: {
                 done ? "bg-[var(--tile)] text-[color:var(--brand)]" : "bg-[var(--gray-100)] text-[color:var(--fg-3)]")}>
                 <StepIcon i={i} />
               </span>
-              <p className="mt-3 font-jbmono text-[11px] text-[color:var(--fg-3)]">etapa {i + 1}/5 · {done ? "concluída" : "prevista"}</p>
+              <p className="mt-3 font-jbmono text-[13px] text-[color:var(--fg-3)]">etapa {i + 1}/5 · {done ? "concluída" : "prevista"}</p>
               <p className="font-montserrat text-[15px] font-semibold text-[color:var(--fg-1)]">{s.title}</p>
-              <p className="mt-1 text-[13px] leading-snug text-[color:var(--fg-3)]">{s.objective}</p>
-              {onEdit && <button onClick={() => onEdit(s.key)} className="ds-focus mt-3 text-[12px] font-semibold text-[color:var(--brand)] underline-offset-2 hover:underline">Editar etapa</button>}
+              <p className="mt-1 text-[14px] leading-snug text-[color:var(--fg-3)]">{s.objective}</p>
+              {onEdit && <button onClick={() => onEdit(s.key)} className="ds-focus mt-3 text-[13px] font-semibold text-[color:var(--brand)] underline-offset-2 hover:underline">Editar etapa</button>}
             </div>
           );
         })}

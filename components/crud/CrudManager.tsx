@@ -84,17 +84,17 @@ export function CrudManager({ resourceName, rows, trashRows, can, newHref, editH
       {/* Lixeira — exclusão permanente é ação separada e explícita */}
       {trashRows.length > 0 && (
         <div className="mt-4">
-          <button onClick={() => setShowTrash((v) => !v)} className="ds-focus inline-flex items-center gap-1.5 font-montserrat text-[12px] font-medium text-[color:var(--fg-3)] hover:text-[color:var(--fg-1)]">
+          <button onClick={() => setShowTrash((v) => !v)} className="ds-focus inline-flex items-center gap-1.5 font-montserrat text-[13px] font-medium text-[color:var(--fg-3)] hover:text-[color:var(--fg-1)]">
             <Icon name="close" size={13} /> Itens excluídos ({trashRows.length})
           </button>
           {showTrash && (
             <div className="mt-2 rounded-ds-card border border-hairline bg-[var(--bg-1)] p-2 shadow-ds-xs">
               {trashRows.map((row) => (
                 <div key={String(row.id)} className="flex items-center justify-between gap-3 rounded-[8px] px-3 py-2 hover:bg-[var(--bg-2)]">
-                  <span className="font-montserrat text-[13px] text-[color:var(--fg-2)] line-through">{trashLabel ? trashLabel(row) : def.duplicate?.suffixField ? String(row[def.duplicate.suffixField] ?? "") : String(row.id)}</span>
+                  <span className="font-montserrat text-[14px] text-[color:var(--fg-2)] line-through">{trashLabel ? trashLabel(row) : def.duplicate?.suffixField ? String(row[def.duplicate.suffixField] ?? "") : String(row.id)}</span>
                   <div className="flex items-center gap-2">
-                    {can.restore && <button onClick={() => doRestore(String(row.id))} className="ds-focus rounded-[8px] border border-hairline-strong px-2 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Restaurar</button>}
-                    {can.delete && <button onClick={() => doHardDelete(String(row.id))} className="ds-focus rounded-[8px] px-2 py-1 font-montserrat text-[11px] text-[color:var(--danger)] hover:bg-[var(--danger-tint)]">Excluir permanentemente</button>}
+                    {can.restore && <button onClick={() => doRestore(String(row.id))} className="ds-focus rounded-[8px] border border-hairline-strong px-2 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Restaurar</button>}
+                    {can.delete && <button onClick={() => doHardDelete(String(row.id))} className="ds-focus rounded-[8px] px-2 py-1 font-montserrat text-[13px] text-[color:var(--danger)] hover:bg-[var(--danger-tint)]">Excluir permanentemente</button>}
                   </div>
                 </div>
               ))}

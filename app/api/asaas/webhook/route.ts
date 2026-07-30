@@ -5,6 +5,7 @@ import { notifyAdmin } from "@/lib/whatsapp";
 import { emailAdmin } from "@/lib/email";
 import { brl } from "@/lib/types";
 import { getProviderConfig } from "@/lib/settings/secrets";
+import { ativarPorPagamento } from "@/lib/academy/matricula";
 
 /**
  * Webhook ASAAS — configurar no painel ASAAS apontando para esta rota,
@@ -24,6 +25,19 @@ export async function POST(req: NextRequest) {
   if (!asaasId) return NextResponse.json({ ok: true });
 
   const sb = createServiceClient();
+
+  // Academy: a cobrança pode ser de um curso, não de um contrato. Resolve primeiro, porque
+  // a busca em `invoices` abaixo não encontraria nada e o pagamento morreria em silêncio —
+  // o aluno pagaria e continuaria sem acesso.
+  if (event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED") {
+    const { data: pedido } = await sb.from("academy_orders")
+      .select("id").eq("provider_ref", asaasId).maybeSingle();
+    if (pedido) {
+      await ativarPorPagamento(pedido.id, "asaas");
+      return NextResponse.json({ ok: true, academy: true });
+    }
+  }
+
   // procura pela referência gravada (stripe_invoice_id reutilizado como provider_ref genérico)
   const { data: inv } = await sb.from("invoices").select("id, org_id, amount").eq("stripe_invoice_id", asaasId).limit(1).single();
 

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ds";
+import { PageHeader, ContentArea } from "@/components/ds";
 import { resolvePortalOrg } from "@/lib/portal";
 import { anthropicConfigured } from "@/lib/agents/runner";
 import { ConsultorChat } from "@/components/portal/ConsultorChat";
@@ -22,13 +22,15 @@ export default async function ConsultorPage() {
   }
 
   return (
-    <div>
-      <PageHeader eyebrow="Seu copiloto" title="Consultor do Programa" />
-      <p className="text-sm text-muted mb-5 max-w-2xl">Tire dúvidas sobre seu programa, materiais, sessões e Receitas do Playbook. Ele conhece o contexto do seu programa — mas não acessa nenhum sistema seu.</p>
-      {!anthropicConfigured() && (
-        <div className="card p-3 mb-4 border-goldline bg-[rgba(79, 31, 255,.06)]"><p className="text-sm text-gold">O consultor está temporariamente indisponível. Você ainda pode navegar pelo Playbook e pela Biblioteca.</p></div>
-      )}
-      <ConsultorChat initialMessages={initial} initialConversationId={conv?.id ?? null} />
-    </div>
+    <ContentArea>
+      <div>
+        <PageHeader eyebrow="Seu copiloto" title="Consultor do Programa" />
+        <p className="text-sm text-muted mb-5 max-w-2xl">Tire dúvidas sobre seu programa, materiais, sessões e Receitas do Playbook. Ele conhece o contexto do seu programa — mas não acessa nenhum sistema seu.</p>
+        {!anthropicConfigured() && (
+          <div className="card p-3 mb-4 border-goldline bg-[rgba(0, 122, 148,.06)]"><p className="text-sm text-gold">O consultor está temporariamente indisponível. Você ainda pode navegar pelo Playbook e pela Biblioteca.</p></div>
+        )}
+        <ConsultorChat initialMessages={initial} initialConversationId={conv?.id ?? null} />
+      </div>
+    </ContentArea>
   );
 }

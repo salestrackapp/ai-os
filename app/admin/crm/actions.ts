@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
 import { DEAL_STAGES } from "@/lib/types";
+import { notifyMany, salestrackAdminIds } from "@/lib/notifications/notify";
 
 const ALL_STAGES = [...DEAL_STAGES, "perdido"] as const;
 
@@ -20,11 +21,23 @@ async function logActivity(orgId: string | null, dealId: string, kind: string, p
 export async function moveDealToStage(id: string, stage: string) {
   if (!ALL_STAGES.includes(stage as (typeof ALL_STAGES)[number])) return;
   const supabase = await createClient();
-  const { data: deal } = await supabase.from("deals").select("stage, org_id").eq("id", id).single();
+  const { data: deal } = await supabase.from("deals").select("stage, org_id, title").eq("id", id).single();
   if (!deal || deal.stage === stage) return;
   await supabase.from("deals").update({ stage }).eq("id", id);
   await logActivity(deal.org_id, id, "estagio", { from: deal.stage, to: stage });
   await audit("deal.stage_change", "deals", id, { from: deal.stage, to: stage });
+
+  if (stage === "cliente" || stage === "perdido") {
+    const { data: { user } } = await supabase.auth.getUser();
+    await notifyMany(await salestrackAdminIds(), {
+      event: stage === "cliente" ? "deal_won" : "deal_lost",
+      title: stage === "cliente" ? `Negócio ganho: ${deal.title}` : `Negócio perdido: ${deal.title}`,
+      body: `Saiu de "${deal.stage}".`,
+      url: `/admin/crm/${id}`,
+      entityType: "deals", entityId: id, actorId: user?.id ?? null, orgId: deal.org_id,
+    });
+  }
+
   revalidatePath("/admin/crm");
   revalidatePath(`/admin/crm/${id}`);
 }

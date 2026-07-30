@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { brl, type Invoice, type Subscription } from "@/lib/types";
 import { AiAssist } from "@/components/AiAssist";
 import { createManualInvoice, markInvoicePaid, createManualSubscription, cancelSubscription } from "./actions";
-import { PageHeader } from "@/components/ds";
+import { PageHeader, ContentArea } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { HelpButton } from "@/components/guidance/HelpButton";
 
@@ -35,103 +35,105 @@ export default async function FinanceiroPage() {
   ];
 
   return (
-    <div>
-      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Plataforma", href: "/admin/plataforma" }, { label: "Financeiro" }]} className="mb-4" />
-      <PageHeader eyebrow="Plataforma · billing" title="Financeiro"
-        subtitle="Faturas e recebíveis das ofertas vendidas. Sem mensalidade de plataforma."
-        comoUsar={<HelpButton routeKey="/admin/plataforma" />} />
+    <ContentArea>
+      <div>
+        <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Plataforma", href: "/admin/plataforma" }, { label: "Financeiro" }]} className="mb-4" />
+        <PageHeader eyebrow="Plataforma · billing" title="Financeiro"
+          subtitle="Faturas e recebíveis das ofertas vendidas. Sem mensalidade de plataforma."
+          comoUsar={<HelpButton routeKey="/admin/plataforma" />} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-        {cards.map((c) => (
-          <div key={c.label} className={`card p-6 ${c.warn ? "border-amber-500/50" : ""}`}>
-            <p className="label">{c.label}</p>
-            <p className={`font-serif text-3xl font-semibold mt-1 ${c.warn ? "text-amber-400" : "text-gold"}`}>{c.value}</p>
-            <p className="mt-2 text-xs text-muted">{c.note}</p>
-          </div>
-        ))}
-      </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+          {cards.map((c) => (
+            <div key={c.label} className={`card p-6 ${c.warn ? "border-amber-500/50" : ""}`}>
+              <p className="label">{c.label}</p>
+              <p className={`font-serif text-3xl font-semibold mt-1 ${c.warn ? "text-amber-400" : "text-gold"}`}>{c.value}</p>
+              <p className="mt-2 text-xs text-muted">{c.note}</p>
+            </div>
+          ))}
+        </div>
 
-      <div className="mb-6">
-        <AiAssist title="Copiloto financeiro" context={[
-          `MRR: ${brl(mrr)} · A receber: ${brl(aReceber)} (${open.length} faturas) · Em atraso: ${brl(atrasoTotal)} (${atraso.length})`,
-          atraso.length ? `Faturas em atraso:\n${atraso.map((i) => `- ${orgName[i.org_id] ?? i.org_id}: ${brl(i.amount)} venc. ${i.due_date}`).join("\n")}` : "Sem faturas em atraso.",
-          open.length ? `Em aberto (próximas):\n${open.slice(0, 15).map((i) => `- ${orgName[i.org_id] ?? i.org_id}: ${brl(i.amount)} venc. ${i.due_date ?? "s/data"} [${i.status}]`).join("\n")}` : "",
-        ].filter(Boolean).join("\n")} actions={[
-          { label: "Analisar recebíveis e risco", task: "Analise a saúde financeira: risco de inadimplência, concentração e o que priorizar. Bullets acionáveis." },
-          { label: "Priorizar cobranças de hoje", task: "Liste as cobranças a fazer hoje, em ordem de prioridade, com o motivo de cada uma." },
-          { label: "Mensagem de cobrança cordial", task: "Rascunhe uma mensagem de cobrança cordial e profissional para o cliente com a fatura mais atrasada, pronta para enviar." },
-        ]} />
-      </div>
+        <div className="mb-6">
+          <AiAssist title="Copiloto financeiro" context={[
+            `MRR: ${brl(mrr)} · A receber: ${brl(aReceber)} (${open.length} faturas) · Em atraso: ${brl(atrasoTotal)} (${atraso.length})`,
+            atraso.length ? `Faturas em atraso:\n${atraso.map((i) => `- ${orgName[i.org_id] ?? i.org_id}: ${brl(i.amount)} venc. ${i.due_date}`).join("\n")}` : "Sem faturas em atraso.",
+            open.length ? `Em aberto (próximas):\n${open.slice(0, 15).map((i) => `- ${orgName[i.org_id] ?? i.org_id}: ${brl(i.amount)} venc. ${i.due_date ?? "s/data"} [${i.status}]`).join("\n")}` : "",
+          ].filter(Boolean).join("\n")} actions={[
+            { label: "Analisar recebíveis e risco", task: "Analise a saúde financeira: risco de inadimplência, concentração e o que priorizar. Bullets acionáveis." },
+            { label: "Priorizar cobranças de hoje", task: "Liste as cobranças a fazer hoje, em ordem de prioridade, com o motivo de cada uma." },
+            { label: "Mensagem de cobrança cordial", task: "Rascunhe uma mensagem de cobrança cordial e profissional para o cliente com a fatura mais atrasada, pronta para enviar." },
+          ]} />
+        </div>
 
-      <div className="flex flex-wrap gap-3 mb-6">
-        <details className="card p-4 flex-1 min-w-72">
-          <summary className="cursor-pointer text-sm text-gold">+ Registrar fatura manual</summary>
-          <form action={createManualInvoice} className="mt-3 grid grid-cols-2 gap-3">
-            <div className="col-span-2"><label className="label">Conta</label><select className="input" name="org_id" required><option value="">—</option>{(orgs as { id: string; name: string }[] ?? []).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
-            <div><label className="label">Tipo</label><select className="input" name="kind"><option value="mensalidade">Mensalidade</option><option value="implantacao">Implantação</option></select></div>
-            <div><label className="label">Valor</label><input className="input font-mono" name="amount" placeholder="R$" /></div>
-            <div><label className="label">Vencimento</label><input className="input" type="date" name="due_date" /></div>
-            <div className="grid grid-cols-2 gap-2"><input className="input font-mono" name="installment_n" placeholder="Parc. nº" /><input className="input font-mono" name="installments_total" placeholder="de" /></div>
-            <button className="btn-gold col-span-2">Registrar</button>
-          </form>
-        </details>
-        <details className="card p-4 flex-1 min-w-72">
-          <summary className="cursor-pointer text-sm text-gold">+ Registrar assinatura manual</summary>
-          <form action={createManualSubscription} className="mt-3 grid grid-cols-2 gap-3">
-            <div className="col-span-2"><label className="label">Conta</label><select className="input" name="org_id" required><option value="">—</option>{(orgs as { id: string; name: string }[] ?? []).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
-            <div><label className="label">Plano</label><select className="input" name="plan"><option value="essential">Essential</option><option value="professional">Professional</option><option value="enterprise">Enterprise</option></select></div>
-            <div><label className="label">Mensalidade</label><input className="input font-mono" name="monthly_amount" placeholder="R$/mês" /></div>
-            <button className="btn-gold col-span-2">Registrar</button>
-          </form>
-        </details>
-      </div>
+        <div className="flex flex-wrap gap-3 mb-6">
+          <details className="card p-4 flex-1 min-w-72">
+            <summary className="cursor-pointer text-sm text-gold">+ Registrar fatura manual</summary>
+            <form action={createManualInvoice} className="mt-3 grid grid-cols-2 gap-3">
+              <div className="col-span-2"><label className="label">Conta</label><select className="input" name="org_id" required><option value="">—</option>{(orgs as { id: string; name: string }[] ?? []).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
+              <div><label className="label">Tipo</label><select className="input" name="kind"><option value="mensalidade">Mensalidade</option><option value="implantacao">Implantação</option></select></div>
+              <div><label className="label">Valor</label><input className="input font-mono" name="amount" placeholder="R$" /></div>
+              <div><label className="label">Vencimento</label><input className="input" type="date" name="due_date" /></div>
+              <div className="grid grid-cols-2 gap-2"><input className="input font-mono" name="installment_n" placeholder="Parc. nº" /><input className="input font-mono" name="installments_total" placeholder="de" /></div>
+              <button className="btn-gold col-span-2">Registrar</button>
+            </form>
+          </details>
+          <details className="card p-4 flex-1 min-w-72">
+            <summary className="cursor-pointer text-sm text-gold">+ Registrar assinatura manual</summary>
+            <form action={createManualSubscription} className="mt-3 grid grid-cols-2 gap-3">
+              <div className="col-span-2"><label className="label">Conta</label><select className="input" name="org_id" required><option value="">—</option>{(orgs as { id: string; name: string }[] ?? []).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
+              <div><label className="label">Plano</label><select className="input" name="plan"><option value="essential">Essential</option><option value="professional">Professional</option><option value="enterprise">Enterprise</option></select></div>
+              <div><label className="label">Mensalidade</label><input className="input font-mono" name="monthly_amount" placeholder="R$/mês" /></div>
+              <button className="btn-gold col-span-2">Registrar</button>
+            </form>
+          </details>
+        </div>
 
-      <div className="card overflow-x-auto mb-6">
-        <p className="label px-4 pt-4">Assinaturas</p>
-        <table className="w-full">
-          <thead><tr><th className="th">Conta</th><th className="th">Plano</th><th className="th text-right">Mensal</th><th className="th">Status</th><th className="th">Início</th><th className="th"></th></tr></thead>
-          <tbody>
-            {subscriptions.map((s) => (
-              <tr key={s.id} className="hover:bg-navy3/50">
-                <td className="td text-cream">{s.org_id ? (orgName[s.org_id] ?? "—") : "—"}</td>
-                <td className="td text-muted">{s.plan}</td>
-                <td className="td text-right font-mono">{brl(s.monthly_amount)}</td>
-                <td className="td"><span className={s.status === "ativa" ? "badge-teal" : "badge-muted"}>{s.status}</span></td>
-                <td className="td text-xs text-muted2">{new Date(s.started_at).toLocaleDateString("pt-BR")}</td>
-                <td className="td text-right">{s.status === "ativa" && <form action={cancelSubscription.bind(null, s.id)}><button className="text-muted2 hover:text-red-400 text-xs">cancelar</button></form>}</td>
-              </tr>
-            ))}
-            {subscriptions.length === 0 && <tr><td className="td text-muted2" colSpan={6}>Sem assinaturas.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="card overflow-x-auto">
-        <p className="label px-4 pt-4">Faturas</p>
-        <table className="w-full">
-          <thead><tr><th className="th">Conta</th><th className="th">Tipo</th><th className="th">Parcela</th><th className="th text-right">Valor</th><th className="th">Vencimento</th><th className="th">Status</th><th className="th"></th></tr></thead>
-          <tbody>
-            {invoices.map((i) => {
-              const overdue = i.status !== "paga" && i.due_date && i.due_date < today;
-              return (
-                <tr key={i.id} className="hover:bg-navy3/50">
-                  <td className="td text-cream">{i.org_id ? (orgName[i.org_id] ?? "—") : "—"}</td>
-                  <td className="td text-muted">{i.kind}</td>
-                  <td className="td font-mono text-xs">{i.installment_n ? `${i.installment_n}/${i.installments_total ?? "?"}` : "—"}</td>
-                  <td className="td text-right font-mono">{brl(i.amount)}</td>
-                  <td className={`td text-xs ${overdue ? "text-amber-400" : "text-muted2"}`}>{i.due_date ? new Date(i.due_date + "T00:00:00").toLocaleDateString("pt-BR") : "—"}</td>
-                  <td className="td"><span className={i.status === "paga" ? "badge-teal" : overdue ? "badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-amber-400 border-amber-500/40 bg-amber-500/10" : "badge-muted"}>{i.status === "paga" ? "paga" : overdue ? "atrasada" : "aberta"}</span></td>
-                  <td className="td text-right whitespace-nowrap">
-                    {i.hosted_url && <a href={i.hosted_url} target="_blank" className="text-gold text-xs hover:underline mr-3">Stripe ↗</a>}
-                    {i.status !== "paga" && <form action={markInvoicePaid.bind(null, i.id)} className="inline"><button className="text-teal text-xs hover:underline">marcar paga</button></form>}
-                  </td>
+        <div className="card overflow-x-auto mb-6">
+          <p className="label px-4 pt-4">Assinaturas</p>
+          <table className="w-full">
+            <thead><tr><th className="th">Conta</th><th className="th">Plano</th><th className="th text-right">Mensal</th><th className="th">Status</th><th className="th">Início</th><th className="th"></th></tr></thead>
+            <tbody>
+              {subscriptions.map((s) => (
+                <tr key={s.id} className="hover:bg-navy3/50">
+                  <td className="td text-cream">{s.org_id ? (orgName[s.org_id] ?? "—") : "—"}</td>
+                  <td className="td text-muted">{s.plan}</td>
+                  <td className="td text-right font-mono">{brl(s.monthly_amount)}</td>
+                  <td className="td"><span className={s.status === "ativa" ? "badge-teal" : "badge-muted"}>{s.status}</span></td>
+                  <td className="td text-xs text-muted2">{new Date(s.started_at).toLocaleDateString("pt-BR")}</td>
+                  <td className="td text-right">{s.status === "ativa" && <form action={cancelSubscription.bind(null, s.id)}><button className="text-muted2 hover:text-red-400 text-xs">cancelar</button></form>}</td>
                 </tr>
-              );
-            })}
-            {invoices.length === 0 && <tr><td className="td text-muted2" colSpan={7}>Sem faturas.</td></tr>}
-          </tbody>
-        </table>
+              ))}
+              {subscriptions.length === 0 && <tr><td className="td text-muted2" colSpan={6}>Sem assinaturas.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="card overflow-x-auto">
+          <p className="label px-4 pt-4">Faturas</p>
+          <table className="w-full">
+            <thead><tr><th className="th">Conta</th><th className="th">Tipo</th><th className="th">Parcela</th><th className="th text-right">Valor</th><th className="th">Vencimento</th><th className="th">Status</th><th className="th"></th></tr></thead>
+            <tbody>
+              {invoices.map((i) => {
+                const overdue = i.status !== "paga" && i.due_date && i.due_date < today;
+                return (
+                  <tr key={i.id} className="hover:bg-navy3/50">
+                    <td className="td text-cream">{i.org_id ? (orgName[i.org_id] ?? "—") : "—"}</td>
+                    <td className="td text-muted">{i.kind}</td>
+                    <td className="td font-mono text-xs">{i.installment_n ? `${i.installment_n}/${i.installments_total ?? "?"}` : "—"}</td>
+                    <td className="td text-right font-mono">{brl(i.amount)}</td>
+                    <td className={`td text-xs ${overdue ? "text-amber-400" : "text-muted2"}`}>{i.due_date ? new Date(i.due_date + "T00:00:00").toLocaleDateString("pt-BR") : "—"}</td>
+                    <td className="td"><span className={i.status === "paga" ? "badge-teal" : overdue ? "badge inline-flex text-[11px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-amber-400 border-amber-500/40 bg-amber-500/10" : "badge-muted"}>{i.status === "paga" ? "paga" : overdue ? "atrasada" : "aberta"}</span></td>
+                    <td className="td text-right whitespace-nowrap">
+                      {i.hosted_url && <a href={i.hosted_url} target="_blank" className="text-gold text-xs hover:underline mr-3">Stripe ↗</a>}
+                      {i.status !== "paga" && <form action={markInvoicePaid.bind(null, i.id)} className="inline"><button className="text-teal text-xs hover:underline">marcar paga</button></form>}
+                    </td>
+                  </tr>
+                );
+              })}
+              {invoices.length === 0 && <tr><td className="td text-muted2" colSpan={7}>Sem faturas.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </ContentArea>
   );
 }

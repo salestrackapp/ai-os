@@ -30,7 +30,19 @@ export async function canEnrollLive(prospect: Pick<Prospect, "score" | "icp">): 
   return { ok: (prospect.score ?? 0) >= min, min };
 }
 
-/** Score 0–100 de um prospect por fit de ICP (cargo/senioridade) + sinais da conta + completude. */
+/**
+ * Score 0–100 de um prospect: fit de ICP (cargo/senioridade) + sinais da conta + completude.
+ *
+ * Isto é FIT — quem a pessoa é. Não diz nada sobre interesse. O interesse mora em
+ * `prospects.engajamento`, alimentado pelos sinais de primeira parte (abriu, clicou, leu a
+ * proposta). Os dois ficam separados de propósito: um diretor de operações numa indústria de 300
+ * pessoas tem fit alto no dia em que entra na base e continua tendo daqui a um ano; se ele abriu
+ * a proposta ontem, isso é outra informação, e some sozinha se ele parar de responder.
+ *
+ * Misturar os dois num número só esconderia qual dos dois está sustentando a nota — e a fila de
+ * abordagem seria ordenada por um valor que ninguém sabe ler. `prioridade()` combina os dois
+ * quando é hora de decidir a quem falar primeiro.
+ */
 export function scoreProspect(prospect: Partial<Prospect>, account?: Partial<ProspectAccount> | null): number {
   const t = (prospect.title ?? "").toLowerCase();
   const sen = (prospect.seniority ?? "").toLowerCase();
@@ -69,6 +81,27 @@ export function scoreAccount(a: Partial<ProspectAccount>): number {
   if (a.industry) s += 6;
   if (a.domain) s += 6;
   return Math.max(0, Math.min(100, s));
+}
+
+/**
+ * A quem falar primeiro. Fit diz se vale a pena; engajamento diz se é agora.
+ *
+ * O engajamento pesa mais (60/40) porque fit alto sem nenhum sinal é uma hipótese, enquanto um
+ * clique é um fato. Quem tem fit médio e acabou de abrir a agenda merece a ligação antes do
+ * diretor perfeito que nunca abriu nada.
+ *
+ * Quem se descadastrou tem engajamento negativo e cai para o fim da fila sozinho — sem precisar
+ * de uma regra separada para excluí-lo.
+ */
+export function prioridade(fit: number, engajamento: number): number {
+  return Math.max(0, Math.min(100, Math.round(fit * 0.4 + Math.max(0, engajamento) * 0.6)));
+}
+
+/** Faixa legível da prioridade — a tela mostra isto, não o número cru. */
+export function faixaPrioridade(p: number): "quente" | "morno" | "frio" {
+  if (p >= 60) return "quente";
+  if (p >= 35) return "morno";
+  return "frio";
 }
 
 /** Portão do funil: pode inscrever em cadência? (score ≥ mínimo do ICP) */

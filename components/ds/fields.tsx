@@ -16,7 +16,7 @@ export function Label({ children, htmlFor, required, className }: {
   children: React.ReactNode; htmlFor?: string; required?: boolean; className?: string;
 }) {
   return (
-    <label htmlFor={htmlFor} className={cn("mb-1.5 block font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]", className)}>
+    <label htmlFor={htmlFor} className={cn("mb-1.5 block font-montserrat text-[14px] font-medium text-[color:var(--fg-2)]", className)}>
       {children}{required && <span className="ml-0.5 text-[color:var(--danger)]">*</span>}
     </label>
   );

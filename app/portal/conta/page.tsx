@@ -43,9 +43,9 @@ export default async function MinhaConta() {
 
         {/* Acesso */}
         <Card>
-          <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow !mb-0">Quem acessa</p><Link href="/portal/equipe" className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Gerenciar →</Link></div>
+          <div className="mb-3 flex items-center justify-between"><p className="ds-eyebrow !mb-0">Quem acessa</p><Link href="/portal/equipe" className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">Gerenciar →</Link></div>
           {(mems ?? []).length === 0 ? <p className="ds-small">Só você por enquanto.</p> : (
-            <ul className="space-y-2">{(mems ?? []).map((mm, i) => <li key={i} className="flex items-center justify-between gap-2"><span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{mm.email ?? "—"}</span><Badge tone="neutral">{mm.role}</Badge></li>)}</ul>
+            <ul className="space-y-2">{(mems ?? []).map((mm, i) => <li key={i} className="flex items-center justify-between gap-2"><span className="font-montserrat text-[14px] text-[color:var(--fg-1)]">{mm.email ?? "—"}</span><Badge tone="neutral">{mm.role}</Badge></li>)}</ul>
           )}
         </Card>
       </div>
@@ -61,14 +61,14 @@ export default async function MinhaConta() {
           <div className="border-b border-hairline px-4 py-2.5"><p className="ds-eyebrow !mb-0">Faturas</p></div>
           {(invoices ?? []).length === 0 ? <p className="px-4 py-4 ds-small">Nenhuma fatura.</p> : (
             <div className="overflow-x-auto"><table className="w-full border-collapse">
-              <thead><tr className="border-b border-hairline">{["Tipo", "Parcela", "Vencimento", "Status", "Valor"].map((h) => <th key={h} className="px-4 py-2.5 text-left font-jbmono text-[11px] uppercase tracking-[.08em] text-[color:var(--fg-3)]">{h}</th>)}</tr></thead>
+              <thead><tr className="border-b border-hairline">{["Tipo", "Parcela", "Vencimento", "Status", "Valor"].map((h) => <th key={h} className="px-4 py-2.5 text-left font-jbmono text-[13px] uppercase tracking-[.08em] text-[color:var(--fg-3)]">{h}</th>)}</tr></thead>
               <tbody>{(invoices ?? []).map((i, idx) => (
                 <tr key={idx} className="border-b border-hairline last:border-0">
-                  <td className="px-4 py-2.5 font-montserrat text-[13px] text-[color:var(--fg-1)]">{i.kind === "manutencao" ? "Manutenção" : "Implantação"}</td>
-                  <td className="px-4 py-2.5 font-jbmono text-[12px] text-[color:var(--fg-3)]">{i.installment_n ? `${i.installment_n}/${i.installments_total ?? "—"}` : "—"}</td>
-                  <td className="px-4 py-2.5 font-jbmono text-[12px] text-[color:var(--fg-2)]">{fmt(i.due_date)}</td>
+                  <td className="px-4 py-2.5 font-montserrat text-[14px] text-[color:var(--fg-1)]">{i.kind === "manutencao" ? "Manutenção" : "Implantação"}</td>
+                  <td className="px-4 py-2.5 font-jbmono text-[13px] text-[color:var(--fg-3)]">{i.installment_n ? `${i.installment_n}/${i.installments_total ?? "—"}` : "—"}</td>
+                  <td className="px-4 py-2.5 font-jbmono text-[13px] text-[color:var(--fg-2)]">{fmt(i.due_date)}</td>
                   <td className="px-4 py-2.5"><Badge tone={i.status === "paga" ? "success" : i.status === "atrasada" ? "danger" : "warn"}>{i.status}</Badge></td>
-                  <td className="px-4 py-2.5 text-right font-jbmono text-[12px] text-[color:var(--fg-1)]">{brl(Number(i.amount) || 0)}</td>
+                  <td className="px-4 py-2.5 text-right font-jbmono text-[13px] text-[color:var(--fg-1)]">{brl(Number(i.amount) || 0)}</td>
                 </tr>
               ))}</tbody>
             </table></div>

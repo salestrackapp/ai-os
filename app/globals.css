@@ -27,7 +27,7 @@ body {
   background-attachment: fixed;
 }
 
-::selection { background: rgba(79, 31, 255, 0.18); color: var(--ink); }
+::selection { background: rgba(0, 180, 216, 0.22); color: var(--ink); }
 
 /* Foco visível para navegação por teclado (WCAG) — anel violeta, nunca remover */
 :focus-visible {
@@ -37,15 +37,16 @@ body {
 }
 
 /* Scrollbar discreta, na paleta v2 */
-* { scrollbar-width: thin; scrollbar-color: rgba(120, 116, 140, 0.4) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(107, 122, 141, 0.4) transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
-*::-webkit-scrollbar-thumb { background: rgba(120, 116, 140, 0.35); border-radius: 8px; }
-*::-webkit-scrollbar-thumb:hover { background: rgba(120, 116, 140, 0.55); }
+*::-webkit-scrollbar-thumb { background: rgba(107, 122, 141, 0.35); border-radius: 8px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(107, 122, 141, 0.55); }
 *::-webkit-scrollbar-track { background: transparent; }
 
 /* ── Superfícies ── */
+/* Forma do .acad-card da Academy: raio 14, hairline, sem sombra. */
 .card {
-  @apply rounded-2xl;
+  @apply rounded-[14px];
   background: var(--bg-1);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-xs);
@@ -74,20 +75,24 @@ body {
 }
 .btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-/* .btn-gold = ação primária violeta (nome legado mantido) */
+/* .btn-gold = ação primária (nome legado mantido; hoje é o ciano da marca).
+   TEM de casar com a variante `primary` de components/ds/Button.tsx — as duas são o
+   mesmo botão para o usuário. Usava var(--grad-brand), que virou o gradiente navy no v6,
+   e por isso o mesmo botão saía navy nas telas legadas e ciano nas do DS. */
 .btn-gold {
   @apply btn text-white;
   border-color: transparent;
-  background: var(--grad-brand);
+  background: var(--brand);
   box-shadow: var(--shadow-brand);
 }
-.btn-gold:hover { filter: saturate(1.08) brightness(1.03); box-shadow: var(--shadow-md); }
+.btn-gold:hover { background: var(--brand-hover); box-shadow: var(--shadow-md); }
 .btn-ghost { @apply btn; color: var(--fg-2); border-color: var(--border-strong); background: var(--bg-1); }
-.btn-ghost:hover { color: var(--fg-1); border-color: var(--brand-light); background: var(--bg-2); }
+.btn-ghost:hover { color: var(--fg-1); border-color: var(--brand); background: var(--bg-2); }
 
 /* ── Formulários ── */
+/* Forma do .acad-input: raio 10, 10px/13px de respiro, 14px de texto. */
 .input {
-  @apply w-full rounded-lg px-3 py-2 text-sm;
+  @apply w-full rounded-[10px] px-[13px] py-[10px] text-base;
   background: var(--bg-1);
   border: 1px solid var(--border);
   color: var(--fg-1);
@@ -96,27 +101,29 @@ body {
 .input::placeholder { color: var(--fg-4); }
 .input:focus {
   outline: none;
-  border-color: var(--brand-light);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px var(--ring);
 }
-.label { @apply block text-[11px] uppercase tracking-[.18em] mb-1.5; color: var(--fg-3); }
+/* .acad-lbl: rótulo curto em caixa alta, discreto. */
+.label { @apply block text-xs font-bold uppercase tracking-[.1em] mb-1.5; color: var(--fg-3); }
 
 /* ── Selos ── */
-.badge { @apply inline-flex items-center gap-1 text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border whitespace-nowrap; }
-.badge-gold { @apply badge; color: var(--brand-deep); border-color: var(--border-strong); background: var(--tile); }
-.badge-teal { @apply badge; color: var(--success); border-color: rgba(24,160,107,.3); background: var(--success-tint); }
-.badge-muted { @apply badge; color: var(--fg-3); border-color: var(--border); }
+/* .acad-badge: pílula tingida, sem borda. Mais legível que a versão em caixa alta espaçada. */
+.badge { @apply inline-flex items-center gap-1 text-xs font-bold px-2.5 py-[3px] rounded-full whitespace-nowrap; }
+.badge-gold { @apply badge; color: var(--brand-deep); background: var(--tile); }
+.badge-teal { @apply badge; color: var(--success); background: var(--success-tint); }
+.badge-muted { @apply badge; color: var(--fg-3); background: var(--bg-2); }
 
 /* ── Tabelas de dados ── */
-.th { @apply text-left text-[11px] uppercase tracking-[.16em] font-normal px-4 py-3; color: var(--fg-3); border-bottom: 1px solid var(--border); }
+.th { @apply text-left text-xs font-bold uppercase tracking-[.1em] px-4 py-3; color: var(--fg-3); border-bottom: 1px solid var(--border); }
 .td { @apply px-4 py-3 text-sm; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
 tbody tr { transition: background-color 150ms var(--ease-out); }
 tbody tr:hover { background: var(--bg-2); }
 
 /* ── Navegação (shells admin/portal) ── */
-.nav-group { @apply px-4 pt-5 pb-1.5 text-[10px] uppercase tracking-[.22em] select-none; color: var(--fg-4); }
+.nav-group { @apply px-4 pt-5 pb-1.5 text-[11px] uppercase tracking-[.22em] select-none; color: var(--fg-4); }
 .nav-item {
-  @apply flex items-center gap-3 rounded-lg px-3 py-2 text-[13px];
+  @apply flex items-center gap-3 rounded-lg px-3 py-2 text-[14px];
   color: var(--fg-3);
   transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
 }

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { currentMembership } from "@/lib/auth";
-import { ContentArea, PageHeader, Card, EmptyState, Badge } from "@/components/ds";
+import { ContentArea, PageHeader, Card, EmptyState, Badge, botaoClasses } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const FILTERS: InboxFilter[] = ["todas", "minhas", "nao_atribuidas"];
-const chip = (active: boolean) => `rounded-ds-pill border px-3 py-1 font-montserrat text-[12px] transition-colors ${active ? "border-[color:var(--brand)] bg-[var(--tile)] text-[color:var(--brand-deep)]" : "border-hairline text-[color:var(--fg-3)] hover:border-[color:var(--brand-light)]"}`;
+const chip = (active: boolean) => `rounded-ds-pill border px-3 py-1 font-montserrat text-[13px] transition-colors ${active ? "border-[color:var(--brand)] bg-[var(--tile)] text-[color:var(--brand-deep)]" : "border-hairline text-[color:var(--fg-3)] hover:border-[color:var(--brand-light)]"}`;
 const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—";
 
 export default async function Relacionamento({ searchParams }: { searchParams: Promise<{ canal?: string; filtro?: string; q?: string }> }) {
@@ -45,6 +45,13 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
   const { data: convs } = await query;
   const list = convs ?? [];
 
+  // Quais conversas já têm rascunho do agente esperando — o item da lista mostra para não
+  // precisar abrir uma a uma para descobrir onde há trabalho meio pronto.
+  const { data: sugs } = list.length
+    ? await sb.from("rel_sugestoes").select("conversa_id").eq("status", "pendente").in("conversa_id", list.map((c) => c.id))
+    : { data: [] };
+  const comSugestao = new Set((sugs ?? []).map((s) => s.conversa_id as string));
+
   const naoLidas = list.filter((c) => c.unread).length;
   const atrasadas = list.filter((c) => isSlaBreached({ status: c.status as ConvStatus, last_message_at: c.last_message_at }, sla, nowISO)).length;
   const canalHref = (c: "email" | "whatsapp" | "todos") => `/admin/relacionamento?canal=${c}`;
@@ -62,7 +69,7 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
           <Link href="/admin/relacionamento/relatorios" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="trending" size={15} /> Relatórios</Link>
           {(isEmail || isTodos) && (
             <form action={syncInboxAction}>
-              <button className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="activity" size={15} /> Sincronizar Gmail</button>
+              <button className={botaoClasses()}><Icon name="activity" size={15} /> Sincronizar Gmail</button>
             </form>
           )}
         </div>} />
@@ -107,11 +114,11 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
             <form action={bulkAction}>
               {/* barra de ações em massa (aplica ao que estiver marcado) */}
               <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                <span className="mr-1 font-montserrat text-[11px] uppercase tracking-[.12em] text-[color:var(--fg-3)]">Em massa:</span>
-                <button name="op" value="assumir" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Assumir p/ mim</button>
-                <button name="op" value="status:respondida" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Marcar respondida</button>
-                <button name="op" value="status:arquivada" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Arquivar</button>
-                <button name="op" value="snooze:3" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Follow-up +3d</button>
+                <span className="mr-1 font-montserrat text-[13px] uppercase tracking-[.12em] text-[color:var(--fg-3)]">Em massa:</span>
+                <button name="op" value="assumir" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Assumir p/ mim</button>
+                <button name="op" value="status:respondida" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Marcar respondida</button>
+                <button name="op" value="status:arquivada" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Arquivar</button>
+                <button name="op" value="snooze:3" className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">Follow-up +3d</button>
               </div>
               <Card className="!p-0 overflow-hidden">
                 <ul className="divide-y divide-[color:var(--border)]">
@@ -122,14 +129,15 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
                         <span className={`h-2 w-2 shrink-0 rounded-full ${c.unread ? "bg-[var(--brand)]" : "bg-transparent"}`} />
                         {isTodos && <Badge tone={c.channel === "whatsapp" ? "success" : "neutral"}>{c.channel === "whatsapp" ? "WA" : "E-mail"}</Badge>}
                         <span className="min-w-0 flex-1">
-                          <span className={`block truncate font-montserrat text-[13px] ${c.unread ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-2)]"}`}>{c.contato_nome || c.contato_email || c.contato_phone || "—"}</span>
-                          <span className="block truncate font-montserrat text-[12px] text-[color:var(--fg-3)]">{c.assunto || "(sem assunto)"}</span>
+                          <span className={`block truncate font-montserrat text-[14px] ${c.unread ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-2)]"}`}>{c.contato_nome || c.contato_email || c.contato_phone || "—"}</span>
+                          <span className="block truncate font-montserrat text-[13px] text-[color:var(--fg-3)]">{c.assunto || "(sem assunto)"}</span>
                         </span>
                         <span className="flex shrink-0 items-center gap-2">
+                          {comSugestao.has(c.id) && <Badge tone="brand">resposta pronta</Badge>}
                           {isSlaBreached({ status: c.status as ConvStatus, last_message_at: c.last_message_at }, sla, nowISO) && <Badge tone="warn">atrasada</Badge>}
                           {c.client_id && <Badge tone="brand">cliente</Badge>}
                           <Badge tone={c.status === "aberta" ? "warn" : "neutral"}>{STATUS_LABELS[c.status as ConvStatus] ?? c.status}</Badge>
-                          <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{fmtDate(c.last_message_at)}</span>
+                          <span className="font-jbmono text-[13px] text-[color:var(--fg-4)]">{fmtDate(c.last_message_at)}</span>
                         </span>
                       </Link>
                     </li>

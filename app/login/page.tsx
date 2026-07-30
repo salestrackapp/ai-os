@@ -47,7 +47,7 @@ function LoginForm() {
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="card w-full max-w-md p-9">
         <div className="mb-6"><SalestrackLogo /></div>
-        <p className="text-[11px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
+        <p className="text-[13px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
         <h1 className="font-serif text-4xl font-semibold mb-1">Entrar</h1>
         <p className="text-sm text-muted mb-8">Ambiente seguro · Salestrack AI</p>
         <form onSubmit={signIn} className="space-y-4">
@@ -70,7 +70,7 @@ function LoginForm() {
             Esqueci minha senha
           </button>
         </form>
-        <p className="mt-8 text-[11px] text-muted2 text-center">MFA obrigatório para administradores Salestrack — configure em Configurações após o primeiro acesso.</p>
+        <p className="mt-8 text-[13px] text-muted2 text-center">MFA obrigatório para administradores Salestrack — configure em Configurações após o primeiro acesso.</p>
       </div>
     </main>
   );

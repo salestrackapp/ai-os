@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PROPOSAL_STATUS_LABELS, proposalStatusBadge, proposalTotals, brl, type Proposal, type ProposalItem } from "@/lib/types";
-import { PageHeader } from "@/components/ds";
+import { PageHeader, ContentArea } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { HelpButton } from "@/components/guidance/HelpButton";
 
@@ -30,45 +30,47 @@ export default async function PropostasPage({ searchParams }: { searchParams: Pr
   const statuses = Object.keys(PROPOSAL_STATUS_LABELS);
 
   return (
-    <div>
-      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "Propostas" }]} className="mb-4" />
-      <PageHeader eyebrow="Comercial · motor" title="Propostas"
-        subtitle="Gerar, enviar e acompanhar — liga ao Estúdio e ao fechamento."
-        comoUsar={<HelpButton routeKey="/admin/comercial" />}
-        actions={<Link href="/admin/propostas/nova" className="btn-gold">+ Nova proposta</Link>} />
+    <ContentArea>
+      <div>
+        <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "Propostas" }]} className="mb-4" />
+        <PageHeader eyebrow="Comercial · motor" title="Propostas"
+          subtitle="Gerar, enviar e acompanhar — liga ao Estúdio e ao fechamento."
+          comoUsar={<HelpButton routeKey="/admin/comercial" />}
+          actions={<Link href="/admin/propostas/nova" className="btn-gold">+ Nova proposta</Link>} />
 
-      <div className="flex gap-2 flex-wrap mb-6">
-        <Link href="/admin/propostas" className={`badge-muted ${!status ? "!text-gold !border-goldline" : ""}`}>Todas</Link>
-        {statuses.map((s) => <Link key={s} href={`/admin/propostas?status=${s}`} className={`badge-muted ${status === s ? "!text-gold !border-goldline" : ""}`}>{PROPOSAL_STATUS_LABELS[s]}</Link>)}
-      </div>
+        <div className="flex gap-2 flex-wrap mb-6">
+          <Link href="/admin/propostas" className={`badge-muted ${!status ? "!text-gold !border-goldline" : ""}`}>Todas</Link>
+          {statuses.map((s) => <Link key={s} href={`/admin/propostas?status=${s}`} className={`badge-muted ${status === s ? "!text-gold !border-goldline" : ""}`}>{PROPOSAL_STATUS_LABELS[s]}</Link>)}
+        </div>
 
-      <div className="card overflow-x-auto">
-        <table className="w-full">
-          <thead><tr>
-            <th className="th">Proposta</th><th className="th">Conta</th><th className="th">Cliente</th><th className="th">Versão</th>
-            <th className="th">Status</th><th className="th text-right">Total</th><th className="th">Última leitura</th><th className="th"></th>
-          </tr></thead>
-          <tbody>
-            {proposals.map((p) => {
-              const { total } = proposalTotals((p.items as ProposalItem[]) ?? []);
-              const grand = total + (p.monthly_platform_fee ?? 0);
-              return (
-                <tr key={p.id} className="hover:bg-navy3/50">
-                  <td className="td"><p className="text-cream">{p.title}</p><p className="text-xs text-muted2">{new Date(p.created_at).toLocaleDateString("pt-BR")}</p></td>
-                  <td className="td text-muted">{p.org_id ? (orgName[p.org_id] ?? "—") : "—"}</td>
-                  <td className="td text-muted">{p.client_name ?? "—"}</td>
-                  <td className="td font-mono">v{p.version}</td>
-                  <td className="td"><span className={proposalStatusBadge(p.status)}>{PROPOSAL_STATUS_LABELS[p.status] ?? p.status}</span></td>
-                  <td className="td text-right font-mono">{brl(grand)}</td>
-                  <td className="td text-xs text-muted2">{lastRead[p.id] ? new Date(lastRead[p.id]).toLocaleString("pt-BR") : "—"}</td>
-                  <td className="td text-right"><Link href={`/admin/propostas/${p.id}`} className="text-gold text-sm hover:underline">Abrir</Link></td>
-                </tr>
-              );
-            })}
-            {proposals.length === 0 && <tr><td className="td text-muted2" colSpan={8}>Nenhuma proposta{status ? " neste status" : ""}. Crie a primeira.</td></tr>}
-          </tbody>
-        </table>
+        <div className="card overflow-x-auto">
+          <table className="w-full">
+            <thead><tr>
+              <th className="th">Proposta</th><th className="th">Conta</th><th className="th">Cliente</th><th className="th">Versão</th>
+              <th className="th">Status</th><th className="th text-right">Total</th><th className="th">Última leitura</th><th className="th"></th>
+            </tr></thead>
+            <tbody>
+              {proposals.map((p) => {
+                const { total } = proposalTotals((p.items as ProposalItem[]) ?? []);
+                const grand = total + (p.monthly_platform_fee ?? 0);
+                return (
+                  <tr key={p.id} className="hover:bg-navy3/50">
+                    <td className="td"><p className="text-cream">{p.title}</p><p className="text-xs text-muted2">{new Date(p.created_at).toLocaleDateString("pt-BR")}</p></td>
+                    <td className="td text-muted">{p.org_id ? (orgName[p.org_id] ?? "—") : "—"}</td>
+                    <td className="td text-muted">{p.client_name ?? "—"}</td>
+                    <td className="td font-mono">v{p.version}</td>
+                    <td className="td"><span className={proposalStatusBadge(p.status)}>{PROPOSAL_STATUS_LABELS[p.status] ?? p.status}</span></td>
+                    <td className="td text-right font-mono">{brl(grand)}</td>
+                    <td className="td text-xs text-muted2">{lastRead[p.id] ? new Date(lastRead[p.id]).toLocaleString("pt-BR") : "—"}</td>
+                    <td className="td text-right"><Link href={`/admin/propostas/${p.id}`} className="text-gold text-sm hover:underline">Abrir</Link></td>
+                  </tr>
+                );
+              })}
+              {proposals.length === 0 && <tr><td className="td text-muted2" colSpan={8}>Nenhuma proposta{status ? " neste status" : ""}. Crie a primeira.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </ContentArea>
   );
 }

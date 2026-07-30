@@ -1,7 +1,7 @@
 /** Portal · Minhas entregas (U4) — multiformato, consumo passo a passo (reusa /entregavel/[token] do UC). */
 import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/service";
-import { ContentArea, PageHeader, Card, Badge, EmptyState } from "@/components/ds";
+import { ContentArea, PageHeader, Card, Badge, EmptyState, botaoClasses } from "@/components/ds";
 import { Icon } from "@/components/ui/icons";
 import { resolvePortalOrg } from "@/lib/portal";
 import { tipoDef, familiaLabel, progressoModulos, isPassoAPasso } from "@/lib/estudio/catalogo";
@@ -52,20 +52,20 @@ export default async function MinhasEntregas() {
                 <div>
                   <div className="mb-1 flex items-center gap-2">
                     <Badge tone="brand">{def.label}</Badge>
-                    <span className="font-montserrat text-[11px] text-[color:var(--fg-4)]">{familiaLabel(def.familia)}</span>
+                    <span className="font-montserrat text-[13px] text-[color:var(--fg-4)]">{familiaLabel(def.familia)}</span>
                   </div>
                   <p className="font-montserrat text-[16px] font-semibold text-[color:var(--fg-1)]">{d.title}</p>
                   {pct !== null && (
                     <div className="mt-2">
-                      <div className="mb-1 flex justify-between font-montserrat text-[11px] text-[color:var(--fg-3)]"><span>Seu progresso</span><span>{pct}%</span></div>
+                      <div className="mb-1 flex justify-between font-montserrat text-[13px] text-[color:var(--fg-3)]"><span>Seu progresso</span><span>{pct}%</span></div>
                       <div className="h-2 w-full rounded-full bg-[var(--bg-2)]"><div className="h-2 rounded-full bg-[var(--brand)]" style={{ width: `${pct}%` }} /></div>
                     </div>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {url
-                    ? <a href={url} target={d.public_token ? "_self" : "_blank"} rel="noopener noreferrer" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="activity" size={14} /> {passo ? (pct && pct > 0 ? "Continuar" : "Começar") : "Acessar"}</a>
-                    : <span className="font-montserrat text-[12px] text-[color:var(--fg-4)]">em preparação</span>}
+                    ? <a href={url} target={d.public_token ? "_self" : "_blank"} rel="noopener noreferrer" className={botaoClasses()}><Icon name="activity" size={14} /> {passo ? (pct && pct > 0 ? "Continuar" : "Começar") : "Acessar"}</a>
+                    : <span className="font-montserrat text-[13px] text-[color:var(--fg-4)]">em preparação</span>}
                   <form action={aceitarEntregaAction.bind(null, d.id)}>
                     <button className="ds-focus inline-flex h-10 items-center rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Aprovar entrega</button>
                   </form>

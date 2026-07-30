@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ds";
+import { PageHeader, ContentArea } from "@/components/ds";
 import { createServiceClient } from "@/lib/supabase/service";
 import { resolvePortalOrg } from "@/lib/portal";
 import { LibraryGrid } from "@/components/portal/LibraryGrid";
@@ -23,9 +23,11 @@ export default async function Biblioteca() {
   }));
 
   return (
-    <div>
-      <PageHeader eyebrow="Materiais do programa" title="Biblioteca" />
-      <LibraryGrid items={items} />
-    </div>
+    <ContentArea>
+      <div>
+        <PageHeader eyebrow="Materiais do programa" title="Biblioteca" />
+        <LibraryGrid items={items} />
+      </div>
+    </ContentArea>
   );
 }

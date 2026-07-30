@@ -41,7 +41,7 @@ export function CadenceEditor({ action, cadence }: Props) {
 
       <div className="flex items-center justify-between">
         <p className="label">Passos da cadência</p>
-        <p className="text-[11px] text-muted2">{toques} toque(s) · {steps.length} passo(s) · {duracao} dias</p>
+        <p className="text-[13px] text-muted2">{toques} toque(s) · {steps.length} passo(s) · {duracao} dias</p>
       </div>
 
       <div className="space-y-2">
@@ -50,24 +50,24 @@ export function CadenceEditor({ action, cadence }: Props) {
             {/* reorder + índice */}
             <div className="flex flex-col items-center pt-1">
               <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="text-muted2 hover:text-gold disabled:opacity-30 text-xs leading-none">▲</button>
-              <span className="w-6 h-6 my-1 rounded-full bg-[rgba(79, 31, 255,.14)] border border-goldline text-gold flex items-center justify-center font-mono text-xs">{i + 1}</span>
+              <span className="w-6 h-6 my-1 rounded-full bg-[rgba(0, 122, 148,.14)] border border-goldline text-gold flex items-center justify-center font-mono text-xs">{i + 1}</span>
               <button type="button" onClick={() => move(i, 1)} disabled={i === steps.length - 1} className="text-muted2 hover:text-gold disabled:opacity-30 text-xs leading-none">▼</button>
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted2">Dia</span>
+              <span className="text-[11px] uppercase tracking-wider text-muted2">Dia</span>
               <input type="number" min={0} value={s.dia} onChange={(e) => patch(i, { dia: Number(e.target.value) })} className="input w-16 text-sm text-center" />
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted2">Canal</span>
+              <span className="text-[11px] uppercase tracking-wider text-muted2">Canal</span>
               <select value={s.canal} onChange={(e) => patch(i, { canal: e.target.value })} className="input text-sm w-36">
                 {CHANNELS.map((c) => <option key={c} value={c}>{CHANNEL_ICON[c]} {CHANNEL_LABELS[c]}</option>)}
               </select>
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted2">Tipo</span>
+              <span className="text-[11px] uppercase tracking-wider text-muted2">Tipo</span>
               <select value={s.tipo} onChange={(e) => patch(i, { tipo: e.target.value })} className="input text-sm w-32">
                 <option value="toque">Toque (agente)</option>
                 <option value="tarefa">Tarefa manual</option>
@@ -75,7 +75,7 @@ export function CadenceEditor({ action, cadence }: Props) {
             </div>
 
             <div className="flex flex-col gap-1 flex-1 min-w-52">
-              <span className="text-[10px] uppercase tracking-wider text-muted2">Diretriz do passo (o agente usa isto)</span>
+              <span className="text-[11px] uppercase tracking-wider text-muted2">Diretriz do passo (o agente usa isto)</span>
               <input value={s.modelo} onChange={(e) => patch(i, { modelo: e.target.value })} className="input text-sm w-full" placeholder="Ex.: Abertura pela dor, sem oferecer serviço. CTA único de agenda." />
             </div>
 
@@ -88,7 +88,7 @@ export function CadenceEditor({ action, cadence }: Props) {
         <button type="button" onClick={add} className="btn-ghost text-sm">+ Adicionar passo</button>
         <button type="submit" className="btn-gold text-sm">{cadence ? "Salvar cadência" : "Criar cadência"}</button>
       </div>
-      <p className="text-[11px] text-muted2">Dica: <b>Toque</b> em e-mail/WhatsApp gera um rascunho para a fila de aprovação; <b>Tarefa</b> (LinkedIn/ligação) entra como tarefa manual do operador.</p>
+      <p className="text-[13px] text-muted2">Dica: <b>Toque</b> em e-mail/WhatsApp gera um rascunho para a fila de aprovação; <b>Tarefa</b> (LinkedIn/ligação) entra como tarefa manual do operador.</p>
     </form>
   );
 }

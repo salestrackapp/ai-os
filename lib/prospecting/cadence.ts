@@ -1,5 +1,6 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
+import { rastrearLinks, pixelAbertura } from "./engajamento";
 import { auditService } from "@/lib/audit";
 import { canEnrollLive } from "./score";
 import { generateOutreach } from "./agents";
@@ -81,7 +82,19 @@ export async function deliverApproved(messageId: string, approverId: string): Pr
 
   let sent = false, manual = false;
   if (msg.channel === "email") {
-    if ((await googleConfigured()) && p?.email) { const r = await sendGmail(p.email, msg.subject ?? "", msg.body ?? ""); sent = r.sent; }
+    if ((await googleConfigured()) && p?.email) {
+      /**
+       * O corpo é instrumentado só AQUI, na hora de enviar — não no rascunho.
+       *
+       * Se os links fossem reescritos na geração, quem revisa a mensagem na fila de aprovação
+       * veria URLs opacas de rastreio em vez do destino real, e não teria como julgar se o link
+       * está certo. O revisor precisa ver o link que a pessoa vai receber.
+       */
+      const comLinks = await rastrearLinks(msg.body ?? "", { prospectId: msg.prospect_id, messageId });
+      const pixel = await pixelAbertura({ prospectId: msg.prospect_id, messageId });
+      const r = await sendGmail(p.email, msg.subject ?? "", comLinks + pixel);
+      sent = r.sent;
+    }
     else manual = true;
   } else if (msg.channel === "whatsapp") {
     // WhatsApp comercial exige telefone; opt-in não se aplica a prospect frio → registra como tarefa manual se não houver via segura

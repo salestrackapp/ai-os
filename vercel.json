@@ -2,9 +2,49 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "crons": [
-    { "path": "/api/cron/cadence", "schedule": "0 12 * * *" },
-    { "path": "/api/cron/ops", "schedule": "0 6 * * *" },
-    { "path": "/api/cron/orchestrate", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/relacionamento", "schedule": "0 7 * * *" }
+    {
+      "path": "/api/cron/cadence",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/ops",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/orchestrate",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/relacionamento",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/tarefas",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/leads",
+      "schedule": "30 11 * * *"
+    },
+    {
+      "path": "/api/cron/retencao",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/prospeccao",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/engajamento",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/coleta",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/cobranca",
+      "schedule": "0 10 * * *"
+    }
   ]
 }

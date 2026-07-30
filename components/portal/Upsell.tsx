@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/icons";
 export function Upsell({ feature, plano = "Professional" }: { feature: string; plano?: string }) {
   return (
     <div className="max-w-2xl">
-      <div className="card p-8 border-goldline bg-[rgba(79, 31, 255,.05)] text-center">
+      <div className="card p-8 border-goldline bg-[rgba(0, 122, 148,.05)] text-center">
         <p className="mb-3 text-gold flex justify-center"><Icon name="sparkles" size={28} /></p>
         <h1 className="font-serif text-2xl font-semibold mb-2">{FEATURE_LABELS[feature] ?? feature} está no plano {plano}</h1>
         <p className="text-sm text-muted leading-relaxed mb-5">

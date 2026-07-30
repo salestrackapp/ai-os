@@ -1,6 +1,6 @@
 import "server-only";
 import type { RenderInput, DeliverableContent, DeliverableSection, KPI } from "../types";
-import { brandSignature, isV2Accent } from "../types";
+import { brandSignature, isAccentPermitido } from "../types";
 import { deckToHtml } from "@/lib/studio/render/slides/render";
 import { buildEmailHtml } from "@/lib/studio/render/email";
 import { buildMessageHtml } from "@/lib/studio/render/message";
@@ -28,10 +28,10 @@ type Theme = {
  * `accent` da identidade do programa só entra se pertencer à paleta v2 (senão cai no violeta padrão).
  */
 function theme(accent?: string | null): Theme {
-  const acc = isV2Accent(accent) ? accent! : "#8B5CFF";
+  const acc = isAccentPermitido(accent) ? accent! : "#00B4D8";
   return {
-    bg: "#0B0B16", surf: "#14141F", surf2: "#1C1C2B", fg: "#F4F4FA", muted: "#AFAFC6", muted2: "#7A7A95",
-    accent: acc, accent2: "#EBF212", line: "rgba(255,255,255,.08)", accentLine: "rgba(139,92,255,.36)",
+    bg: "#1A1A2E", surf: "#141C24", surf2: "#0D1F3C", fg: "#F7F8FA", muted: "#93A1B3", muted2: "#6B7A8D",
+    accent: acc, accent2: "#00E5FF", line: "rgba(255,255,255,.08)", accentLine: "rgba(139,92,255,.36)",
     fontImport: "@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');",
     fontBody: "'Montserrat',-apple-system,Segoe UI,Roboto,sans-serif",
     fontHead: "'Montserrat',-apple-system,Segoe UI,sans-serif",

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { currentMembership } from "@/lib/auth";
-import { ContentArea, PageHeader, Card, CopilotCard, EmptyState, Badge, StatusDot } from "@/components/ds";
+import { ContentArea, PageHeader, Card, CopilotCard, EmptyState, Badge, StatusDot, botaoClasses } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
@@ -24,7 +24,7 @@ export default async function Hoje() {
   const in7 = new Date(now.getTime() + 7 * 86_400_000);
 
   const [{ data: deals }, { data: tasks }, { data: alerts }, { data: sessions }, { data: revisao }, { data: roiPend }, { data: orgs }] = await Promise.all([
-    supabase.from("deals").select("id, title, stage, score, value_estimated, last_activity_at"),
+    supabase.from("deals").select("id, title, stage, score, value_estimated, last_activity_at").is("deleted_at", null),
     supabase.from("tasks").select("id, title, due_date, deal_id").eq("done", false).not("due_date", "is", null).order("due_date"),
     supabase.from("alerts").select("id, kind, severity, message, created_at").neq("status", "resolvido").order("created_at", { ascending: false }),
     supabase.from("sessions").select("id, title, org_id, scheduled_at, status").gte("scheduled_at", now.toISOString()).lte("scheduled_at", in7.toISOString()).order("scheduled_at"),
@@ -67,14 +67,14 @@ export default async function Hoje() {
       <PageHeader eyebrow="Hoje" title={`Bom dia — ${top3.length ? `${top3.length} ${top3.length === 1 ? "ação" : "ações"} para agora` : "tudo sob controle"}`}
         subtitle="O cockpit do sistema: o que precisa de você, os alertas, o funil em movimento e a semana pela frente."
         comoUsar={<HelpButton routeKey="/admin/hoje" />}
-        actions={<Link href="/admin/jornadas" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="rocket" size={15} /> Painel de jornadas</Link>} />
+        actions={<Link href="/admin/jornadas" className={botaoClasses()}><Icon name="rocket" size={15} /> Painel de jornadas</Link>} />
 
       {guide && <FirstSteps surface="admin" guide={guide} />}
 
       {relNotifs > 0 && (
         <Link href="/admin/relacionamento" className="mb-6 flex items-center justify-between gap-3 rounded-ds-card border border-hairline bg-[var(--tile)] px-4 py-3 transition-colors hover:border-[color:var(--brand-light)]">
           <span className="flex items-center gap-2.5 font-montserrat text-[13.5px] text-[color:var(--brand-deep)]"><Icon name="chat" size={16} /> Você tem <b>{relNotifs}</b> {relNotifs === 1 ? "novidade" : "novidades"} no Relacionamento (conversas/atribuições).</span>
-          <span className="font-montserrat text-[12px] font-semibold text-[color:var(--brand)]">Abrir →</span>
+          <span className="font-montserrat text-[13px] font-semibold text-[color:var(--brand)]">Abrir →</span>
         </Link>
       )}
 
@@ -107,12 +107,12 @@ export default async function Hoje() {
               <div className="space-y-2.5">
                 {funnel.map((f) => (
                   <Link key={f.stage} href="/admin/crm" className="flex items-center gap-3 group">
-                    <span className="w-24 shrink-0 font-montserrat text-[13px] text-[color:var(--fg-2)]">{f.stage}</span>
+                    <span className="w-24 shrink-0 font-montserrat text-[14px] text-[color:var(--fg-2)]">{f.stage}</span>
                     <span className="relative h-2 flex-1 overflow-hidden rounded-full bg-[var(--gray-100)]">
                       <span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${(f.qtd / maxQtd) * 100}%`, background: "var(--grad-brand)" }} />
                     </span>
-                    <span className="w-8 shrink-0 text-right font-jbmono text-[12px] text-[color:var(--fg-1)] tabular-nums">{f.qtd}</span>
-                    <span className="hidden w-24 shrink-0 text-right font-jbmono text-[11px] text-[color:var(--fg-3)] sm:block tabular-nums">{brl(f.valor)}</span>
+                    <span className="w-8 shrink-0 text-right font-jbmono text-[13px] text-[color:var(--fg-1)] tabular-nums">{f.qtd}</span>
+                    <span className="hidden w-24 shrink-0 text-right font-jbmono text-[13px] text-[color:var(--fg-3)] sm:block tabular-nums">{brl(f.valor)}</span>
                   </Link>
                 ))}
               </div>
@@ -132,7 +132,7 @@ export default async function Hoje() {
                   <li key={a.id} className="flex items-start gap-2.5">
                     <span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: a.severity === "critico" ? "var(--danger)" : a.severity === "aviso" ? "var(--warn)" : "var(--gray-400)" }} />
                     <div className="min-w-0">
-                      <p className="font-montserrat text-[13px] leading-snug text-[color:var(--fg-1)]">{a.message}</p>
+                      <p className="font-montserrat text-[14px] leading-snug text-[color:var(--fg-1)]">{a.message}</p>
                       <Badge tone={SEV_TONE[a.severity] ?? "neutral"} className="mt-1">{a.severity}</Badge>
                     </div>
                   </li>
@@ -152,7 +152,7 @@ export default async function Hoje() {
               <ul className="space-y-3">
                 {(sessions ?? []).map((s) => (
                   <li key={s.id} className="border-b border-hairline pb-2.5 last:border-0 last:pb-0">
-                    <p className="font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{s.title || "Sessão ao vivo"}</p>
+                    <p className="font-montserrat text-[14px] font-medium text-[color:var(--fg-1)]">{s.title || "Sessão ao vivo"}</p>
                     <p className="ds-small !mt-0.5">{orgName[s.org_id] ?? "—"} · {new Date(s.scheduled_at).toLocaleString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</p>
                   </li>
                 ))}
@@ -174,7 +174,7 @@ export default async function Hoje() {
                   <li key={a.id}>
                     <Link href={a.href} className="flex items-center gap-3 py-2.5 group">
                       <Badge tone="brand">{a.tag}</Badge>
-                      <span className="min-w-0 flex-1"><span className="block truncate font-montserrat text-[13px] text-[color:var(--fg-1)] group-hover:text-[color:var(--brand)]">{a.label}</span><span className="ds-small !mt-0">{a.meta}</span></span>
+                      <span className="min-w-0 flex-1"><span className="block truncate font-montserrat text-[14px] text-[color:var(--fg-1)] group-hover:text-[color:var(--brand)]">{a.label}</span><span className="ds-small !mt-0">{a.meta}</span></span>
                       <span className="text-[color:var(--fg-4)]">→</span>
                     </Link>
                   </li>

@@ -1,0 +1,316 @@
+/**
+ * Identidade visual da Salestrack AI Academy — a mesma da versão anterior.
+ * Escopada em .academy para não interferir no admin nem no portal, que seguem o DS v5 claro.
+ */
+
+.academy {
+  --navy: #1A1A2E;
+  --navy2: #0d1f3c;
+  --cyan: #00B4D8;
+  --cyan2: #0096B7;
+  --slate: #90A4B4;
+  --acad-bg: #F7F8FA;
+  --acad-text: #1E2A38;
+  --acad-muted: #6B7A8D;
+  --acad-border: #E3E8EF;
+  --green: #10B981;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --purple: #8B5CF6;
+  --sidebar-w: 260px;
+
+  background: var(--acad-bg);
+  color: var(--acad-text);
+  /* base do original: body{font-size:15px;line-height:1.65} */
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* Conteúdo ocupa a largura toda, como .main{margin-left:260px;padding:32px} do original. */
+.acad-main { margin-left: var(--sidebar-w); padding: 32px; min-width: 0; }
+@media (max-width: 1023px) { .acad-main { margin-left: 0; } }
+@media (max-width: 640px) { .acad-main { padding: 20px; } }
+
+/* Grade do original: repeat(auto-fill, minmax(280px, 1fr)) — 4 a 5 colunas em tela larga. */
+.acad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.acad-grid-lg { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+/* .grid-3 do original: três colunas iguais, usada na faixa de indicadores. */
+.acad-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.acad-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 860px) { .acad-grid-3, .acad-grid-2 { grid-template-columns: 1fr; } }
+
+/* ── Barra superior ─────────────────────────────────────────── */
+.acad-topbar {
+  height: 60px; background: var(--navy); border-bottom: 3px solid var(--cyan);
+  display: flex; align-items: center; padding: 0 20px; gap: 16px;
+  position: sticky; top: 0; z-index: 300;
+}
+.acad-topbar-name { font-size: 14px; font-weight: 800; color: #fff; letter-spacing: .04em; }
+.acad-topbar-name span { color: var(--cyan); }
+.acad-topbar-sep { width: 1px; height: 28px; background: rgba(255,255,255,.1); }
+.acad-topbar-btn {
+  margin-left: auto; background: var(--cyan); color: #fff; border-radius: 8px;
+  padding: 8px 16px; font-size: 12px; font-weight: 800; letter-spacing: .04em;
+  text-transform: uppercase; transition: background .15s;
+}
+.acad-topbar-btn:hover { background: var(--cyan2); }
+
+/* ── Barra lateral ──────────────────────────────────────────── */
+/* Mesma mecânica do original: .sidebar{position:fixed} + .main{margin-left:260px}.
+   Escolhida em vez de flex+sticky porque com margem a sobreposição é impossível —
+   o conteúdo nunca ocupa a faixa da barra. */
+.acad-sidebar {
+  width: var(--sidebar-w); background: var(--navy);
+  position: fixed; left: 0; top: 60px; bottom: 0; z-index: 200;
+  display: flex; flex-direction: column; overflow-y: auto;
+  transition: transform .2s ease;
+}
+@media (max-width: 1023px) {
+  .acad-sidebar { transform: translateX(-100%); }
+  .acad-sidebar.is-open { transform: none; }
+}
+.acad-sidebar::-webkit-scrollbar { width: 4px; }
+.acad-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+.acad-sidebar-title {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(255,255,255,.3); padding: 16px 20px 10px;
+}
+.acad-nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px; width: 100%;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.55);
+  border-left: 3px solid transparent; transition: all .15s; text-align: left;
+}
+.acad-nav-item:hover { color: #fff; background: rgba(255,255,255,.05); }
+.acad-nav-item.is-active {
+  color: #fff; background: rgba(0,180,216,.12); border-left-color: var(--cyan); font-weight: 700;
+}
+.acad-nav-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+.acad-agents { border-top: 1px solid rgba(255,255,255,.08); padding: 4px 0 16px; }
+.acad-agent-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 20px;
+  font-size: 13px; color: rgba(255,255,255,.55); border-left: 3px solid transparent;
+  transition: all .15s; text-align: left;
+}
+.acad-agent-item:hover { color: #fff; background: rgba(255,255,255,.05); }
+.acad-agent-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--amber); }
+.acad-novo-agente {
+  margin: 10px 16px 0; padding: 10px; border-radius: 10px; width: calc(100% - 32px);
+  border: 1px solid rgba(255,255,255,.16); color: rgba(255,255,255,.75);
+  font-size: 13px; font-weight: 600; transition: all .15s;
+}
+.acad-novo-agente:hover { background: rgba(255,255,255,.07); color: #fff; }
+
+/* ── Destaque da home ───────────────────────────────────────── */
+.acad-hero {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+  border-radius: 16px; padding: 36px 40px; display: flex; align-items: center; gap: 32px;
+  margin-bottom: 28px; position: relative; overflow: hidden;
+}
+.acad-hero::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(0,180,216,.18), transparent);
+  pointer-events: none;
+}
+.acad-hero h2 { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 8px; position: relative; z-index: 1; }
+.acad-hero h2 em { font-style: normal; color: var(--cyan); }
+.acad-hero p { color: var(--slate); font-size: 15px; line-height: 1.65; max-width: 480px; position: relative; z-index: 1; }
+.acad-hero-img { font-size: 72px; line-height: 1; flex-shrink: 0; position: relative; z-index: 1; }
+.acad-btn-cyan {
+  background: var(--cyan); color: #fff; border-radius: 10px; padding: 12px 22px;
+  font-size: 14px; font-weight: 700; transition: background .15s;
+}
+.acad-btn-cyan:hover { background: var(--cyan2); }
+.acad-btn-ghost {
+  background: rgba(255,255,255,.08); color: #fff; border-radius: 10px; padding: 12px 22px;
+  font-size: 14px; font-weight: 600; transition: background .15s;
+}
+.acad-btn-ghost:hover { background: rgba(255,255,255,.14); }
+
+/* ── Indicadores e cartões ──────────────────────────────────── */
+.acad-stat {
+  background: #fff; border: 1px solid var(--acad-border); border-radius: 14px;
+  padding: 20px 24px; display: flex; align-items: center; gap: 16px;
+}
+.acad-stat-icon {
+  width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center;
+  justify-content: center; font-size: 22px; flex-shrink: 0;
+}
+.acad-stat-num { font-size: 28px; font-weight: 900; color: var(--navy); line-height: 1; }
+.acad-stat-lbl { font-size: 12px; color: var(--acad-muted); margin-top: 2px; }
+
+.acad-section-div { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; }
+.acad-section-div::before, .acad-section-div::after { content: ""; flex: 1; height: 1px; background: var(--acad-border); }
+.acad-section-div span {
+  font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--acad-muted);
+}
+
+.acad-qa {
+  background: #fff; border: 1px solid var(--acad-border); border-left: 4px solid var(--cyan);
+  border-radius: 14px; padding: 22px; height: 100%; transition: box-shadow .15s, transform .15s;
+}
+.acad-qa:hover { box-shadow: 0 8px 24px -12px rgba(26,26,46,.28); transform: translateY(-1px); }
+.acad-qa-icon { font-size: 26px; line-height: 1; }
+.acad-qa h3 { margin-top: 14px; font-size: 15px; font-weight: 800; color: var(--navy); }
+.acad-qa p { margin-top: 6px; font-size: 13px; line-height: 1.6; color: var(--acad-muted); }
+
+.acad-card { background: #fff; border: 1px solid var(--acad-border); border-radius: 14px; }
+
+/* ── Trilho de passos ───────────────────────────────────────── */
+.acad-stepper { display: flex; margin-bottom: 28px; }
+.acad-step { flex: 1; position: relative; text-align: center; }
+.acad-step:not(:last-child)::after {
+  content: ""; position: absolute; left: calc(50% + 20px); right: 0; top: 18px; height: 2px; background: var(--acad-border);
+}
+.acad-step.is-done:not(:last-child)::after { background: var(--cyan); }
+.acad-step-circle {
+  width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--acad-border); background: #fff;
+  font-size: 13px; font-weight: 800; color: var(--acad-muted);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto; position: relative; z-index: 1; transition: all .2s;
+}
+.acad-step.is-done .acad-step-circle { background: var(--green); border-color: var(--green); color: #fff; }
+.acad-step.is-current .acad-step-circle { background: var(--cyan); border-color: var(--cyan); color: #fff; }
+.acad-step-label { font-size: 11px; font-weight: 600; color: var(--acad-muted); margin-top: 7px; white-space: nowrap; }
+.acad-step.is-done .acad-step-label { color: var(--green); }
+.acad-step.is-current .acad-step-label { color: var(--navy); font-weight: 800; }
+
+/* ── Abas ───────────────────────────────────────────────────── */
+.acad-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--acad-border); flex-wrap: wrap; }
+.acad-tab {
+  padding: 12px 18px; font-size: 13px; font-weight: 600; color: var(--acad-muted);
+  border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all .15s;
+}
+.acad-tab:hover { color: var(--navy); }
+.acad-tab.is-active { color: var(--navy); border-bottom-color: var(--cyan); font-weight: 800; }
+
+/* ── Bloco de código ────────────────────────────────────────── */
+.acad-code {
+  background: var(--navy); color: #E6EDF3; border-radius: 12px; overflow: hidden;
+}
+.acad-code-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.08);
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+.acad-code-body {
+  padding: 16px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12.5px;
+  line-height: 1.7; white-space: pre-wrap; max-height: 460px; overflow: auto;
+}
+.acad-code-btn {
+  background: rgba(255,255,255,.1); color: #fff; border-radius: 8px; padding: 6px 12px;
+  font-size: 12px; font-weight: 600; transition: background .15s;
+}
+.acad-code-btn:hover { background: rgba(255,255,255,.18); }
+
+/* ── Selos e avisos ─────────────────────────────────────────── */
+.acad-badge {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+}
+.acad-badge-amber { background: rgba(245,158,11,.15); color: var(--amber); }
+.acad-badge-green { background: rgba(16,185,129,.15); color: var(--green); }
+.acad-ok {
+  background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.3);
+  border-radius: 12px; padding: 16px 18px;
+}
+
+/* ── Formulários ────────────────────────────────────────────── */
+.acad-lbl {
+  display: block; font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 6px;
+}
+.acad-hint { display: block; font-size: 12px; color: var(--acad-muted); margin-top: 6px; }
+.acad-input {
+  width: 100%; border: 1px solid var(--acad-border); border-radius: 10px;
+  padding: 10px 13px; font-size: 14px; color: var(--acad-text); background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.acad-input:focus {
+  outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,180,216,.15);
+}
+.acad-input::placeholder { color: #A8B4C2; }
+select.acad-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7A8D' d='M1 1l5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 34px; }
+
+.acad-tool {
+  border: 1px solid var(--acad-border); border-radius: 10px; padding: 12px; text-align: left;
+  background: #fff; transition: all .15s;
+}
+.acad-tool:hover { border-color: var(--slate); }
+.acad-tool.is-on { border-color: var(--cyan); background: rgba(0,180,216,.06); box-shadow: 0 0 0 1px var(--cyan) inset; }
+.acad-chip {
+  border: 1px solid var(--acad-border); border-radius: 20px; padding: 5px 13px;
+  font-size: 12px; font-weight: 600; color: var(--acad-muted); background: #fff; transition: all .15s;
+}
+.acad-chip:hover { color: var(--navy); }
+.acad-chip.is-on { border-color: var(--cyan); background: rgba(0,180,216,.1); color: var(--cyan2); font-weight: 700; }
+.acad-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan2); }
+.acad-h1 { font-size: 28px; font-weight: 900; color: var(--navy); margin-top: 6px; line-height: 1.15; }
+.acad-h1 em { font-style: normal; color: var(--cyan); }
+/* .page-desc do original: 15px, sem largura máxima. */
+.acad-sub { margin-top: 8px; font-size: 15px; color: var(--acad-muted); }
+.acad-copy {
+  background: var(--cyan); color: #fff; border-radius: 8px; padding: 6px 14px;
+  font-size: 12px; font-weight: 700; transition: background .15s;
+}
+.acad-copy:hover { background: var(--cyan2); }
+
+/* ── Selos ──────────────────────────────────────────────────── */
+.acad-badge-cyan { background: rgba(0,180,216,.1); color: var(--cyan); }
+.acad-badge-purple { background: rgba(139,92,246,.1); color: var(--purple); }
+.acad-badge-red { background: rgba(239,68,68,.1); color: var(--red); }
+
+/* ── Bloco de código (padrão do original: #0D1117) ──────────── */
+.acad-code-block { background: #0D1117; border-radius: 12px; overflow: hidden; margin: 14px 0; border: 1px solid rgba(0,180,216,.15); }
+.acad-code-header { background: #161B22; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.acad-code-lang { font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: .07em; text-transform: uppercase; }
+.acad-code-content {
+  padding: 18px 20px; font-family: "JetBrains Mono", "Courier New", monospace; font-size: 13px;
+  line-height: 1.75; color: #CDD6F4; white-space: pre-wrap; overflow: auto; max-height: 360px;
+}
+
+/* ── Cartão de prompt ───────────────────────────────────────── */
+.acad-prompt-card { background: #fff; border: 1px solid var(--acad-border); border-radius: 14px; overflow: hidden; transition: box-shadow .2s; }
+.acad-prompt-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+.acad-pc-header { background: var(--navy); padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-left: 5px solid var(--cyan); }
+.acad-pc-icon { font-size: 24px; line-height: 1; }
+.acad-pc-area { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 3px; }
+.acad-pc-name { font-size: 15px; font-weight: 800; color: #fff; }
+.acad-pc-impact { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: rgba(0,180,216,.15); color: var(--cyan); margin-top: 4px; display: inline-block; }
+.acad-pc-body { padding: 16px 20px; }
+.acad-pc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--acad-muted); margin-bottom: 8px; }
+.acad-pc-footer { padding: 14px 20px; border-top: 1px solid var(--acad-border); display: flex; gap: 8px; }
+.acad-tool-chip { background: var(--navy); color: var(--cyan); font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 20px; font-family: "JetBrains Mono", monospace; }
+.acad-tool-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.acad-btn-copy {
+  background: var(--navy); color: var(--cyan); padding: 7px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; transition: all .15s; display: inline-flex; align-items: center; gap: 5px;
+}
+.acad-btn-copy:hover { background: var(--navy2); }
+.acad-btn-copy.is-ok { background: var(--green); color: #fff; }
+
+/* ── Checklist ──────────────────────────────────────────────── */
+.acad-check-cat { font-size: 11px; font-weight: 700; color: var(--acad-muted); text-transform: uppercase; letter-spacing: .08em; padding: 9px 14px; background: var(--acad-bg); border-radius: 9px 9px 0 0; border: 1px solid var(--acad-border); }
+.acad-check-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; background: #fff; border: 1px solid var(--acad-border); border-bottom: none; width: 100%; text-align: left; }
+.acad-check-item:last-child { border-radius: 0 0 10px 10px; border-bottom: 1px solid var(--acad-border); }
+.acad-check-item.is-done { background: #F0FDF4; }
+.acad-check-box { width: 18px; height: 18px; border: 2px solid var(--acad-border); border-radius: 5px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all .15s; }
+.acad-check-box.is-on { background: var(--green); border-color: var(--green); color: #fff; }
+.acad-check-text { font-size: 14px; font-weight: 600; color: var(--acad-text); line-height: 1.5; }
+.acad-check-text.is-done { text-decoration: line-through; color: var(--acad-muted); }
+.acad-check-detail { font-size: 12px; color: var(--acad-muted); margin-top: 3px; line-height: 1.5; }
+.acad-progress { height: 6px; background: var(--acad-border); border-radius: 3px; overflow: hidden; }
+.acad-progress span { display: block; height: 100%; background: var(--cyan); border-radius: 3px; transition: width .3s; }
+
+/* ── Glossário ──────────────────────────────────────────────── */
+.acad-gloss { background: #fff; border: 1px solid var(--acad-border); border-radius: 12px; padding: 18px 20px; border-left: 4px solid var(--cyan); }
+.acad-gc-term { font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 2px; }
+.acad-gc-en { font-size: 11px; color: var(--acad-muted); font-style: italic; margin-bottom: 7px; }
+.acad-gc-def { font-size: 13px; color: var(--acad-text); margin-bottom: 10px; line-height: 1.65; }
+.acad-gc-ex { background: rgba(0,180,216,.07); border-left: 3px solid var(--cyan); padding: 8px 12px; border-radius: 0 7px 7px 0; font-size: 12px; color: var(--acad-muted); font-style: italic; }
+.acad-gc-ex strong { font-style: normal; color: var(--navy); }
+
+/* ── Modal ──────────────────────────────────────────────────── */
+.acad-modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.acad-modal-box { background: #fff; border-radius: 16px; width: 100%; max-width: 760px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+.acad-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--acad-border); }
+.acad-modal-body { padding: 20px 24px; overflow-y: auto; }
+.acad-modal-foot { padding: 16px 24px; border-top: 1px solid var(--acad-border); display: flex; gap: 10px; flex-wrap: wrap; }

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import type { Contact, Organization } from "@/lib/types";
-import { createContact, updateContact, deleteContact } from "@/app/admin/crm/contatos/actions";
+import { createContact, updateContact, deleteContact, enrichContact } from "@/app/admin/crm/contatos/actions";
 
 export function ContactsManager({ contacts, orgs }: { contacts: Contact[]; orgs: Organization[] }) {
   const [q, setQ] = useState("");
@@ -60,7 +60,7 @@ export function ContactsManager({ contacts, orgs }: { contacts: Contact[]; orgs:
                   {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </select></div>
               <label className="flex items-center gap-2 text-sm text-muted">
-                <input type="checkbox" name="opt_in_whatsapp" defaultChecked={cur?.opt_in_whatsapp ?? false} className="accent-[#4F1FFF]" /> Opt-in WhatsApp
+                <input type="checkbox" name="opt_in_whatsapp" defaultChecked={cur?.opt_in_whatsapp ?? false} className="accent-[#007A94]" /> Opt-in WhatsApp
               </label>
               <div className="flex gap-3 pt-2">
                 <button className="btn-gold">Salvar</button>
@@ -68,9 +68,15 @@ export function ContactsManager({ contacts, orgs }: { contacts: Contact[]; orgs:
               </div>
             </form>
             {cur && (
-              <form action={deleteContact.bind(null, cur.id)} className="mt-6 pt-6 border-t border-line" onSubmit={() => setTimeout(() => setEditing(null), 50)}>
-                <button className="btn-ghost text-xs !text-muted2 hover:!text-cream">Excluir contato (auditado)</button>
-              </form>
+              <>
+                <form action={enrichContact.bind(null, cur.id)} className="mt-6 pt-6 border-t border-line">
+                  <button className="btn-ghost text-xs">Enriquecer pelo Apollo</button>
+                  <p className="mt-2 text-[13px] text-muted2">Consome crédito. Só preenche campos vazios — nada do que já está aqui é sobrescrito.</p>
+                </form>
+                <form action={deleteContact.bind(null, cur.id)} className="mt-6 pt-6 border-t border-line" onSubmit={() => setTimeout(() => setEditing(null), 50)}>
+                  <button className="btn-ghost text-xs !text-muted2 hover:!text-cream">Excluir contato (auditado)</button>
+                </form>
+              </>
             )}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { isV2Accent, type VideoPayload, type VideoScene } from "@/lib/deliverables/types";
+import { isAccentPermitido, type VideoPayload, type VideoScene } from "@/lib/deliverables/types";
 
 export type StoryboardOpts = { accent?: string | null; logo?: string | null; programName?: string | null; footer?: string; tipo?: string };
 
@@ -21,31 +21,31 @@ function frame(scene: VideoScene, accent: string, i: number, n: number, opts: St
 
 /** Storyboard revisável (PDF/HTML v2 + identidade): roteiro + cenas com frame visual, narração e texto em tela. */
 export function buildStoryboardHtml(video: VideoPayload, opts: StoryboardOpts = {}): string {
-  const accent = isV2Accent(opts.accent) ? opts.accent! : "#8B5CFF";
+  const accent = isAccentPermitido(opts.accent) ? opts.accent! : "#00B4D8";
   const css = `
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:#0B0B16;color:#F4F4FA;font-family:'Montserrat',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{background:#1A1A2E;color:#F7F8FA;font-family:'Montserrat',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .doc{max-width:900px;margin:0 auto}
   .cover{padding:64px 56px 36px}
   .eyebrow{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:${accent};margin-bottom:10px}
   h1{font-size:46px;font-weight:900;letter-spacing:-.03em;line-height:1.05}
-  .sub{font-size:16px;color:#AFAFC6;margin-top:12px}
-  .roteiro{padding:28px 56px;background:#14141F;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
-  .roteiro p{color:#AFAFC6;margin-bottom:10px;max-width:74ch}
+  .sub{font-size:16px;color:#93A1B3;margin-top:12px}
+  .roteiro{padding:28px 56px;background:#141C24;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
+  .roteiro p{color:#93A1B3;margin-bottom:10px;max-width:74ch}
   .scene{padding:26px 56px;border-top:1px solid rgba(255,255,255,.08);display:grid;grid-template-columns:360px 1fr;gap:26px;align-items:start;break-inside:avoid}
   .frame{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;
-    background:radial-gradient(400px 240px at 80% -20%, ${accent}44, transparent), radial-gradient(300px 200px at -10% 120%, #EBF21214, transparent), #0B0B16;border:1px solid rgba(255,255,255,.08)}
-  .fspark{position:absolute;right:16px;top:14px;color:#EBF212;font-size:22px}
+    background:radial-gradient(400px 240px at 80% -20%, ${accent}44, transparent), radial-gradient(300px 200px at -10% 120%, #00E5FF14, transparent), #1A1A2E;border:1px solid rgba(255,255,255,.08)}
+  .fspark{position:absolute;right:16px;top:14px;color:#00E5FF;font-size:22px}
   .fcena{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${accent}}
   .fhl{font-size:24px;font-weight:800;line-height:1.12;margin-top:8px}
-  .fbig{font-size:64px;font-weight:900;color:#EBF212;line-height:1;margin-top:6px}
-  .fbl{font-size:14px;color:#F4F4FA;margin-top:6px}
+  .fbig{font-size:64px;font-weight:900;color:#00E5FF;line-height:1;margin-top:6px}
+  .fbl{font-size:14px;color:#F7F8FA;margin-top:6px}
   .fbrand{position:absolute;left:24px;bottom:16px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:${accent};font-weight:700}
-  .sinfo .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7A7A95;margin:12px 0 4px}
+  .sinfo .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#6B7A8D;margin:12px 0 4px}
   .sinfo .lbl:first-child{margin-top:0}
-  .sinfo .v{font-size:15px;color:#F4F4FA;line-height:1.5}
-  .sinfo .vis{color:#AFAFC6;font-size:14px}
+  .sinfo .v{font-size:15px;color:#F7F8FA;line-height:1.5}
+  .sinfo .vis{color:#93A1B3;font-size:14px}
   footer{padding:28px 56px;text-align:center;border-top:1px solid rgba(255,255,255,.08)}
   footer p{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:${accent}}
   @media print{ .scene,.roteiro{break-before:auto} .scene{break-inside:avoid} @page{margin:0} .cover{break-after:avoid} }`;

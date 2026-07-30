@@ -19,10 +19,10 @@ export default async function NovoProgramaPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Link href="/admin/onboarding/novo" className="group block">
-          <Card className="h-full transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-[color:rgba(79,31,255,0.28)] group-hover:shadow-ds-md"
+          <Card className="h-full transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-[color:rgba(0, 122, 148,0.28)] group-hover:shadow-ds-md"
             icon={<Icon name="layers" size={20} />} eyebrow="Recomendado" title="A partir de um template ou negócio">
             Parte de um blueprint (Fase 9) ou de um negócio ganho — o motor de provisionamento monta a estrutura pronta.
-            <span className="mt-3 inline-flex items-center gap-1 font-montserrat text-[12px] font-semibold text-[color:var(--brand)]">Abrir provisionamento →</span>
+            <span className="mt-3 inline-flex items-center gap-1 font-montserrat text-[13px] font-semibold text-[color:var(--brand)]">Abrir provisionamento →</span>
           </Card>
         </Link>
 

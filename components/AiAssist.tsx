@@ -25,7 +25,7 @@ export function AiAssist({ context, actions, title = "Copiloto", compact = false
   }
 
   return (
-    <div className={compact ? "" : "card p-5 border-goldline bg-[rgba(79, 31, 255,.04)]"}>
+    <div className={compact ? "" : "card p-5 border-goldline bg-[rgba(0, 122, 148,.04)]"}>
       <div className="flex items-center gap-2 mb-3">
         <span className="text-gold"><Icon name="sparkles" size={16} /></span><p className="label !mb-0">{title}</p>
       </div>
@@ -38,8 +38,8 @@ export function AiAssist({ context, actions, title = "Copiloto", compact = false
       {out && (
         <div className="mt-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] text-muted2">Resultado</span>
-            <button onClick={async () => { try { await navigator.clipboard.writeText(out); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {} }} className="text-[11px] text-muted2 hover:text-gold">{copied ? "✓ copiado" : "copiar"}</button>
+            <span className="text-[13px] text-muted2">Resultado</span>
+            <button onClick={async () => { try { await navigator.clipboard.writeText(out); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {} }} className="text-[13px] text-muted2 hover:text-gold">{copied ? "✓ copiado" : "copiar"}</button>
           </div>
           <div className="bg-navy3 border border-line rounded-lg p-3 text-sm text-cream whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto">{out}</div>
         </div>

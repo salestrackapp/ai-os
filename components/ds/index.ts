@@ -1,6 +1,7 @@
-/** DS v5 · Salestrack AI v2 — barrel export. `import { Button, Card, ... } from "@/components/ds"`. */
+/** DS v6 · Salestrack AI — barrel export. `import { Button, Card, ... } from "@/components/ds"`. */
 export { Eyebrow, Section, Kpi, Badge, StatusDot, MonoTag, IconTile, EmptyState, PrimaryActionBar } from "./primitives";
 export { Button, type ButtonProps } from "./Button";
+export { botaoClasses } from "./button-classes";
 export { Card, CardFeatured } from "./Card";
 export { CopilotCard, CopilotInline } from "./CopilotCard";
 export { Label, Input, Textarea, Select, Field } from "./fields";

@@ -1,7 +1,7 @@
 import "server-only";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { EmptyState, Badge } from "@/components/ds";
+import { EmptyState, Badge, botaoClasses } from "@/components/ds";
 import { Icon } from "@/components/ui/icons";
 import { AI_METHOD } from "@/lib/ds/method";
 import { currentPhaseIndex, phaseStatusAt, cycleStepOf, type TimelinePhase } from "@/lib/timeline/position";
@@ -20,7 +20,7 @@ export async function ProgramTimeline({ projectId, mode }: { projectId: string; 
   if (!p || phases.length === 0) {
     return <EmptyState icon={<Icon name="rocket" size={22} />} title="A linha do tempo aparece aqui"
       description={mode === "conducao" ? "Adicione fases e marcos no editor do programa para montar a jornada." : "Assim que seu programa ganhar marcos, sua jornada se desenha aqui."}
-      action={mode === "conducao" ? <Link href={`/admin/programas/${projectId}/editar`} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="pen" size={15} /> Editar programa</Link> : undefined} />;
+      action={mode === "conducao" ? <Link href={`/admin/programas/${projectId}/editar`} className={botaoClasses()}><Icon name="pen" size={15} /> Editar programa</Link> : undefined} />;
   }
 
   const current = currentPhaseIndex(phases, p);
@@ -36,7 +36,7 @@ export async function ProgramTimeline({ projectId, mode }: { projectId: string; 
           <p className="ds-eyebrow">Linha do tempo</p>
           <p className="ds-small mt-1">Você está aqui: <b className="text-[color:var(--fg-1)]">{phases[current]?.titulo}</b> · passo <b className="text-[color:var(--fg-1)]">{AI_METHOD[step].title}</b> do método.{next ? ` Próximo marco: ${next.titulo}${next.planned_for ? ` (${fmt(next.planned_for)})` : ""}.` : " Você está no marco final."}</p>
         </div>
-        {mode === "conducao" && <Link href={`/admin/programas/${projectId}/editar`} className="ds-focus inline-flex h-9 items-center gap-1.5 rounded-ds-input border border-hairline px-3 font-montserrat text-[13px] font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="pen" size={14} /> Editar no Programa</Link>}
+        {mode === "conducao" && <Link href={`/admin/programas/${projectId}/editar`} className="ds-focus inline-flex h-9 items-center gap-1.5 rounded-ds-input border border-hairline px-3 font-montserrat text-[14px] font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="pen" size={14} /> Editar no Programa</Link>}
       </div>
 
       <ol className="relative ml-1 border-l-2 border-[var(--border-strong)] pl-6">
@@ -54,15 +54,15 @@ export async function ProgramTimeline({ projectId, mode }: { projectId: string; 
               {st === "atual" ? (
                 <div className="relative overflow-hidden rounded-ds-card p-5 text-white shadow-ds-brand" style={{ background: "var(--grad-brand)" }}>
                   <span aria-hidden className="absolute right-3 top-3 text-spark">✳</span>
-                  <span className="inline-flex items-center gap-1.5 rounded-ds-pill bg-white/15 px-2.5 py-1 font-jbmono text-[10px] uppercase tracking-[0.12em]">você está aqui</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-ds-pill bg-white/15 px-2.5 py-1 font-jbmono text-[11px] uppercase tracking-[0.12em]">você está aqui</span>
                   <p className="mt-2 font-montserrat text-lg font-bold tracking-[-0.02em]">{ph.titulo}</p>
-                  <p className="mt-1 text-[13px] leading-snug text-white/85">{ph.descricao}</p>
-                  <p className="mt-2 font-jbmono text-[11px] text-white/70">{ph.meses} {ph.meses === 1 ? "mês" : "meses"}{fmt(ph.planned_for) ? ` · previsto ${fmt(ph.planned_for)}` : ""}</p>
-                  {linked.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{linked.map((d) => <Link key={d.id} href={mode === "conducao" ? "/admin/entregaveis" : "/portal/entregaveis"} className="inline-flex items-center gap-1 rounded-ds-pill bg-white/15 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-white/25"><Icon name="fileText" size={11} /> {d.title}</Link>)}</div>}
+                  <p className="mt-1 text-[14px] leading-snug text-white/85">{ph.descricao}</p>
+                  <p className="mt-2 font-jbmono text-[13px] text-white/70">{ph.meses} {ph.meses === 1 ? "mês" : "meses"}{fmt(ph.planned_for) ? ` · previsto ${fmt(ph.planned_for)}` : ""}</p>
+                  {linked.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{linked.map((d) => <Link key={d.id} href={mode === "conducao" ? "/admin/entregaveis" : "/portal/entregaveis"} className="inline-flex items-center gap-1 rounded-ds-pill bg-white/15 px-2.5 py-1 text-[13px] font-medium text-white hover:bg-white/25"><Icon name="fileText" size={11} /> {d.title}</Link>)}</div>}
                   {mode === "conducao" && (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <form action={fMarkPhase.bind(null, projectId, i, "concluido")}><button className="ds-focus rounded-ds-input bg-spark px-3 py-1.5 font-montserrat text-[12px] font-semibold text-ink">Marcar concluído</button></form>
-                      <Link href={`/admin/programas/${projectId}/editar`} className="ds-focus rounded-ds-input border border-white/40 px-3 py-1.5 font-montserrat text-[12px] font-medium text-white hover:bg-white/10">Editar marco</Link>
+                      <form action={fMarkPhase.bind(null, projectId, i, "concluido")}><button className="ds-focus rounded-ds-input bg-spark px-3 py-1.5 font-montserrat text-[13px] font-semibold text-ink">Marcar concluído</button></form>
+                      <Link href={`/admin/programas/${projectId}/editar`} className="ds-focus rounded-ds-input border border-white/40 px-3 py-1.5 font-montserrat text-[13px] font-medium text-white hover:bg-white/10">Editar marco</Link>
                     </div>
                   )}
                 </div>
@@ -73,13 +73,13 @@ export async function ProgramTimeline({ projectId, mode }: { projectId: string; 
                     <Badge tone={st === "concluido" ? "success" : "neutral"}>{st === "concluido" ? "concluído" : "previsto"}</Badge>
                   </div>
                   <p className="ds-small mt-1">{ph.descricao}</p>
-                  <p className="mt-1.5 font-jbmono text-[11px] text-[color:var(--fg-4)]">{ph.meses} {ph.meses === 1 ? "mês" : "meses"}{st === "concluido" && fmt(ph.occurred_at) ? ` · concluído ${fmt(ph.occurred_at)}` : fmt(ph.planned_for) ? ` · previsto ${fmt(ph.planned_for)}` : ""}</p>
-                  {linked.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{linked.map((d) => <Link key={d.id} href={mode === "conducao" ? "/admin/entregaveis" : "/portal/entregaveis"} className="inline-flex items-center gap-1 rounded-ds-pill border border-hairline bg-[var(--bg-2)] px-2 py-0.5 text-[11px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]"><Icon name="fileText" size={11} /> {d.title}</Link>)}</div>}
+                  <p className="mt-1.5 font-jbmono text-[13px] text-[color:var(--fg-4)]">{ph.meses} {ph.meses === 1 ? "mês" : "meses"}{st === "concluido" && fmt(ph.occurred_at) ? ` · concluído ${fmt(ph.occurred_at)}` : fmt(ph.planned_for) ? ` · previsto ${fmt(ph.planned_for)}` : ""}</p>
+                  {linked.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{linked.map((d) => <Link key={d.id} href={mode === "conducao" ? "/admin/entregaveis" : "/portal/entregaveis"} className="inline-flex items-center gap-1 rounded-ds-pill border border-hairline bg-[var(--bg-2)] px-2 py-0.5 text-[13px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]"><Icon name="fileText" size={11} /> {d.title}</Link>)}</div>}
                   {mode === "conducao" && (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {st !== "concluido" && <form action={fMarkPhase.bind(null, projectId, i, "atual")}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Definir como atual</button></form>}
-                      {st !== "concluido" && <form action={fMarkPhase.bind(null, projectId, i, "concluido")}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Concluir</button></form>}
-                      {st === "concluido" && <form action={fMarkPhase.bind(null, projectId, i, "previsto")}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Reabrir</button></form>}
+                      {st !== "concluido" && <form action={fMarkPhase.bind(null, projectId, i, "atual")}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Definir como atual</button></form>}
+                      {st !== "concluido" && <form action={fMarkPhase.bind(null, projectId, i, "concluido")}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Concluir</button></form>}
+                      {st === "concluido" && <form action={fMarkPhase.bind(null, projectId, i, "previsto")}><button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Reabrir</button></form>}
                     </div>
                   )}
                 </div>
@@ -90,7 +90,7 @@ export async function ProgramTimeline({ projectId, mode }: { projectId: string; 
       </ol>
 
       {mode === "leitura" && (
-        <Link href="/portal/consultor" className="mt-5 inline-flex items-center gap-1.5 font-montserrat text-[13px] font-medium text-[color:var(--brand)] hover:underline">
+        <Link href="/portal/consultor" className="mt-5 inline-flex items-center gap-1.5 font-montserrat text-[14px] font-medium text-[color:var(--brand)] hover:underline">
           <Icon name="sparkles" size={14} /> Dúvidas sobre a jornada? Fale com seu copiloto
         </Link>
       )}

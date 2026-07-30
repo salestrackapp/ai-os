@@ -6,7 +6,7 @@ export default function Home() {
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="max-w-xl text-center">
         <div className="mb-8 flex justify-center"><SalestrackLogo /></div>
-        <p className="text-[11px] uppercase tracking-[.3em] text-gold mb-6">Salestrack Inteligência Digital</p>
+        <p className="text-[13px] uppercase tracking-[.3em] text-gold mb-6">Salestrack Inteligência Digital</p>
         <h1 className="font-serif text-6xl font-semibold leading-none">
           AI Operation <em className="text-gold not-italic italic">System</em>
         </h1>
@@ -17,7 +17,7 @@ export default function Home() {
         <div className="mt-10">
           <Link href="/login" className="btn-gold">Entrar na plataforma →</Link>
         </div>
-        <p className="mt-16 text-[11px] tracking-[.08em] text-muted2">ai-os.salestrack.com.br · André Kachan · Salestrack AI</p>
+        <p className="mt-16 text-[13px] tracking-[.08em] text-muted2">ai-os.salestrack.com.br · André Kachan · Salestrack AI</p>
       </div>
     </main>
   );

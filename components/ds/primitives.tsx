@@ -1,11 +1,11 @@
 /**
- * DS v5 · Primitivas de texto e dado (Salestrack AI v2)
+ * DS v6 · Primitivas de texto e dado (identidade Academy)
  * Eyebrow · Section · Kpi · Badge · StatusDot · MonoTag · EmptyState · PrimaryActionBar
  * Todas herdam tokens; texto em sentence case; caixa alta só no eyebrow-assinatura.
  */
 import { cn } from "@/lib/ds/cn";
 
-/** Rótulo-assinatura: `— LABEL` caps violeta, tracking largo. Único uso de caixa alta. */
+/** Rótulo-assinatura: `— LABEL` em caixa alta ciano, tracking largo. Único uso de caixa alta. */
 export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
   return <span className={cn("ds-eyebrow", className)}>{children}</span>;
 }
@@ -39,24 +39,29 @@ export function Kpi({ value, label, delta, tone = "neutral", className }: {
         <span className="font-montserrat font-extrabold tracking-[-0.03em] text-[clamp(28px,3vw,40px)] leading-none text-[color:var(--fg-1)] tabular-nums">{value}</span>
         {delta && <span className={cn("font-montserrat text-xs font-semibold", deltaColor)}>{delta}</span>}
       </div>
-      <p className="ds-small mt-2 uppercase tracking-[0.08em] text-[10px]">{label}</p>
+      <p className="ds-small mt-2 uppercase tracking-[0.08em] text-[11px]">{label}</p>
     </div>
   );
 }
 
+/**
+ * Selo no formato do .acad-badge: pílula tingida, sem borda.
+ * As bordas saíram junto com o `border` do Badge — traziam hex fixos da paleta v5
+ * (o violeta e seus tons) e teriam ficado como resíduo dela.
+ */
 const BADGE_TONE: Record<string, string> = {
-  neutral: "bg-[var(--gray-100)] text-[color:var(--fg-2)] border-[var(--border)]",
-  brand: "bg-[var(--tile)] text-[color:var(--brand-deep)] border-[color:rgba(79,31,255,0.18)]",
-  success: "bg-[var(--success-tint)] text-[color:var(--success)] border-[color:rgba(24,160,107,0.22)]",
-  warn: "bg-[var(--warn-tint)] text-[color:var(--warn)] border-[color:rgba(232,163,23,0.24)]",
-  danger: "bg-[var(--danger-tint)] text-[color:var(--danger)] border-[color:rgba(229,104,95,0.24)]",
+  neutral: "bg-[var(--gray-100)] text-[color:var(--fg-2)]",
+  brand: "bg-[var(--tile)] text-[color:var(--brand-deep)]",
+  success: "bg-[var(--success-tint)] text-[color:var(--success)]",
+  warn: "bg-[var(--warn-tint)] text-[color:var(--warn)]",
+  danger: "bg-[var(--danger-tint)] text-[color:var(--danger)]",
 };
 
 /** Pill de rótulo. Sentence case. */
 export function Badge({ children, tone = "neutral", className }: {
   children: React.ReactNode; tone?: keyof typeof BADGE_TONE; className?: string;
 }) {
-  return <span className={cn("inline-flex items-center gap-1.5 rounded-ds-pill border px-2.5 py-1 text-xs font-medium font-montserrat", BADGE_TONE[tone], className)}>{children}</span>;
+  return <span className={cn("inline-flex items-center gap-1.5 rounded-ds-pill px-2.5 py-[3px] text-xs font-bold font-montserrat", BADGE_TONE[tone], className)}>{children}</span>;
 }
 
 const DOT_COLOR: Record<string, string> = {
@@ -77,10 +82,10 @@ export function StatusDot({ status, live, className }: { status: string; live?: 
 
 /** Tag técnica em mono (dado, URL, versão, id). */
 export function MonoTag({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <span className={cn("inline-flex items-center rounded-md border border-hairline bg-[var(--bg-2)] px-2 py-0.5 font-jbmono text-[11px] text-[color:var(--fg-3)]", className)}>{children}</span>;
+  return <span className={cn("inline-flex items-center rounded-md border border-hairline bg-[var(--bg-2)] px-2 py-0.5 font-jbmono text-[13px] text-[color:var(--fg-3)]", className)}>{children}</span>;
 }
 
-/** Tile de ícone lavanda (recebe ícone violeta). */
+/** Tile de ícone em ciano lavado (recebe ícone da marca). */
 export function IconTile({ children, size = 40, className }: { children: React.ReactNode; size?: number; className?: string }) {
   return (
     <span className={cn("inline-flex items-center justify-center rounded-[12px] text-[color:var(--brand)]", className)}
@@ -100,7 +105,7 @@ export function EmptyState({ icon, title, description, action, guiaHref, classNa
       <p className="ds-h3">{title}</p>
       {description && <p className="ds-small mt-1.5 max-w-sm">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
-      {guiaHref && <a href={guiaHref} className="mt-3 font-montserrat text-[13px] font-medium text-[color:var(--brand)] hover:underline">Ver o guia →</a>}
+      {guiaHref && <a href={guiaHref} className="mt-3 font-montserrat text-[14px] font-medium text-[color:var(--brand)] hover:underline">Ver o guia →</a>}
     </div>
   );
 }

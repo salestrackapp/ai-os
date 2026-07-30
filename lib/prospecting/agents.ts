@@ -2,6 +2,7 @@ import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
 import { runAgentCore } from "@/lib/agents/runner";
 import { auditService } from "@/lib/audit";
+import { linkDescadastro } from "@/lib/lgpd/consentimento";
 import { getSalesOffer } from "@/lib/settings";
 import { ICP_LABELS } from "./types";
 
@@ -57,12 +58,22 @@ export async function generateOutreach(prospectId: string, opts?: { warm?: boole
   const warm = !!opts?.warm;
   const channel = opts?.channel ?? "email";
   const agenda = opts?.agendaUrl ?? process.env.AGENDA_URL ?? "[seu link de agenda]";
+  /**
+   * A DURAÇÃO precisa vir junto com o link. Sem ela o modelo escolhe um número plausível —
+   * o primeiro rascunho que geramos oferecia "20 minutos" e apontava para uma agenda de 60.
+   * O prospect clica esperando 20 e encontra 60: a mensagem perde credibilidade antes da
+   * conversa começar. Prometer o que o calendário cumpre é o mínimo.
+   */
+  const duracaoMin = Number(process.env.AGENDA_DURACAO_MIN ?? 0) || null;
   const offer = await getSalesOffer();
   const brief = [
     `Canal: ${channel}. Tipo: ${warm ? "WARM/indicado (curto, por pergunta, diálogo)" : "COLD (frio, liderado por André Kachan, sem marca Salestrack, sem oferecer serviço, um único CTA)"}.`,
     opts?.modelo ? `Diretriz do passo da cadência: ${opts.modelo}` : "",
     channel === "email" ? "Gere ASSUNTO (curto, sem clickbait) e CORPO." : "Gere só o CORPO (mensagem curta).",
-    !warm ? `CTA único: convite de baixa fricção para uma conversa rápida, com este link de agenda: ${agenda}` : "",
+    !warm ? `CTA único: convite de baixa fricção para uma conversa, com este link de agenda: ${agenda}` : "",
+    duracaoMin
+      ? `A agenda desse link é de ${duracaoMin} MINUTOS. Se mencionar a duração, diga exatamente ${duracaoMin} minutos — NUNCA prometa um tempo diferente do que a agenda marca.`
+      : "NÃO mencione duração da conversa: não sabemos quanto tempo a agenda reserva.",
     "IMPORTANTE: o conteúdo deve ser COERENTE com o que a Salestrack entrega (ver abaixo) — a dor escolhida e o ângulo devem levar naturalmente a essa solução, para que a conversa e os próximos toques conectem à oferta. No 1º toque frio NÃO descreva nem ofereça o serviço; apenas escolha uma dor que a nossa entrega resolve.",
     "Assine como André Kachan.",
   ].filter(Boolean).join("\n");
@@ -74,7 +85,43 @@ export async function generateOutreach(prospectId: string, opts?: { warm?: boole
   let subject: string | null = null, body = r.text;
   const mSub = r.text.match(/^\s*assunto:\s*(.+)$/im);
   if (mSub) { subject = mSub[1].trim(); body = r.text.replace(mSub[0], "").trim(); }
+  /**
+   * O modelo costuma rotular a segunda parte com "Corpo:" — o pedido menciona "o corpo em
+   * seguida", e ele espelha o vocabulário. Sem esta limpeza o rótulo VAI no e-mail: o primeiro
+   * rascunho que geramos começava literalmente com "Corpo:". Rótulo estrutural não é conteúdo.
+   */
+  body = body.replace(/^\s*(corpo|body|mensagem)\s*:\s*/i, "").trim();
   const sb = createServiceClient();
+
+  /**
+   * Aviso de transparência no PRIMEIRO contato — obrigação, não cortesia.
+   *
+   * A prospecção trata dado profissional que a pessoa nunca nos deu, sob legítimo interesse. Essa
+   * base só se sustenta com três coisas: finalidade legítima, o teste de proporcionalidade escrito
+   * (docs/LIA_PROSPECCAO.md) e transparência com via de oposição fácil (art. 9º e art. 18, §2º).
+   * Esta é a terceira.
+   *
+   * É acrescentado por CÓDIGO, nunca pedido ao modelo: obrigação legal não pode depender de o
+   * gerador ter lembrado. E só no primeiro toque — repetir em todos vira ruído.
+   */
+  const { data: pr } = await sb.from("prospects")
+    .select("email, procedencia, aviso_em, source").eq("id", prospectId).maybeSingle();
+  const coletado = pr && ["coleta_publica", "terceiro"].includes(pr.procedencia as string);
+  if (coletado && !pr!.aviso_em && pr!.email) {
+    const fonte = pr!.source === "apollo" ? "uma base profissional de terceiro" : "seu perfil profissional público";
+    const saida = await linkDescadastro(pr!.email as string);
+    const via = saida
+      ? `responda esta mensagem com "sair" ou use este link: ${saida}`
+      : `responda esta mensagem com "sair", ou escreva para andre.kachan@salestrack.com.br`;
+    const rodape = channel === "email"
+      ? `\n\n---\nChego até você por ${fonte}, usando dados profissionais (nome, cargo e empresa) — nunca dados pessoais. `
+        + `A base legal é legítimo interesse em prospecção B2B. Se preferir não receber contato, ${via}. `
+        + `Encarregado de dados: André Kachan · andre.kachan@salestrack.com.br.`
+      : `\n\nCheguei por ${fonte}, com dados profissionais. Se preferir não receber contato, responda "sair".`;
+    body = `${body}${rodape}`;
+    await sb.from("prospects").update({ aviso_em: new Date().toISOString() }).eq("id", prospectId);
+  }
+
   const { data } = await sb.from("outreach_messages").insert({ prospect_id: prospectId, channel, subject, body, variant: warm ? "warm" : "cold", agent_generated: true, status: "rascunho" }).select("id").single();
   await auditService("outreach.generate", "outreach_messages", data?.id, { channel, warm, tokens: r.tokens }, undefined);
   return { id: data?.id ?? null, degraded: false };

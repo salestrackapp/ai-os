@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KIND_LABELS, STATUS_LABELS, BRAND_LABELS, type DeliverableKind } from "@/lib/deliverables/types";
 import { allLines, linesInFamily, FAMILIES } from "@/lib/studio/define-line";
 import "@/lib/studio/lines"; // registra as linhas
-import { ContentArea, PageHeader, Card, Badge, Table, Input, Select, Textarea, type Column } from "@/components/ds";
+import { ContentArea, PageHeader, Card, Badge, Table, Input, Select, Textarea, type Column, botaoClasses } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
@@ -15,7 +15,7 @@ const ST_TONE: Record<string, "neutral" | "brand" | "warn" | "success"> = {
   rascunho: "neutral", gerando: "brand", em_revisao: "warn", aprovado: "brand", entregue: "success", publicado: "success",
 };
 
-const lbl = "mb-1.5 block font-montserrat text-[12px] font-medium text-[color:var(--fg-2)]";
+const lbl = "mb-1.5 block font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]";
 
 type Row = { id: string; title: string; kind: string; status: string; format: string; org_id: string; version: number; brand: string; line: string | null };
 
@@ -36,8 +36,8 @@ export default async function EntregaveisPage() {
   const columns: Column<Row>[] = [
     { key: "title", header: "Título", render: (d) => (
       <div className="min-w-0">
-        <Link href={`/admin/entregaveis/${d.id}`} className="font-montserrat text-[13px] font-medium text-[color:var(--fg-1)] hover:text-[color:var(--brand)]">{d.title}</Link>
-        {d.line && <span className="ml-2 text-[11px] text-[color:var(--fg-4)]">· {lineLabel[d.line] ?? d.line}</span>}
+        <Link href={`/admin/entregaveis/${d.id}`} className="font-montserrat text-[14px] font-medium text-[color:var(--fg-1)] hover:text-[color:var(--brand)]">{d.title}</Link>
+        {d.line && <span className="ml-2 text-[13px] text-[color:var(--fg-4)]">· {lineLabel[d.line] ?? d.line}</span>}
       </div>
     ) },
     { key: "kind", header: "Tipo", render: (d) => <span className="text-[color:var(--fg-3)]">{KIND_LABELS[d.kind as DeliverableKind] ?? d.kind}</span> },
@@ -45,7 +45,7 @@ export default async function EntregaveisPage() {
     { key: "org", header: "Cliente", render: (d) => <span className="text-[color:var(--fg-3)]">{orgName[d.org_id] ?? "—"}</span> },
     { key: "status", header: "Status", render: (d) => <Badge tone={ST_TONE[d.status] ?? "neutral"}>{STATUS_LABELS[d.status] ?? d.status}</Badge> },
     { key: "version", header: "v", align: "right", mono: true, render: (d) => <>{d.version}</> },
-    { key: "go", header: "", align: "right", render: (d) => <Link href={`/admin/entregaveis/${d.id}`} className="font-montserrat text-[12px] font-medium text-[color:var(--brand)] hover:underline">Abrir</Link> },
+    { key: "go", header: "", align: "right", render: (d) => <Link href={`/admin/entregaveis/${d.id}`} className="font-montserrat text-[13px] font-medium text-[color:var(--brand)] hover:underline">Abrir</Link> },
   ];
 
   return (
@@ -56,7 +56,7 @@ export default async function EntregaveisPage() {
         comoUsar={<HelpButton routeKey="/admin/entregaveis" />}
         actions={<div className="flex items-center gap-2">
           <Link href="/admin/entregaveis/identidade" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-semibold text-[color:var(--fg-1)] hover:bg-[var(--bg-2)]"><Icon name="gem" size={15} /> Identidade do programa</Link>
-          <Link href="/admin/entregaveis/novo" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="fileText" size={15} /> Novo entregável</Link>
+          <Link href="/admin/entregaveis/novo" className={botaoClasses()}><Icon name="fileText" size={15} /> Novo entregável</Link>
         </div>} />
 
       {/* Catálogo por família — tudo que dá para produzir */}
@@ -73,7 +73,7 @@ export default async function EntregaveisPage() {
                 </div>
                 <p className="ds-small !mt-0 mb-2">{f.desc}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {fl.map((l) => <span key={l.key} className="rounded-ds-pill border border-hairline bg-[var(--bg-2)] px-2 py-0.5 font-montserrat text-[11px] text-[color:var(--fg-3)]">{l.label}</span>)}
+                  {fl.map((l) => <span key={l.key} className="rounded-ds-pill border border-hairline bg-[var(--bg-2)] px-2 py-0.5 font-montserrat text-[13px] text-[color:var(--fg-3)]">{l.label}</span>)}
                 </div>
               </div>
             );
@@ -94,15 +94,15 @@ export default async function EntregaveisPage() {
             {pend.map((d) => (
               <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-hairline bg-[var(--bg-2)] px-4 py-2.5">
                 <div className="min-w-0">
-                  <p className="truncate font-montserrat text-[13px] text-[color:var(--fg-1)]">{d.title}</p>
+                  <p className="truncate font-montserrat text-[14px] text-[color:var(--fg-1)]">{d.title}</p>
                   <p className="ds-small !mt-0.5">{orgName[d.org_id] ?? "—"} · {BRAND_LABELS[d.brand] ?? d.brand}{d.line ? ` · ${lineLabel[d.line] ?? d.line}` : ""}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Link href={`/admin/entregaveis/${d.id}`} className="ds-focus rounded-ds-input border border-hairline-strong px-3 py-1.5 font-montserrat text-[12px] font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-1)]">Revisar</Link>
-                  <form action={approveStudioAction.bind(null, d.id)}><button className="ds-focus rounded-ds-input bg-brand px-3 py-1.5 font-montserrat text-[12px] font-semibold text-white shadow-ds-brand hover:bg-brand-hover">Aprovar</button></form>
+                  <Link href={`/admin/entregaveis/${d.id}`} className="ds-focus rounded-ds-input border border-hairline-strong px-3 py-1.5 font-montserrat text-[13px] font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-1)]">Revisar</Link>
+                  <form action={approveStudioAction.bind(null, d.id)}><button className={botaoClasses({ size: "sm" })}>Aprovar</button></form>
                   <form action={rejectStudioAction.bind(null, d.id)} className="flex items-center gap-1">
-                    <input name="comment" aria-label="Motivo da reprovação" placeholder="motivo" className="h-8 w-28 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-2 font-montserrat text-[12px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
-                    <button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1.5 font-montserrat text-[12px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Reprovar</button>
+                    <input name="comment" aria-label="Motivo da reprovação" placeholder="motivo" className="h-8 w-28 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-2 font-montserrat text-[13px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+                    <button className="ds-focus rounded-ds-input border border-hairline-strong px-2.5 py-1.5 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Reprovar</button>
                   </form>
                 </div>
               </li>
@@ -124,13 +124,13 @@ export default async function EntregaveisPage() {
               <div><label className={lbl}>O que produzir</label><Select name="line" required defaultValue={lines[0]?.key}>{FAMILIES.map((f) => <optgroup key={f.key} label={f.label}>{linesInFamily(f.key).map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}</optgroup>)}</Select></div>
               <div><label className={lbl}>Cliente</label><Select name="org_id" required defaultValue={soleOrg}>{!soleOrg && <option value="">Selecione…</option>}{(orgs ?? []).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}</Select></div>
               <details>
-                <summary className="ds-focus cursor-pointer list-none font-montserrat text-[12px] font-medium text-[color:var(--brand)]">Mais opções (marca, foco)</summary>
+                <summary className="ds-focus cursor-pointer list-none font-montserrat text-[13px] font-medium text-[color:var(--brand)]">Mais opções (marca, foco)</summary>
                 <div className="mt-3 space-y-3">
                   <div><label className={lbl}>Marca</label><Select name="brand" defaultValue="salestrack"><option value="salestrack">Salestrack AI (padrão)</option><option value="andre_kachan">André Kachan</option></Select></div>
                   <div><label className={lbl}>Foco (opcional)</label><Input name="brief" placeholder="Ex.: priorize adoção do Playbook" /></div>
                 </div>
               </details>
-              <button type="submit" className="ds-focus inline-flex h-10 w-full items-center justify-center gap-2 rounded-ds-input bg-brand font-montserrat text-sm font-semibold text-white shadow-ds-brand transition-colors hover:bg-brand-hover"><Icon name="sparkles" size={15} /> Rascunhar com IA</button>
+              <button type="submit" className={botaoClasses({ className: "w-full" })}><Icon name="sparkles" size={15} /> Rascunhar com IA</button>
             </form>
           </Card>
 

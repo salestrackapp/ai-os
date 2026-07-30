@@ -39,7 +39,7 @@ export default async function Relatorios() {
               <p className="mb-3 font-montserrat text-[15px] font-semibold text-[color:var(--fg-1)]">Volume por canal</p>
               {([["E-mail", r.porCanal.email], ["WhatsApp", r.porCanal.whatsapp]] as [string, number][]).map(([label, n]) => (
                 <div key={label} className="mb-3">
-                  <div className="mb-1 flex justify-between font-montserrat text-[12px] text-[color:var(--fg-2)]"><span>{label}</span><span>{n} · {pct(n)}%</span></div>
+                  <div className="mb-1 flex justify-between font-montserrat text-[13px] text-[color:var(--fg-2)]"><span>{label}</span><span>{n} · {pct(n)}%</span></div>
                   <div className="h-2 w-full rounded-full bg-[var(--bg-2)]"><div className={bar} style={{ width: `${pct(n)}%` }} /></div>
                 </div>
               ))}
@@ -52,12 +52,12 @@ export default async function Relatorios() {
                 {STATUSES.map((s) => (
                   <div key={s} className="rounded-ds-card border border-hairline px-3 py-2">
                     <p className="font-montserrat text-[18px] font-semibold text-[color:var(--fg-1)]">{r.porStatus[s] ?? 0}</p>
-                    <p className="font-montserrat text-[11px] text-[color:var(--fg-3)]">{STATUS_LABELS[s]}</p>
+                    <p className="font-montserrat text-[13px] text-[color:var(--fg-3)]">{STATUS_LABELS[s]}</p>
                   </div>
                 ))}
                 <div className="rounded-ds-card border border-hairline px-3 py-2">
                   <p className="font-montserrat text-[18px] font-semibold text-[color:var(--brand-deep)]">{r.naoLidas}</p>
-                  <p className="font-montserrat text-[11px] text-[color:var(--fg-3)]">Não lidas</p>
+                  <p className="font-montserrat text-[13px] text-[color:var(--fg-3)]">Não lidas</p>
                 </div>
               </div>
             </Card>
@@ -69,10 +69,10 @@ export default async function Relatorios() {
             <ul className="divide-y divide-[color:var(--border)]">
               {r.workload.map((w) => (
                 <li key={w.userId ?? "none"} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{w.email}</span>
+                  <span className="font-montserrat text-[14px] text-[color:var(--fg-1)]">{w.email}</span>
                   <span className="flex items-center gap-2">
                     <Badge tone={w.abertas ? "warn" : "neutral"}>{w.abertas} aberta(s)</Badge>
-                    <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{w.total} no total</span>
+                    <span className="font-jbmono text-[13px] text-[color:var(--fg-4)]">{w.total} no total</span>
                   </span>
                 </li>
               ))}

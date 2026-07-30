@@ -22,13 +22,19 @@ export const PORTAL_AREAS: PortalArea[] = [
       { label: "Equipe", href: "/portal/equipe", icon: "team", desc: "Quem acessa o portal do seu lado." },
       { label: "Financeiro", href: "/portal/financeiro", icon: "creditCard", desc: "Faturas e situação da assinatura." },
       { label: "Governança", href: "/portal/governanca", icon: "shield", desc: "Política e segurança do seu stack de IA." },
+      { label: "Turma", href: "/portal/academy/turma", icon: "graduation", desc: "Como sua equipe está na formação em agentes de IA." },
     ],
   },
 ];
 
-const V5_INDEX = new Set<string>(PORTAL_AREAS.map((a) => a.href));
-export function isV5PortalPath(path: string): boolean {
-  return V5_INDEX.has(path);
+/**
+ * Todas as telas do portal já trazem o próprio `<ContentArea>`, então nenhuma depende mais do
+ * frame legado para respiro — ele foi removido. A função fica por compatibilidade e para o
+ * teste que trava o contrato: se alguém criar uma tela nova sem `<ContentArea>`, ela nasce
+ * colada na borda, e é isso que este comentário existe para avisar.
+ */
+export function isV5PortalPath(_path: string): boolean {
+  return true;
 }
 
 const ROUTE_AREA: [string, PortalAreaKey][] = [

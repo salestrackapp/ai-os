@@ -13,10 +13,10 @@ export function EmailBody({ html }: { html: string }) {
     <base target="_blank">
     <style>
       html,body{margin:0;padding:0;background:transparent;}
-      body{font-family:Montserrat,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1.55;color:#0B0B16;word-break:break-word;overflow-wrap:anywhere;padding:2px;}
+      body{font-family:Montserrat,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1.55;color:#1A1A2E;word-break:break-word;overflow-wrap:anywhere;padding:2px;}
       img{max-width:100%;height:auto;}
       table{max-width:100%;}
-      a{color:#4F1FFF;}
+      a{color:#007A94;}
       blockquote{margin:.4em 0;padding-left:12px;border-left:3px solid #E5E5EC;color:#55556A;}
     </style></head><body>${html}</body></html>`;
 

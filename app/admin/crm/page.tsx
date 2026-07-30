@@ -3,7 +3,7 @@ import type { Deal, Organization, Contact } from "@/lib/types";
 import { CrmNav } from "@/components/crm/CrmNav";
 import { KanbanBoard } from "@/components/crm/KanbanBoard";
 import { NewDealForm } from "@/components/crm/NewDealForm";
-import { PageHeader } from "@/components/ds";
+import { PageHeader, ContentArea } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { HelpButton } from "@/components/guidance/HelpButton";
 
@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 export default async function CrmPage() {
   const supabase = await createClient();
   const [{ data: deals }, { data: orgs }, { data: contacts }, { data: tasks }, { data: props }] = await Promise.all([
-    supabase.from("deals").select("*").order("created_at", { ascending: false }),
+    supabase.from("deals").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
     supabase.from("organizations").select("*").eq("is_salestrack", false).order("name"),
-    supabase.from("contacts").select("*").order("name"),
+    supabase.from("contacts").select("*").is("deleted_at", null).order("name"),
     supabase.from("tasks").select("deal_id, done"),
     supabase.from("proposals").select("deal_id, status, created_at").order("created_at", { ascending: false }),
   ]);
@@ -35,17 +35,19 @@ export default async function CrmPage() {
   });
 
   return (
-    <div>
-      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "CRM" }]} className="mb-4" />
-      <PageHeader eyebrow="Comercial · pipeline" title="CRM"
-        subtitle="Do sinal ao cliente — pipeline, contas e contatos."
-        comoUsar={<HelpButton routeKey="/admin/comercial" />} />
+    <ContentArea>
+      <div>
+        <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "CRM" }]} className="mb-4" />
+        <PageHeader eyebrow="Comercial · pipeline" title="CRM"
+          subtitle="Do sinal ao cliente — pipeline, contas e contatos."
+          comoUsar={<HelpButton routeKey="/admin/comercial" />} />
 
-      <CrmNav />
+        <CrmNav />
 
-      <NewDealForm orgs={(orgs as Organization[]) ?? []} contacts={(contacts as Contact[]) ?? []} />
+        <NewDealForm orgs={(orgs as Organization[]) ?? []} contacts={(contacts as Contact[]) ?? []} />
 
-      <KanbanBoard initial={(deals as Deal[]) ?? []} taskCounts={taskCounts} proposals={proposals} />
-    </div>
+        <KanbanBoard initial={(deals as Deal[]) ?? []} taskCounts={taskCounts} proposals={proposals} />
+      </div>
+    </ContentArea>
   );
 }

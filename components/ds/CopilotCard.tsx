@@ -20,8 +20,8 @@ export function CopilotCard({ agent = "Copiloto", status = "ativo", finding, act
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white/15">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.29 1.29L3 12l5.8 1.9a2 2 0 0 1 1.29 1.29L12 21l1.9-5.8a2 2 0 0 1 1.29-1.29L21 12l-5.8-1.9a2 2 0 0 1-1.29-1.29Z" /></svg>
         </span>
-        <span className="font-montserrat text-[13px] font-semibold">{agent}</span>
-        <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium text-white/80">
+        <span className="font-montserrat text-[14px] font-semibold">{agent}</span>
+        <span className="ml-auto inline-flex items-center gap-1.5 text-[13px] font-medium text-white/80">
           <span className="h-1.5 w-1.5 rounded-full bg-spark ds-dot-live" /> {status}
         </span>
       </div>

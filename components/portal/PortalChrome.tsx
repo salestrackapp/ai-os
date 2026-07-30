@@ -7,13 +7,12 @@
 import { usePathname } from "next/navigation";
 import { AppShell, Sidebar, SalestrackLogo } from "@/components/ds";
 import { Icon } from "@/components/ui/icons";
-import { PORTAL_AREAS, areaForPortalPath, isV5PortalPath } from "@/lib/portal/nav";
-import { PortalLegacyFrame } from "./PortalLegacyFrame";
+import { PORTAL_AREAS, areaForPortalPath } from "@/lib/portal/nav";
 import { TourProvider } from "@/components/tour/TourProvider";
 import { TourLink } from "@/components/tour/TourLink";
 
-// Alvos do tour nos itens de menu (por área).
-const NAV_TOUR: Record<string, string> = { copilotos: "nav-copilotos", automacoes: "nav-automacoes", visao: "nav-visao" };
+// Alvos do tour nos itens de menu (3 destinos U4: Minha Jornada · Entregas · Conta).
+const NAV_TOUR: Record<string, string> = { jornada: "nav-jornada", entregas: "nav-entregas", conta: "nav-conta" };
 
 type Props = {
   email: string; displayName: string; logoUrl: string | null;
@@ -22,13 +21,14 @@ type Props = {
 };
 
 function Brand({ displayName, logoUrl }: { displayName: string; logoUrl: string | null; accent: string }) {
-  // White-label: logo do tenant manda. Sem logo do tenant → logo oficial Salestrack AI (design system).
+  // White-label: logo do tenant manda. Sem logo do tenant → a arte clara da Salestrack AI,
+  // porque a barra superior é navy e a arte padrão (navy sobre claro) sumiria nela.
   return (
-    <div data-tour="brand">
+    <div data-tour="brand" className="flex shrink-0 items-center gap-2.5">
       {logoUrl
-        ? <img src={logoUrl} alt={displayName} className="max-h-9 max-w-[170px] object-contain" />
-        : <SalestrackLogo />}
-      <p className="mt-1 font-jbmono text-[10px] uppercase tracking-[0.14em] text-[color:var(--fg-3)]">Powered by AI OS</p>
+        ? <img src={logoUrl} alt={displayName} className="max-h-[26px] max-w-[150px] object-contain" />
+        : <SalestrackLogo variant="light" width={80} />}
+      <span className="hidden font-jbmono text-[11px] uppercase tracking-[0.14em] text-white/45 sm:block">Powered by AI OS</span>
     </div>
   );
 }
@@ -36,18 +36,15 @@ function Brand({ displayName, logoUrl }: { displayName: string; logoUrl: string 
 function UserMenu({ email, accent }: { email: string; accent: string }) {
   return (
     <div>
-      <div className="flex items-center gap-2.5 px-1 py-1.5">
+      <div className="flex items-center gap-2.5 px-2 py-1.5">
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-montserrat text-xs font-semibold uppercase text-white" style={{ background: accent }}>
           {email.slice(0, 1)}
         </span>
-        <span className="min-w-0"><span className="block truncate font-montserrat text-[12px] font-medium text-[color:var(--fg-1)]">{email}</span><span className="block font-jbmono text-[10px] text-[color:var(--fg-3)]">Cliente</span></span>
+        <span className="min-w-0"><span className="block truncate font-montserrat text-[13px] font-medium text-white/85">{email}</span><span className="block font-jbmono text-[11px] text-white/40">Cliente</span></span>
       </div>
-      <div className="mt-2 space-y-1">
-        <TourLink entryPath="/portal" />
-        <form action="/api/signout" method="post">
-          <button className="ds-focus flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-hairline-strong px-3 py-2 font-montserrat text-[13px] font-medium text-[color:var(--fg-2)] transition-colors hover:bg-[var(--bg-2)]"><Icon name="logout" size={14} /> Sair</button>
-        </form>
-      </div>
+      <form action="/api/signout" method="post" className="mt-2">
+        <button className="ds-focus flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-white/15 px-3 py-2 font-montserrat text-[14px] font-medium text-white/75 transition-colors hover:bg-white/10"><Icon name="logout" size={14} /> Sair</button>
+      </form>
     </div>
   );
 }
@@ -68,18 +65,26 @@ export function PortalChrome({ email, displayName, logoUrl, accent, wl, wlStyle,
     ["--shadow-brand" as string]: `0 14px 32px -10px ${accent}73`,
   } : undefined;
 
+  // O white-label vive AQUI e não mais no frame legado (removido): o `wl-theme` + o <style>
+  // retematizam as classes legadas (text-gold, btn-gold, badge-gold…), que são cores fixas do
+  // Tailwind e não leem CSS var. Sem isto, um cliente com marca própria veria o ciano padrão.
   return (
-    <div style={wlVars}>
-      <AppShell sidebar={sidebar}>
-        {/* Tour do cliente só quando NÃO é visão admin (não incomoda o operador espiando). */}
-        {!adminView && <TourProvider surface="portal" entryPath="/portal" autoStart={!tourSeen} />}
+    <div style={wlVars} className={wl ? "wl-theme" : undefined}>
+      {wl && <style dangerouslySetInnerHTML={{ __html: wlStyle }} />}
+      <AppShell sidebar={sidebar}
+        brand={<Brand displayName={displayName} logoUrl={logoUrl} accent={accent} />}
+        topbarRight={<TourLink surface="portal" entryPath="/portal"
+          className="ds-focus hidden items-center gap-1.5 rounded-[10px] border border-white/15 px-3 py-1.5 font-montserrat text-[14px] font-medium text-white/75 transition-colors hover:bg-white/10 sm:flex" />}>
+        {/* Provider sempre montado (o botão "Fazer o tour" precisa do ouvinte, inclusive na visão admin);
+            auto-abre só para o cliente real — não incomoda o operador espiando. */}
+        <TourProvider surface="portal" entryPath="/portal" autoStart={!adminView && !tourSeen} />
         {adminView && (
           <div className="ds flex items-center justify-center gap-3 border-b border-hairline bg-[var(--tile)] px-5 py-2.5 text-center">
-            <span className="font-montserrat text-[13px] text-[color:var(--brand-deep)]">Visão admin — portal de <b>{orgName}</b>.</span>
+            <span className="font-montserrat text-[14px] text-[color:var(--brand-deep)]">Visão admin — portal de <b>{orgName}</b>.</span>
             {adminExit}
           </div>
         )}
-        {isV5PortalPath(path) ? children : <PortalLegacyFrame wl={wl} wlStyle={wlStyle}>{children}</PortalLegacyFrame>}
+        {children}
       </AppShell>
     </div>
   );

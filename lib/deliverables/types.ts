@@ -109,15 +109,19 @@ export type RenderInput = {
   programName?: string | null;      // nome do programa (capa)
 };
 
-/** Paleta de acentos PERMITIDA no design Salestrack AI v2 (identidade do programa nunca sai daqui). */
-export const V2_ACCENTS: Record<string, string> = {
-  violeta: "#4F1FFF", "violeta-claro": "#8B5CFF", "violeta-profundo": "#3A16C0",
-  lime: "#EBF212", ink: "#0B0B16", grafite: "#2A2A3C",
+/**
+ * Paleta de acentos PERMITIDA nos entregáveis — a identidade do programa nunca sai daqui.
+ * Espelha o DS v6 (navy/ciano da Academy). Qualquer outro hex é ignorado no render,
+ * e é isso que impede um programa de reintroduzir o dourado da identidade antiga.
+ */
+export const ACCENTS_PERMITIDOS: Record<string, string> = {
+  ciano: "#007A94", "ciano-claro": "#00B4D8", "ciano-profundo": "#005061",
+  faisca: "#00E5FF", navy: "#1A1A2E", grafite: "#26303A",
 };
-export function isV2Accent(hex?: string | null): boolean {
+export function isAccentPermitido(hex?: string | null): boolean {
   if (!hex) return false;
   const h = hex.toUpperCase();
-  return Object.values(V2_ACCENTS).some((v) => v.toUpperCase() === h);
+  return Object.values(ACCENTS_PERMITIDOS).some((v) => v.toUpperCase() === h);
 }
 
 export const KIND_LABELS: Record<DeliverableKind, string> = {

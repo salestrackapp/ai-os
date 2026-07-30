@@ -36,8 +36,8 @@ export function ResponderWhatsApp({ conversaId, policy, templates }:
   return (
     <div className="border-t border-hairline p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">Responder no WhatsApp</p>
-        <span className="rounded-ds-pill bg-[var(--tile)] px-2 py-0.5 font-montserrat text-[11px] text-[color:var(--brand-deep)]">texto livre e templates liberados</span>
+        <p className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">Responder no WhatsApp</p>
+        <span className="rounded-ds-pill bg-[var(--tile)] px-2 py-0.5 font-montserrat text-[13px] text-[color:var(--brand-deep)]">texto livre e templates liberados</span>
       </div>
 
       {/* templates / respostas rápidas — disponíveis sempre */}
@@ -45,26 +45,26 @@ export function ResponderWhatsApp({ conversaId, policy, templates }:
         <div className="mb-2 flex flex-wrap gap-1.5">
           {templates.map((t) => (
             <button key={t.id} type="button" onClick={() => { setTemplateId(t.id); setCorpo(t.corpo); }}
-              className={`ds-focus rounded-ds-pill border px-2.5 py-1 font-montserrat text-[11px] ${templateId === t.id ? "border-[color:var(--brand)] bg-[var(--tile)] text-[color:var(--brand-deep)]" : "border-hairline text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]"}`}>
+              className={`ds-focus rounded-ds-pill border px-2.5 py-1 font-montserrat text-[13px] ${templateId === t.id ? "border-[color:var(--brand)] bg-[var(--tile)] text-[color:var(--brand-deep)]" : "border-hairline text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]"}`}>
               {t.nome}
             </button>
           ))}
-          {templateId && <button type="button" onClick={() => { setTemplateId(""); setCorpo(""); }} className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[11px] text-[color:var(--fg-3)]">limpar</button>}
+          {templateId && <button type="button" onClick={() => { setTemplateId(""); setCorpo(""); }} className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-3)]">limpar</button>}
         </div>
       )}
 
       <textarea value={corpo} onChange={(e) => { setCorpo(e.target.value); if (templateId) setTemplateId(""); }} rows={4}
         placeholder="Escreva a mensagem… (ou escolha um template acima — as variáveis são resolvidas no envio)"
-        className="w-full rounded-ds-card border border-hairline bg-[var(--bg-1)] p-3 font-montserrat text-[13px] leading-relaxed text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+        className="w-full rounded-ds-card border border-hairline bg-[var(--bg-1)] p-3 font-montserrat text-[14px] leading-relaxed text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
 
-      {msg && <p className={`mt-2 rounded-ds-input px-3 py-2 font-montserrat text-[12px] ${msg.tone === "ok" ? "bg-[var(--tile)] text-[color:var(--brand-deep)]" : msg.tone === "warn" ? "bg-[#FFF7E6] text-[color:var(--fg-1)]" : "bg-[#FDECEC] text-[#B42318]"}`}>{msg.text}</p>}
+      {msg && <p className={`mt-2 rounded-ds-input px-3 py-2 font-montserrat text-[13px] ${msg.tone === "ok" ? "bg-[var(--tile)] text-[color:var(--brand-deep)]" : msg.tone === "warn" ? "bg-[#FFF7E6] text-[color:var(--fg-1)]" : "bg-[#FDECEC] text-[#B42318]"}`}>{msg.text}</p>}
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button disabled={pending} onClick={() => enviar("enviar")} className={`${btn} bg-brand text-white shadow-ds-brand hover:bg-brand-hover`}>
           {pending ? "Processando…" : envioDireto ? "Enviar" : "Enviar para aprovação"}
         </button>
         {envioDireto && <button disabled={pending} onClick={() => enviar("rascunho")} className={`${btn} border border-hairline-strong bg-[var(--bg-1)] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]`}>Guardar como rascunho</button>}
-        <span className="font-montserrat text-[11px] text-[color:var(--fg-3)]">{envioDireto ? "Gate: envio direto (sensíveis pedem aprovação)." : "Gate: toda mensagem passa por aprovação."}</span>
+        <span className="font-montserrat text-[13px] text-[color:var(--fg-3)]">{envioDireto ? "Gate: envio direto (sensíveis pedem aprovação)." : "Gate: toda mensagem passa por aprovação."}</span>
       </div>
     </div>
   );

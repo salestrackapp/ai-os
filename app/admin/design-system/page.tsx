@@ -1,6 +1,6 @@
 "use client";
 /**
- * Página viva do Design System v5 (Salestrack AI v2) — restrita a admin (gate no layout /admin).
+ * Página viva do Design System v6 (identidade Academy) — restrita a admin (gate no layout /admin).
  * Renderiza cada componente isolado, em todos os estados, para aprovação visual.
  */
 import { useState } from "react";
@@ -8,7 +8,7 @@ import {
   Eyebrow, Section, Kpi, Badge, StatusDot, MonoTag, EmptyState, PrimaryActionBar,
   Button, Card, CardFeatured, CopilotCard, CopilotInline,
   Label, Input, Textarea, Select, Field, Table, Tabs, Breadcrumbs, Stepper,
-  Dialog, Drawer, ToastProvider, useToast, CycleSteps,
+  Dialog, Drawer, ToastProvider, useToast, CycleSteps, ContentArea,
 } from "@/components/ds";
 import { Icon } from "@/components/ui/icons";
 
@@ -30,9 +30,9 @@ function Swatch({ name, hex }: { name: string; hex: string }) {
   return (
     <div className="rounded-ds-input border border-hairline bg-[var(--bg-1)] p-1.5">
       <div className="h-12 w-full rounded-[9px] border border-hairline" style={{ background: hex }} />
-      <p className="mt-1.5 px-1 font-montserrat text-[11px] font-medium text-[color:var(--fg-1)]">{name}</p>
-      <p className="px-1 font-jbmono text-[10px] text-[color:var(--fg-3)]">{hex}</p>
-      {light && <p className="px-1 font-jbmono text-[9px] text-[color:var(--warn)]">nunca texto claro</p>}
+      <p className="mt-1.5 px-1 font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{name}</p>
+      <p className="px-1 font-jbmono text-[11px] text-[color:var(--fg-3)]">{hex}</p>
+      {light && <p className="px-1 font-jbmono text-[11px] text-[color:var(--warn)]">nunca texto claro</p>}
     </div>
   );
 }
@@ -220,5 +220,9 @@ function Showcase() {
 }
 
 export default function DesignSystemPage() {
-  return <ToastProvider><Showcase /></ToastProvider>;
+  return (
+    <ContentArea>
+      <ToastProvider><Showcase /></ToastProvider>
+    </ContentArea>
+  );
 }

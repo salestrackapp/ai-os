@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { TasksBoard } from "@/components/TasksBoard";
 import type { Task } from "@/lib/types";
-import { PageHeader } from "@/components/ds";
+import { PageHeader, ContentArea } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { HelpButton } from "@/components/guidance/HelpButton";
 
@@ -24,12 +24,14 @@ export default async function TarefasPage() {
   const open = rows.filter((t) => !t.done).length;
 
   return (
-    <div className="max-w-3xl">
-      <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "Tarefas" }]} className="mb-4" />
-      <PageHeader eyebrow="Comercial · execução" title="Tarefas"
-        subtitle={`${open} aberta(s) · ${rows.length} no total. Tarefas de oportunidades aparecem aqui e no card do pipeline.`}
-        comoUsar={<HelpButton routeKey="/admin/comercial" />} />
-      <TasksBoard tasks={rows} />
-    </div>
+    <ContentArea>
+      <div className="max-w-3xl">
+        <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Comercial", href: "/admin/comercial" }, { label: "Tarefas" }]} className="mb-4" />
+        <PageHeader eyebrow="Comercial · execução" title="Tarefas"
+          subtitle={`${open} aberta(s) · ${rows.length} no total. Tarefas de oportunidades aparecem aqui e no card do pipeline.`}
+          comoUsar={<HelpButton routeKey="/admin/comercial" />} />
+        <TasksBoard tasks={rows} />
+      </div>
+    </ContentArea>
   );
 }

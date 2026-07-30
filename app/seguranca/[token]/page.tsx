@@ -14,7 +14,7 @@ export default async function SegurancaPublica({ params }: { params: Promise<{ t
     svc.from("organizations").select("name").eq("id", g.org_id).single(),
     svc.from("tenant_branding").select("internal_name, logo_url, color_accent").eq("org_id", g.org_id).maybeSingle(),
   ]);
-  const accent = b?.color_accent || "#4F1FFF";
+  const accent = b?.color_accent || "#007A94";
   const nome = b?.internal_name || org?.name || "Empresa";
 
   return (
@@ -23,7 +23,7 @@ export default async function SegurancaPublica({ params }: { params: Promise<{ t
         <div className="flex items-center gap-3 mb-8 border-b border-line pb-6">
           {b?.logo_url ? <img src={b.logo_url} alt={nome} className="max-h-12 max-w-[180px] object-contain" /> : <p className="font-serif text-2xl font-semibold" style={{ color: accent }}>{nome}</p>}
         </div>
-        <p className="text-[11px] uppercase tracking-[.24em] mb-2" style={{ color: accent }}>Segurança & Governança de IA</p>
+        <p className="text-[13px] uppercase tracking-[.24em] mb-2" style={{ color: accent }}>Segurança & Governança de IA</p>
         <h1 className="font-serif text-4xl font-semibold mb-2">Como {nome} usa IA com responsabilidade</h1>
         <p className="text-sm text-muted2 mb-8">Atualizado em {g.published_at ? new Date(g.published_at).toLocaleDateString("pt-BR") : "—"}</p>
         <div className="prose-invert text-cream whitespace-pre-wrap leading-relaxed text-[15px]">{g.security_summary_md || "Resumo em preparação."}</div>

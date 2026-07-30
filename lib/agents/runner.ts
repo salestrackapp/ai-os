@@ -1,5 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
+import { registrarExecucao } from "./registro";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getSetting } from "@/lib/settings/resolve";
 
@@ -51,7 +52,7 @@ export async function runAgent(opts: {
   if (!anthropicConfigured()) {
     return { text: "O consultor está temporariamente indisponível. Tente novamente em instantes ou fale com a equipe Salestrack.", tokens: 0, degraded: true, model: null };
   }
-  return runAgentCore({ agentKey: opts.agentKey, guardrails: GUARDRAILS, userMessages: opts.userMessages, extraContext: opts.extraContext, contextLabel: "CONTEXTO DO PROGRAMA (apenas deste cliente)", maxTokens: opts.maxTokens });
+  return runAgentCore({ agentKey: opts.agentKey, guardrails: GUARDRAILS, userMessages: opts.userMessages, extraContext: opts.extraContext, contextLabel: "CONTEXTO DO PROGRAMA (apenas deste cliente)", maxTokens: opts.maxTokens, orgId: opts.orgId });
 }
 
 /**
@@ -60,6 +61,8 @@ export async function runAgent(opts: {
  */
 export async function runAgentCore(opts: {
   agentKey: string; guardrails: string; userMessages: ChatMsg[]; extraContext?: string; contextLabel?: string; maxTokens?: number;
+  /** Cliente para quem o trabalho é feito. É o que permite dizer quanto de IA cada um consumiu. */
+  orgId?: string | null;
 }): Promise<AgentResult> {
   if (!anthropicConfigured()) {
     return { text: "Agente temporariamente indisponível (sem ANTHROPIC_API_KEY).", tokens: 0, degraded: true, model: null };
@@ -68,15 +71,46 @@ export async function runAgentCore(opts: {
   const model = await activeModel();
   const system = `${base}\n${opts.guardrails}${opts.extraContext ? `\n\n=== ${opts.contextLabel ?? "CONTEXTO"} ===\n${opts.extraContext}` : ""}`;
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const inicio = Date.now();
+
+  /**
+   * O registro é sempre disparado, e sempre sem `await` bloqueante no caminho de erro: ele é
+   * observabilidade, não funcionalidade. Se o agent-control estiver fora do ar, a resposta ao
+   * usuário sai do mesmo jeito.
+   */
+  const registrar = (extras: Parameters<typeof registrarExecucao>[0]) =>
+    void registrarExecucao(extras).catch(() => {});
+
   try {
     const resp = await client.messages.create({
       model, max_tokens: opts.maxTokens ?? 1024, system,
       messages: opts.userMessages.map((m) => ({ role: m.role, content: m.content })),
     });
     const text = resp.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
-    const tokens = (resp.usage?.input_tokens ?? 0) + (resp.usage?.output_tokens ?? 0);
-    return { text: text || "(sem resposta)", tokens, degraded: false, model };
-  } catch {
+    const entrada = resp.usage?.input_tokens ?? 0;
+    const saida = resp.usage?.output_tokens ?? 0;
+
+    registrar({
+      agentKey: opts.agentKey, orgId: opts.orgId ?? null,
+      entrada: { pergunta: opts.userMessages.at(-1)?.content ?? "", contexto: opts.contextLabel ?? null },
+      saida: text, modelo: model,
+      tokensEntrada: entrada, tokensSaida: saida, latenciaMs: Date.now() - inicio,
+    });
+
+    return { text: text || "(sem resposta)", tokens: entrada + saida, degraded: false, model };
+  } catch (e) {
+    /**
+     * O catch engolia o erro sem registro nenhum: quando o agente parava de responder, não havia
+     * como saber se era chave inválida, limite de taxa ou modelo indisponível — só a mensagem
+     * genérica na tela. Agora o motivo fica no log E no traço da execução.
+     */
+    const motivo = (e as Error).message;
+    console.error(`[agente ${opts.agentKey}] falhou:`, motivo);
+    registrar({
+      agentKey: opts.agentKey, orgId: opts.orgId ?? null,
+      entrada: { pergunta: opts.userMessages.at(-1)?.content ?? "" },
+      erro: motivo, modelo: model, latenciaMs: Date.now() - inicio,
+    });
     return { text: "Tive um problema para gerar agora. Tente novamente em instantes.", tokens: 0, degraded: true, model };
   }
 }

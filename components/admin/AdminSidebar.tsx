@@ -90,16 +90,16 @@ export function AdminSidebar({ email, signout }: { email: string; signout: React
 
   const brand = (
     <div className="px-5 py-6 border-b border-line">
-      <p className="text-[10px] uppercase tracking-[.28em] text-gold">Salestrack AI</p>
+      <p className="text-[11px] uppercase tracking-[.28em] text-gold">Salestrack AI</p>
       <p className="font-serif text-2xl font-semibold leading-tight">AI OS</p>
-      <p className="text-[10px] uppercase tracking-[.2em] text-muted2 mt-0.5">Operating System</p>
+      <p className="text-[11px] uppercase tracking-[.2em] text-muted2 mt-0.5">Operating System</p>
     </div>
   );
 
   const footer = (
     <div className="p-3 border-t border-line">
       <div className="flex items-center gap-2.5 px-2 py-2">
-        <span className="w-8 h-8 shrink-0 rounded-full bg-[rgba(79, 31, 255,.16)] border border-goldline text-gold flex items-center justify-center text-xs font-semibold uppercase">
+        <span className="w-8 h-8 shrink-0 rounded-full bg-[rgba(0, 122, 148,.16)] border border-goldline text-gold flex items-center justify-center text-xs font-semibold uppercase">
           {email.slice(0, 1)}
         </span>
         <span className="text-xs text-muted2 truncate min-w-0">{email}</span>

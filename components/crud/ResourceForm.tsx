@@ -1,7 +1,7 @@
 "use client";
 /** Formulário gerado a partir do `schema`/`fields` do recurso — valida no cliente (zod) e salva via server action. */
 import { useState } from "react";
-import { Label, Input, Textarea, Select } from "@/components/ds";
+import { Label, Input, Textarea, Select, botaoClasses } from "@/components/ds";
 import { crudCreate, crudUpdate } from "@/lib/crud/actions";
 import { getResource } from "@/lib/crud/registry";
 
@@ -36,7 +36,7 @@ export function ResourceForm({ resourceName, mode, id, initial, onSaved, onCance
           return (
             <label key={f.name} className="flex items-center gap-2.5">
               <input type="checkbox" name={f.name} defaultChecked={!!val} className="ds-focus h-4 w-4 accent-[color:var(--brand)]" />
-              <span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{f.label}</span>
+              <span className="font-montserrat text-[14px] text-[color:var(--fg-1)]">{f.label}</span>
             </label>
           );
         }
@@ -52,10 +52,10 @@ export function ResourceForm({ resourceName, mode, id, initial, onSaved, onCance
           </div>
         );
       })}
-      {error && <p className="rounded-ds-input border border-[color:rgba(229,104,95,0.3)] bg-[var(--danger-tint)] px-3 py-2 text-[13px] text-[color:var(--danger)]">{error}</p>}
+      {error && <p className="rounded-ds-input border border-[color:rgba(229,104,95,0.3)] bg-[var(--danger-tint)] px-3 py-2 text-[14px] text-[color:var(--danger)]">{error}</p>}
       <div className="flex items-center justify-end gap-2 border-t border-hairline pt-4">
         {onCancel && <button type="button" onClick={onCancel} className="ds-focus rounded-ds-input px-4 py-2 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Cancelar</button>}
-        <button type="submit" disabled={busy} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand transition-colors hover:bg-brand-hover disabled:opacity-45">
+        <button type="submit" disabled={busy} className={botaoClasses({ className: "disabled:opacity-45" })}>
           {busy ? "Salvando…" : mode === "create" ? `Criar ${def.singular}` : "Salvar"}
         </button>
       </div>

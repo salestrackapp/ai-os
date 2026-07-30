@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { currentMembership } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
-import { isV2Accent } from "@/lib/deliverables/types";
+import { isAccentPermitido } from "@/lib/deliverables/types";
 
 async function requireAdmin() {
   const m = await currentMembership();
@@ -21,7 +21,7 @@ export async function saveIdentityAction(formData: FormData) {
   if (!proj) throw new Error("Programa não encontrado.");
 
   const accentRaw = String(formData.get("accent") ?? "").trim();
-  const accent = accentRaw && isV2Accent(accentRaw) ? accentRaw : null; // fora da paleta v2 → ignora
+  const accent = accentRaw && isAccentPermitido(accentRaw) ? accentRaw : null; // fora da paleta v2 → ignora
   const patch = {
     org_id: proj.org_id, program_id: programId,
     program_name: String(formData.get("program_name") ?? "").trim() || null,

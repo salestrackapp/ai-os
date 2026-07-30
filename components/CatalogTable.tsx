@@ -51,7 +51,7 @@ export function CatalogTable({ items, brand, kind }: { items: CatalogItem[]; bra
       <div className="card overflow-x-auto">
         <table className="w-full">
           <thead><tr>
-            <th className="th w-8"><input type="checkbox" className="accent-[#4F1FFF]" checked={sel.size > 0 && sel.size === rows.length} onChange={toggleAll} /></th>
+            <th className="th w-8"><input type="checkbox" className="accent-[#007A94]" checked={sel.size > 0 && sel.size === rows.length} onChange={toggleAll} /></th>
             <th className="th cursor-pointer" onClick={() => toggleSort("name")}>Item{arrow("name")}</th>
             <th className="th">Marca</th><th className="th">Frentes</th>
             <th className="th cursor-pointer" onClick={() => toggleSort("price")}>Preço{arrow("price")}</th>
@@ -65,7 +65,7 @@ export function CatalogTable({ items, brand, kind }: { items: CatalogItem[]; bra
               const neg = m != null && m < 0;
               return (
                 <tr key={it.id} className={`hover:bg-navy3/50 ${sel.has(it.id) ? "bg-navy3/40" : ""}`}>
-                  <td className="td"><input type="checkbox" className="accent-[#4F1FFF]" checked={sel.has(it.id)} onChange={() => toggle(it.id)} /></td>
+                  <td className="td"><input type="checkbox" className="accent-[#007A94]" checked={sel.has(it.id)} onChange={() => toggle(it.id)} /></td>
                   <td className="td"><p className="text-cream">{it.name}</p><p className="text-xs text-muted2">{KIND_LABELS[it.kind] ?? it.kind} · {it.unit}</p></td>
                   <td className="td"><span className={it.brand === "andre_kachan" ? "badge-gold" : "badge-teal"}>{BRAND_LABELS[it.brand]}</span></td>
                   <td className="td"><div className="flex flex-wrap gap-1">{(it.frentes ?? []).slice(0, 3).map((f) => <span key={f} className="badge-muted">{f}</span>)}{(it.frentes?.length ?? 0) > 3 && <span className="text-xs text-muted2">+{(it.frentes!.length - 3)}</span>}</div></td>

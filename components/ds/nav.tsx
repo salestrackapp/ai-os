@@ -41,7 +41,7 @@ export function Tabs({ tabs, defaultTab, onChange, className }: {
 
 export function Breadcrumbs({ items, className }: { items: { label: string; href?: string }[]; className?: string }) {
   return (
-    <nav aria-label="Breadcrumb" className={cn("flex items-center gap-1.5 text-[13px]", className)}>
+    <nav aria-label="Breadcrumb" className={cn("flex items-center gap-1.5 text-[14px]", className)}>
       {items.map((it, i) => {
         const last = i === items.length - 1;
         return (
@@ -68,7 +68,7 @@ export function Stepper({ steps, current, className }: { steps: string[]; curren
               active ? "bg-brand text-white shadow-ds-brand" : done ? "bg-[var(--tile)] text-[color:var(--brand-deep)]" : "bg-[var(--gray-100)] text-[color:var(--fg-3)]")}>
               {done ? "✓" : i + 1}
             </span>
-            <span className={cn("font-montserrat text-[13px]", active ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-3)]")}>{s}</span>
+            <span className={cn("font-montserrat text-[14px]", active ? "font-semibold text-[color:var(--fg-1)]" : "text-[color:var(--fg-3)]")}>{s}</span>
             {i < steps.length - 1 && <span className="mx-1 h-px w-6 bg-[var(--border-strong)]" />}
           </li>
         );

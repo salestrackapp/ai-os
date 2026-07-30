@@ -104,6 +104,54 @@ export async function responderWhatsAppAction(id: string, formData: FormData): P
   }
 }
 
+/**
+ * Envia (ou descarta) o rascunho que o agente escreveu.
+ *
+ * O envio passa pelo MESMO caminho de qualquer resposta humana — inclusive o gate de aprovação. O
+ * agente não ganha uma porta própria para o canal: o que ele fez foi poupar a digitação, não pular
+ * a fila. Se o texto saiu diferente do sugerido, guardamos as duas versões; é assim que se descobre
+ * se o agente ajuda ou dá trabalho.
+ */
+export async function decidirSugestaoAction(
+  sugestaoId: string, conversaId: string, texto: string, descartar = false,
+): Promise<{ ok: boolean; enviado?: boolean; pendente?: boolean; erro?: string }> {
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) return { ok: false, erro: "Apenas a equipe Salestrack." };
+
+  const { createServiceClient } = await import("@/lib/supabase/service");
+  const { decidirSugestao, classificarDecisao } = await import("@/lib/relacionamento/sugestao");
+  const sb = createServiceClient();
+  const { data: s } = await sb.from("rel_sugestoes").select("texto, status, conversa_id").eq("id", sugestaoId).maybeSingle();
+  if (!s || s.conversa_id !== conversaId) return { ok: false, erro: "Sugestão não encontrada." };
+  if (s.status !== "pendente") return { ok: false, erro: "Esta sugestão já foi decidida." };
+
+  if (descartar) {
+    await decidirSugestao(sugestaoId, "descartada", null, m.userId);
+    revalidatePath(`/admin/relacionamento/${conversaId}`);
+    return { ok: true };
+  }
+
+  const corpo = texto.trim();
+  if (!corpo) return { ok: false, erro: "A mensagem está vazia." };
+
+  const { data: conv } = await sb.from("rel_conversas").select("channel").eq("id", conversaId).maybeSingle();
+  try {
+    const r = conv?.channel === "email"
+      ? await responderConversa(conversaId, corpo, {})
+      : await responderWhatsApp(conversaId, { corpo });
+    if ("bloqueado" in r && r.bloqueado) return { ok: false, erro: r.motivo ?? "Envio bloqueado pelas regras do canal." };
+
+    const desfecho = classificarDecisao(String(s.texto ?? ""), corpo);
+    await decidirSugestao(sugestaoId, desfecho, desfecho === "editada" ? corpo : null, m.userId);
+    revalidatePath(`/admin/relacionamento/${conversaId}`);
+    revalidatePath("/admin/relacionamento");
+    return { ok: true, enviado: r.enviado, pendente: r.pendente };
+  } catch (e) {
+    // A sugestão continua pendente: falha de envio não pode consumir o rascunho.
+    return { ok: false, erro: e instanceof Error ? e.message : "Erro ao enviar." };
+  }
+}
+
 /** Aprova e envia um rascunho de saída pendente (fila de aprovação). */
 export async function aprovarEnvioAction(msgId: string, conversaId: string): Promise<{ ok: boolean; erro?: string }> {
   try {

@@ -37,10 +37,10 @@ export function TasksBoard({ tasks }: { tasks: Row[] }) {
       <div className="card divide-y divide-line">
         {shown.map((t) => (
           <div key={t.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-            <input type="checkbox" className="accent-[#4F1FFF]" checked={t.done} onChange={() => start(() => toggleTask(t.id, !t.done).then(() => {}))} />
+            <input type="checkbox" className="accent-[#007A94]" checked={t.done} onChange={() => start(() => toggleTask(t.id, !t.done).then(() => {}))} />
             <span className={`flex-1 ${t.done ? "line-through text-muted2" : "text-cream"}`}>{t.title}</span>
             {t.deal_id && <Link href={`/admin/crm/${t.deal_id}`} className="text-xs text-gold hover:underline shrink-0">{t.dealTitle ?? "deal"}</Link>}
-            {t.due_date && <span className={`text-[11px] shrink-0 ${overdue(t) ? "text-red-400" : "text-muted2"}`}>{new Date(t.due_date + "T00:00:00").toLocaleDateString("pt-BR")}</span>}
+            {t.due_date && <span className={`text-[13px] shrink-0 ${overdue(t) ? "text-red-400" : "text-muted2"}`}>{new Date(t.due_date + "T00:00:00").toLocaleDateString("pt-BR")}</span>}
             <button className="text-muted2 hover:text-red-400 text-xs shrink-0" onClick={() => start(() => deleteTask(t.id).then(() => {}))}>excluir</button>
           </div>
         ))}

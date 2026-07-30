@@ -17,7 +17,7 @@ export function RoiView({ metricas, narrativa }: { metricas: RoiMetrics; narrati
           <div key={c.label} className="bg-navy3 border border-line rounded-lg p-4">
             <p className="label">{c.label}</p>
             <p className="font-serif text-2xl font-semibold text-gold mt-1">{c.value}</p>
-            <p className="text-[11px] text-muted2 mt-1">{c.note}</p>
+            <p className="text-[13px] text-muted2 mt-1">{c.note}</p>
           </div>
         ))}
       </div>

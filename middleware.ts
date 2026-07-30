@@ -60,5 +60,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // Só as rotas que realmente precisam do gate de auth. Páginas públicas
+  // (/, /diagnostico, /entregavel, /p, /sem-acesso) e assets não pagam a
+  // chamada de rede ao Supabase Auth — o que deixava toda navegação lenta.
+  matcher: ["/admin/:path*", "/portal/:path*", "/login"],
 };

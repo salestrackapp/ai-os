@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { currentMembership } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { scoreProspect, scoreAccount } from "@/lib/prospecting/score";
+import { registrarBaseProspeccao } from "@/lib/lgpd/consentimento";
+import { emailCorporativo } from "@/lib/lgpd/corporativo";
 import { apolloConfigured, apolloSearchPeople } from "@/lib/apollo";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -34,10 +36,20 @@ async function upsertAccount(sb: SupabaseClient, opts: { name: string; domain: s
 
 type RowIn = { name: string; title?: string; email?: string; company?: string; domain?: string; icp?: string; linkedin?: string; seniority?: string; industry?: string; size?: string; signals?: string[]; apollo_id?: string; source?: string };
 
-/** Cria um prospect (com conta + score) evitando duplicidade por email/apollo_id. Retorna 'created'|'dup'. */
-async function createProspect(sb: SupabaseClient, r: RowIn, ownerId: string): Promise<"created" | "dup" | "skip"> {
+/**
+ * Cria um prospect (com conta + score) evitando duplicidade por email/apollo_id.
+ *
+ * Prospecção opera sob LEGÍTIMO INTERESSE e SÓ com dado corporativo (decisão de 2026-07-30).
+ * O banco recusa caixa de provedor gratuito e celular por gatilho — aqui a verificação é
+ * antecipada para que a linha vire "recusado" no relatório da importação, com motivo, em vez de
+ * derrubar o lote inteiro numa exceção.
+ *
+ * Retorna 'created' | 'dup' | 'skip' | 'pessoal'.
+ */
+async function createProspect(sb: SupabaseClient, r: RowIn, ownerId: string): Promise<"created" | "dup" | "skip" | "pessoal"> {
   if (!r.name) return "skip";
   const email = (r.email ?? "").trim().toLowerCase() || null;
+  if (email && !emailCorporativo(email)) return "pessoal";
   const apolloId = r.apollo_id ?? null;
   if (email || apolloId) {
     const or = [email ? `email.eq.${email}` : null, apolloId ? `apollo_id.eq.${apolloId}` : null].filter(Boolean).join(",");
@@ -50,8 +62,21 @@ async function createProspect(sb: SupabaseClient, r: RowIn, ownerId: string): Pr
   const { data: acc } = accountId ? await sb.from("prospect_accounts").select("*").eq("id", accountId).single() : { data: null };
   const prospect = { account_id: accountId, name: r.name, title: r.title ?? null, seniority: r.seniority ?? null, icp, email, linkedin_url: r.linkedin ?? null, apollo_id: apolloId, source: r.source ?? "manual" };
   const score = scoreProspect(prospect, acc);
-  const { error } = await sb.from("prospects").insert({ ...prospect, score, status: "novo" });
+  const { error } = await sb.from("prospects").insert({
+    ...prospect, score, status: "novo",
+    // Dado que a pessoa não nos deu. É o que fecha a porta do marketing, no banco.
+    procedencia: "coleta_publica",
+  });
   if (error) throw new Error(error.message);
+
+  // A base legal do tratamento fica registrada junto com o dado, não num documento à parte:
+  // prospecção por legítimo interesse, marketing negado.
+  if (email) {
+    await registrarBaseProspeccao({
+      email, telefone: null,
+      origem: r.source === "apollo" ? "Apollo (base de terceiro)" : "coleta de dado profissional público",
+    });
+  }
   return "created";
 }
 
@@ -74,7 +99,7 @@ export async function importPasted(formData: FormData) {
   };
   const hasHeader = cols.name >= 0 || cols.email >= 0;
   const body = hasHeader ? lines.slice(1) : lines;
-  let created = 0, dup = 0, skip = 0;
+  let created = 0, dup = 0, skip = 0, pessoal = 0;
   for (const line of body) {
     const c = line.split(delim).map((x) => x.trim());
     const get = (i: number) => (i >= 0 && i < c.length ? c[i] : "");
@@ -82,9 +107,12 @@ export async function importPasted(formData: FormData) {
       ? { name: get(cols.name), title: get(cols.title), email: get(cols.email), company: get(cols.company), domain: get(cols.domain), icp: get(cols.icp) || icpDefault, linkedin: get(cols.linkedin), seniority: get(cols.seniority), industry: get(cols.industry), size: get(cols.size), signals: get(cols.signals) ? get(cols.signals).split(/[;|]/).map((s) => s.trim()).filter(Boolean) : [], source: "manual" }
       : { name: c[0], title: c[1], email: c[2], company: c[3], icp: icpDefault, source: "manual" };
     const res = await createProspect(sb, row, m.userId);
-    if (res === "created") created++; else if (res === "dup") dup++; else skip++;
+    if (res === "created") created++;
+    else if (res === "dup") dup++;
+    else if (res === "pessoal") pessoal++;     // recusado: caixa pessoal não entra por coleta
+    else skip++;
   }
-  await audit("prospect.import", "prospects", undefined, { created, dup, skip, via: "paste" }, undefined);
+  await audit("prospect.import", "prospects", undefined, { created, dup, skip, pessoal, via: "paste" }, undefined);
   revalidatePath("/admin/prospeccao");
 }
 
@@ -109,7 +137,7 @@ export async function addProspectManual(formData: FormData) {
 /** Importa do Apollo em LOTE (várias páginas) por títulos de ICP. Degrada se sem chave. */
 export async function importFromApollo(formData: FormData) {
   const m = await requireAdmin();
-  if (!apolloConfigured()) throw new Error("APOLLO_API_KEY não configurada — use colar CSV ou adicionar manual.");
+  if (!(await apolloConfigured())) throw new Error("Chave do Apollo não configurada — use colar CSV ou adicionar manual.");
   const icp = String(formData.get("icp") ?? "icp1");
   const alvo = Math.min(500, Math.max(25, parseInt(String(formData.get("qtd") ?? "50"), 10) || 50)); // quantos trazer
   const titlesByIcp: Record<string, string[]> = {
@@ -119,7 +147,7 @@ export async function importFromApollo(formData: FormData) {
   };
   const PER = 25, maxPages = Math.ceil(alvo / PER);
   const sb = await createClient();
-  let created = 0, dup = 0, visto = 0;
+  let created = 0, dup = 0, visto = 0, pessoal = 0;
   for (let page = 1; page <= maxPages; page++) {
     const people = await apolloSearchPeople({ titles: titlesByIcp[icp] ?? [], perPage: PER, page });
     if (people.length === 0) break; // acabou o resultado
@@ -127,10 +155,12 @@ export async function importFromApollo(formData: FormData) {
       if (visto >= alvo) break;
       visto++;
       const res = await createProspect(sb, { name: p.name, title: p.title ?? undefined, email: p.email ?? undefined, company: p.org_name ?? undefined, domain: p.domain ?? undefined, icp, linkedin: p.linkedin_url ?? undefined, seniority: p.seniority ?? undefined, apollo_id: p.apollo_id ?? undefined, source: "apollo" }, m.userId);
-      if (res === "created") created++; else if (res === "dup") dup++;
+      if (res === "created") created++;
+      else if (res === "dup") dup++;
+      else if (res === "pessoal") pessoal++;   // o Apollo devolve caixa pessoal; ela não entra
     }
     if (visto >= alvo) break;
   }
-  await audit("prospect.import", "prospects", undefined, { created, dup, via: "apollo", icp, alvo }, undefined);
+  await audit("prospect.import", "prospects", undefined, { created, dup, pessoal, via: "apollo", icp, alvo }, undefined);
   revalidatePath("/admin/prospeccao");
 }

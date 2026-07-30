@@ -19,11 +19,11 @@ export default async function PortalLayout({ children }: { children: React.React
     supabase.from("organizations").select("name").eq("id", m.orgId).single(),
     supabase.from("tenant_branding").select("*").eq("org_id", m.orgId).single(),
     getOrgFeatures(m.orgId),
-    tourSeen("portal"),
+    tourSeen("portal", { userId: m.userId, orgId: m.orgId }),
   ]);
   // White-label N2/N3: acento do tenant só se o plano libera e o nível está setado; senão, violeta v5.
   const wl = !!features.whitelabel_n2 && ["n2_personalizado", "n3_whitelabel"].includes(branding?.level ?? "") && !!branding?.color_accent;
-  const accent = wl ? branding!.color_accent : "#4F1FFF";
+  const accent = wl ? branding!.color_accent : "#007A94";
   const displayName = branding?.internal_name || org?.name || "Meu programa";
   // Override escopado (.wl-theme) para as telas LEGADAS (frame escuro) manterem o white-label.
   const wlStyle = wl ? `
@@ -40,7 +40,7 @@ export default async function PortalLayout({ children }: { children: React.React
       accent={accent} wl={wl} wlStyle={wlStyle} adminView={!!m.adminView} orgName={org?.name ?? ""} tourSeen={seen}
       adminExit={m.adminView ? (
         <form action={exitPortalView}>
-          <button className="ds-focus rounded-[8px] border border-hairline-strong bg-[var(--bg-1)] px-2.5 py-1 font-montserrat text-[12px] font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Sair da visão</button>
+          <button className="ds-focus rounded-[8px] border border-hairline-strong bg-[var(--bg-1)] px-2.5 py-1 font-montserrat text-[13px] font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Sair da visão</button>
         </form>
       ) : undefined}
     >

@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { V2_ACCENTS, BRAND_LABELS } from "@/lib/deliverables/types";
-import { ContentArea, PageHeader, Card, Badge, EmptyState, Input, Select } from "@/components/ds";
+import { ACCENTS_PERMITIDOS, BRAND_LABELS } from "@/lib/deliverables/types";
+import { ContentArea, PageHeader, Card, Badge, EmptyState, Input, Select, botaoClasses } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
 import { saveIdentityAction, activateIdentityAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-const lbl = "mb-1.5 block font-montserrat text-[12px] font-medium text-[color:var(--fg-2)]";
+const lbl = "mb-1.5 block font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]";
 
 type Idn = { id: string; program_id: string; program_name: string | null; cover_title: string | null; cover_subtitle: string | null; client_logo: string | null; brand_attribution: string; accent: string | null; status: string; active: boolean };
 
@@ -62,7 +62,7 @@ export default async function IdentidadePage() {
                   <div><label className={lbl}>Acento (paleta v2)</label>
                     <Select name="accent" defaultValue={cur?.accent ?? ""}>
                       <option value="">Violeta padrão</option>
-                      {Object.entries(V2_ACCENTS).map(([name, hex]) => <option key={hex} value={hex}>{name} ({hex})</option>)}
+                      {Object.entries(ACCENTS_PERMITIDOS).map(([name, hex]) => <option key={hex} value={hex}>{name} ({hex})</option>)}
                     </Select>
                   </div>
                   <div><label className={lbl}>Atribuição de marca (assinatura)</label>
@@ -72,8 +72,8 @@ export default async function IdentidadePage() {
                     </Select>
                   </div>
                   <div className="sm:col-span-2 flex items-center gap-2">
-                    <button type="submit" className="ds-focus inline-flex h-9 items-center rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)] hover:bg-[var(--bg-2)]">Salvar rascunho</button>
-                    {draft && <button formAction={activateIdentityAction.bind(null, draft.id)} className="ds-focus inline-flex h-9 items-center gap-1.5 rounded-ds-input bg-brand px-4 font-montserrat text-[13px] font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="shield" size={14} /> Aprovar e ativar</button>}
+                    <button type="submit" className="ds-focus inline-flex h-9 items-center rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)] hover:bg-[var(--bg-2)]">Salvar rascunho</button>
+                    {draft && <button formAction={activateIdentityAction.bind(null, draft.id)} className={botaoClasses()}><Icon name="shield" size={14} /> Aprovar e ativar</button>}
                   </div>
                 </form>
                 {active && <p className="ds-small mt-2">Identidade ativa trava o conteúdo (imutável). Salvar cria um novo rascunho; aprovar substitui a ativa.</p>}

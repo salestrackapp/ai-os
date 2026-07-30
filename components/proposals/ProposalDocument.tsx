@@ -12,7 +12,7 @@ export type ProposalDoc = {
 function Section({ id, eyebrow, title, children }: { id: string; eyebrow?: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} data-section={id} className="px-8 md:px-14 py-10 border-t border-line">
-      {eyebrow && <p className="text-[11px] uppercase tracking-[.24em] text-gold mb-1">{eyebrow}</p>}
+      {eyebrow && <p className="text-[13px] uppercase tracking-[.24em] text-gold mb-1">{eyebrow}</p>}
       <h2 className="font-serif text-3xl font-semibold mb-6">{title}</h2>
       {children}
     </section>
@@ -30,7 +30,7 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
     <article className="bg-navy text-cream mx-auto max-w-4xl border border-line rounded-2xl overflow-hidden">
       {/* Capa */}
       <header className="px-8 md:px-14 pt-16 pb-12">
-        <p className="text-[11px] uppercase tracking-[.28em] text-gold mb-4">Proposta · André Kachan × Salestrack AI</p>
+        <p className="text-[13px] uppercase tracking-[.28em] text-gold mb-4">Proposta · André Kachan × Salestrack AI</p>
         <h1 className="font-serif text-5xl md:text-6xl font-semibold leading-[1.05] mb-6">{p.title}</h1>
         {p.client_name && <p className="text-lg text-muted">Preparada para <span className="text-cream">{p.client_name}</span></p>}
         <div className="mt-6 flex flex-wrap gap-3 text-sm text-muted2">
@@ -79,7 +79,7 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
         {/* Escopo e entregas por item */}
         {items.some((it) => deliverablesOf(it.description).length > 0) && (
           <div className="mt-8">
-            <p className="text-[11px] uppercase tracking-[.2em] text-gold mb-4">Escopo e entregas</p>
+            <p className="text-[13px] uppercase tracking-[.2em] text-gold mb-4">Escopo e entregas</p>
             <div className="grid sm:grid-cols-2 gap-4">
               {items.map((it, i) => {
                 const entregas = deliverablesOf(it.description);
@@ -87,7 +87,7 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
                 return (
                   <div key={i} className="card p-5">
                     <p className="font-serif text-lg font-semibold mb-1">{it.name}</p>
-                    <p className="text-[11px] uppercase tracking-[.14em] text-muted2 mb-3">{BRAND_LABELS[it.brand] ?? it.brand}{it.qty > 1 ? ` · ${it.qty}×` : ""}</p>
+                    <p className="text-[13px] uppercase tracking-[.14em] text-muted2 mb-3">{BRAND_LABELS[it.brand] ?? it.brand}{it.qty > 1 ? ` · ${it.qty}×` : ""}</p>
                     <ul className="space-y-1.5">
                       {entregas.map((e, j) => (
                         <li key={j} className="flex gap-2 text-sm text-muted"><span className="text-gold shrink-0">✓</span><span>{e}</span></li>
@@ -107,9 +107,9 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
           <div className="flex gap-4 overflow-x-auto pb-2">
             {(p.timeline ?? []).map((f) => (
               <div key={f.n} className="min-w-56 card p-5 relative">
-                <div className="w-7 h-7 rounded-full bg-[rgba(79, 31, 255,.14)] border border-goldline text-gold flex items-center justify-center font-mono text-sm mb-3">{f.n}</div>
+                <div className="w-7 h-7 rounded-full bg-[rgba(0, 122, 148,.14)] border border-goldline text-gold flex items-center justify-center font-mono text-sm mb-3">{f.n}</div>
                 <p className="font-serif text-lg font-semibold">{f.titulo}</p>
-                <p className="text-[11px] uppercase tracking-[.14em] text-muted2 mb-2">{f.meses} {f.meses === 1 ? "mês" : "meses"}</p>
+                <p className="text-[13px] uppercase tracking-[.14em] text-muted2 mb-2">{f.meses} {f.meses === 1 ? "mês" : "meses"}</p>
                 <p className="text-sm text-muted leading-relaxed">{f.descricao}</p>
               </div>
             ))}
@@ -122,9 +122,9 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
         <div className="card p-6 mb-4">
           <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">{p.platform_plan_md || "O programa opera sobre uma plataforma de IA corporativa. Recomendação primária: Claude Team ou Enterprise."}</p>
         </div>
-        <div className="card p-6 border-goldline bg-[rgba(79, 31, 255,.05)] flex items-center justify-between flex-wrap gap-3">
+        <div className="card p-6 border-goldline bg-[rgba(0, 122, 148,.05)] flex items-center justify-between flex-wrap gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[.2em] text-gold">Plataforma AI OS</p>
+            <p className="text-[13px] uppercase tracking-[.2em] text-gold">Plataforma AI OS</p>
             <p className="text-sm text-muted">Forma e canal de entrega do programa · mensalidade recorrente</p>
           </div>
           <p className="font-serif text-3xl text-gold">{brl(p.monthly_platform_fee ?? 0)}<span className="text-sm text-muted2">/mês</span></p>
@@ -139,7 +139,7 @@ export function ProposalDocument({ p }: { p: ProposalDoc }) {
       )}
 
       <footer className="px-8 md:px-14 py-8 border-t border-line text-center">
-        <p className="text-[11px] uppercase tracking-[.28em] text-gold">André Kachan · Salestrack AI</p>
+        <p className="text-[13px] uppercase tracking-[.28em] text-gold">André Kachan · Salestrack AI</p>
       </footer>
     </article>
   );

@@ -5,12 +5,12 @@ import {
 } from "recharts";
 
 // Paleta v2 clara (PROMPT REV): violeta como acento, verde sucesso, muted ink-cinza, grid hairline.
-const GOLD = "#4F1FFF", TEAL = "#18A06B", MUTED = "#6B6B7C", LINE = "rgba(17,12,46,.10)";
+const GOLD = "#007A94", TEAL = "#10B981", MUTED = "#6B7A8D", LINE = "rgba(13, 31, 60,.10)";
 const brlShort = (v: number) => v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`;
 
 const tip = {
-  contentStyle: { background: "#FFFFFF", border: "1px solid #E7E4F1", borderRadius: 10, fontSize: 12, color: "#0B0B16" },
-  labelStyle: { color: "#6B6B7C" }, cursor: { fill: "rgba(79, 31, 255,.08)" },
+  contentStyle: { background: "#FFFFFF", border: "1px solid #E3E8EF", borderRadius: 10, fontSize: 12, color: "#1A1A2E" },
+  labelStyle: { color: "#6B7A8D" }, cursor: { fill: "rgba(0, 122, 148,.08)" },
 };
 const axis = { stroke: MUTED, fontSize: 11, tickLine: false };
 

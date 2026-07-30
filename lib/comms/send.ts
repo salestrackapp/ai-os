@@ -4,6 +4,7 @@ import { auditService } from "@/lib/audit";
 import { getChannel } from "./channels";
 import { resolveAsset, type Recipient } from "./resolve-vars";
 import { buildEmailHtml } from "@/lib/studio/render/email";
+import { linkDescadastro, podeEnviarMarketing } from "@/lib/lgpd/consentimento";
 import type { DeliverableContent } from "@/lib/deliverables/types";
 
 export type SendResult = { status: "enviado" | "falhou" | "manual" | "bloqueado"; motivo?: string; providerRef?: string | null; content?: string; deliveryId?: string };
@@ -45,7 +46,10 @@ export async function sendOne(opts: { deliverableId: string; canal: "whatsapp" |
     const r = resolveAsset([e.assunto, e.preheader ?? "", ...e.corpo, e.cta?.label ?? ""], opts.recipient);
     missing = r.missing;
     subject = r.resolved[0];
-    if (r.ok) html = buildEmailHtml({ assunto: r.resolved[0], preheader: r.resolved[1], corpo: r.resolved.slice(2, 2 + e.corpo.length), cta: e.cta ? { label: r.resolved[2 + e.corpo.length], url: e.cta.url } : undefined, attribution: dv.line === "email_mkt" ? "salestrack" : "salestrack" });
+    // Todo e-mail sai com via de saída própria. O link é gerado por destinatário e é estável —
+    // o mesmo endereço recebe sempre o mesmo token, então um e-mail antigo continua funcionando.
+    const unsubscribeUrl = await linkDescadastro(endereco);
+    if (r.ok) html = buildEmailHtml({ assunto: r.resolved[0], preheader: r.resolved[1], corpo: r.resolved.slice(2, 2 + e.corpo.length), cta: e.cta ? { label: r.resolved[2 + e.corpo.length], url: e.cta.url } : undefined, attribution: dv.line === "email_mkt" ? "salestrack" : "salestrack", unsubscribeUrl });
   } else {
     const m = content.message;
     if (!m) return { status: "falhou", motivo: "Ativo não é uma mensagem." };
@@ -57,10 +61,18 @@ export async function sendOne(opts: { deliverableId: string; canal: "whatsapp" |
     return { status: "bloqueado", motivo: `Faltam variáveis do destinatário: ${missing.join(", ")}. Nada é enviado com placeholder.` };
   }
 
-  // 3) Consentimento
+  // 3) Consentimento — duas perguntas distintas, e as duas precisam passar.
+  //    (a) o gate de canal: este endereço aceita receber por aqui?
   if (!(await consentOk(dv.org_id, opts.canal, endereco, opts.optIn))) {
     await record(dv, opts, endereco, "bloqueado", null, "Sem consentimento (opt-in).");
     return { status: "bloqueado", motivo: "Destinatário sem consentimento (opt-in) para este canal." };
+  }
+  //    (b) a finalidade: peça de MARKETING exige consentimento para marketing, que é coisa
+  //        diferente de ter aceitado receber um documento do próprio projeto. Um teste do admin
+  //        não passa por aqui — é o admin mandando para si mesmo, não campanha.
+  if (dv.line === "email_mkt" && !opts.test && opts.canal === "email" && !(await podeEnviarMarketing(endereco))) {
+    await record(dv, opts, endereco, "bloqueado", null, "Sem consentimento de marketing (LGPD).");
+    return { status: "bloqueado", motivo: "Este destinatário não consentiu receber marketing. Nada é enviado." };
   }
 
   // 4) Dispatch

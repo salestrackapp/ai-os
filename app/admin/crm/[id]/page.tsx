@@ -5,6 +5,7 @@ import { CrmNav } from "@/components/crm/CrmNav";
 import { DealDetail } from "@/components/crm/DealDetail";
 import { AiAssist } from "@/components/AiAssist";
 import { STAGE_LABELS, brl, type Deal, type SignalDefinition, type Contact, type Organization, type Task } from "@/lib/types";
+import { ContentArea } from "@/components/ds";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const [{ data: signalDefs }, { data: activities }, { data: contacts }, { data: orgs }, { data: tasks }, { data: proposals }] = await Promise.all([
     supabase.from("signal_definitions").select("*").eq("active", true).order("sort"),
     supabase.from("activities").select("id, kind, payload, created_at").eq("ref_table", "deals").eq("ref_id", id).order("created_at", { ascending: false }),
-    supabase.from("contacts").select("*").order("name"),
+    supabase.from("contacts").select("*").is("deleted_at", null).order("name"),
     supabase.from("organizations").select("*").eq("is_salestrack", false).order("name"),
     supabase.from("tasks").select("*").eq("deal_id", id).order("done").order("due_date", { nullsFirst: false }).order("created_at", { ascending: false }),
     supabase.from("proposals").select("id, title, version, status").eq("deal_id", id).order("version", { ascending: false }),
@@ -45,28 +46,30 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   ].filter(Boolean).join("\n");
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/crm" className="text-muted2 hover:text-gold text-sm">← CRM</Link>
+    <ContentArea>
+      <div>
+        <div className="flex items-center gap-3 mb-6">
+          <Link href="/admin/crm" className="text-muted2 hover:text-gold text-sm">← CRM</Link>
+        </div>
+        <CrmNav />
+        <div className="mb-5">
+          <AiAssist context={aiContext} title="Copiloto do deal" actions={[
+            { label: "Analisar o deal", task: "Analise este deal: risco de perda, o que provavelmente está travando e a próxima melhor ação. Bullets curtos e acionáveis." },
+            { label: "Rascunhar e-mail de follow-up", task: "Rascunhe um e-mail curto e profissional de follow-up para o contato deste deal, no tom da marca pessoal André Kachan, com um próximo passo claro. Pronto para enviar (com assunto)." },
+            { label: "Rascunhar WhatsApp", task: "Rascunhe uma mensagem curta e cordial de WhatsApp para o contato, retomando a conversa com um convite objetivo." },
+            { label: "Sugerir próximo passo", task: "Sugira o próximo passo concreto para avançar este deal no funil, em 1–2 frases." },
+          ]} />
+        </div>
+        <DealDetail
+          deal={d}
+          signalDefs={(signalDefs as SignalDefinition[]) ?? []}
+          activities={(activities as { id: string; kind: string; payload: Record<string, unknown> | null; created_at: string }[]) ?? []}
+          contacts={list}
+          orgs={(orgs as Organization[]) ?? []}
+          tasks={(tasks as Task[]) ?? []}
+          proposals={(proposals as { id: string; title: string; version: number; status: string }[]) ?? []}
+        />
       </div>
-      <CrmNav />
-      <div className="mb-5">
-        <AiAssist context={aiContext} title="Copiloto do deal" actions={[
-          { label: "Analisar o deal", task: "Analise este deal: risco de perda, o que provavelmente está travando e a próxima melhor ação. Bullets curtos e acionáveis." },
-          { label: "Rascunhar e-mail de follow-up", task: "Rascunhe um e-mail curto e profissional de follow-up para o contato deste deal, no tom da marca pessoal André Kachan, com um próximo passo claro. Pronto para enviar (com assunto)." },
-          { label: "Rascunhar WhatsApp", task: "Rascunhe uma mensagem curta e cordial de WhatsApp para o contato, retomando a conversa com um convite objetivo." },
-          { label: "Sugerir próximo passo", task: "Sugira o próximo passo concreto para avançar este deal no funil, em 1–2 frases." },
-        ]} />
-      </div>
-      <DealDetail
-        deal={d}
-        signalDefs={(signalDefs as SignalDefinition[]) ?? []}
-        activities={(activities as { id: string; kind: string; payload: Record<string, unknown> | null; created_at: string }[]) ?? []}
-        contacts={list}
-        orgs={(orgs as Organization[]) ?? []}
-        tasks={(tasks as Task[]) ?? []}
-        proposals={(proposals as { id: string; title: string; version: number; status: string }[]) ?? []}
-      />
-    </div>
+    </ContentArea>
   );
 }

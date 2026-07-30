@@ -35,13 +35,13 @@ export function Responder({ conversaId, policy, templates, contatoNome, assunto,
   return (
     <div className="border-t border-hairline p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">Responder</p>
+        <p className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">Responder</p>
         {templates.length > 0 && (
           <select
             aria-label="Inserir template"
             defaultValue=""
             onChange={(e) => { const t = templates.find((x) => x.id === e.target.value); if (t) setCorpo((c) => (c ? c + "\n\n" : "") + render(t.corpo, contatoNome, assunto)); e.target.value = ""; }}
-            className="h-9 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-2 font-montserrat text-[12px] text-[color:var(--fg-2)]">
+            className="h-9 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-2 font-montserrat text-[13px] text-[color:var(--fg-2)]">
             <option value="" disabled>Inserir template…</option>
             {templates.map((t) => <option key={t.id} value={t.id}>{t.nome}{t.atalho ? ` (${t.atalho})` : ""}</option>)}
           </select>
@@ -50,10 +50,10 @@ export function Responder({ conversaId, policy, templates, contatoNome, assunto,
 
       <textarea value={corpo} onChange={(e) => setCorpo(e.target.value)} rows={5}
         placeholder="Escreva a resposta… a assinatura da equipe é anexada automaticamente."
-        className="w-full rounded-ds-card border border-hairline bg-[var(--bg-1)] p-3 font-montserrat text-[13px] leading-relaxed text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
+        className="w-full rounded-ds-card border border-hairline bg-[var(--bg-1)] p-3 font-montserrat text-[14px] leading-relaxed text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
 
       {msg && (
-        <p className={`mt-2 rounded-ds-input px-3 py-2 font-montserrat text-[12px] ${msg.tone === "ok" ? "bg-[var(--tile)] text-[color:var(--brand-deep)]" : msg.tone === "warn" ? "bg-[color:var(--warn-tint,#FFF7E6)] text-[color:var(--fg-1)]" : "bg-[#FDECEC] text-[#B42318]"}`}>{msg.text}</p>
+        <p className={`mt-2 rounded-ds-input px-3 py-2 font-montserrat text-[13px] ${msg.tone === "ok" ? "bg-[var(--tile)] text-[color:var(--brand-deep)]" : msg.tone === "warn" ? "bg-[color:var(--warn-tint,#FFF7E6)] text-[color:var(--fg-1)]" : "bg-[#FDECEC] text-[#B42318]"}`}>{msg.text}</p>
       )}
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -65,7 +65,7 @@ export function Responder({ conversaId, policy, templates, contatoNome, assunto,
             Guardar como rascunho
           </button>
         )}
-        <span className="font-montserrat text-[11px] text-[color:var(--fg-3)]">
+        <span className="font-montserrat text-[13px] text-[color:var(--fg-3)]">
           {envioDireto ? "Gate: envio direto (assuntos sensíveis ainda pedem aprovação)." : "Gate: toda resposta passa por aprovação."}
         </span>
       </div>

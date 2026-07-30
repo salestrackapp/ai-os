@@ -1,7 +1,7 @@
 "use client";
 /** Listagem do CRUD kit — busca, ordenação, paginação, ações por linha (gated por permissão), empty que ensina. */
 import { useMemo, useState } from "react";
-import { EmptyState, Input, Badge } from "@/components/ds";
+import { EmptyState, Input, Badge, botaoClasses } from "@/components/ds";
 import { Icon } from "@/components/ui/icons";
 import { getResource } from "@/lib/crud/registry";
 import type { CrudOp } from "@/lib/crud/types";
@@ -49,7 +49,7 @@ export function DataTable({ resourceName, rows, can, onNew, onEdit, onDuplicate,
           <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder={`Buscar ${def.plural}…`} className="!pl-9" />
         </div>
         {can.create && onNew && (
-          <button onClick={onNew} className="ds-focus inline-flex h-10 shrink-0 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand transition-colors hover:bg-brand-hover">
+          <button onClick={onNew} className={botaoClasses({ className: "shrink-0" })}>
             <Icon name="userPlus" size={15} /> Novo {def.singular}
           </button>
         )}
@@ -60,7 +60,7 @@ export function DataTable({ resourceName, rows, can, onNew, onEdit, onDuplicate,
           title={q ? `Nenhum resultado para "${q}"` : `Nenhum ${def.singular} ainda`}
           description={q ? "Tente outro termo de busca." : `Aqui ficam os seus ${def.plural}. Crie o primeiro para começar.`}
           action={!q && can.create && onNew ? (
-            <button onClick={onNew} className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover"><Icon name="userPlus" size={15} /> Criar {def.singular}</button>
+            <button onClick={onNew} className={botaoClasses()}><Icon name="userPlus" size={15} /> Criar {def.singular}</button>
           ) : undefined} />
       ) : (
         <div className="overflow-x-auto rounded-ds-card border border-hairline bg-[var(--bg-1)] shadow-ds-xs">
@@ -68,7 +68,7 @@ export function DataTable({ resourceName, rows, can, onNew, onEdit, onDuplicate,
             <thead>
               <tr className="border-b border-hairline">
                 {def.columns.map((c) => (
-                  <th key={c.key} className={`px-4 py-3 font-jbmono text-[11px] font-normal uppercase tracking-[0.08em] text-[color:var(--fg-3)] ${c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left"}`}>
+                  <th key={c.key} className={`px-4 py-3 font-jbmono text-[13px] font-normal uppercase tracking-[0.08em] text-[color:var(--fg-3)] ${c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left"}`}>
                     <button onClick={() => toggleSort(c.key)} className="ds-focus inline-flex items-center gap-1 hover:text-[color:var(--fg-1)]">
                       {c.header}{sortKey === c.key && <span>{asc ? "↑" : "↓"}</span>}
                     </button>
@@ -106,9 +106,9 @@ export function DataTable({ resourceName, rows, can, onNew, onEdit, onDuplicate,
         <div className="mt-3 flex items-center justify-between">
           <p className="ds-small">{filtered.length} {def.plural}</p>
           <div className="flex items-center gap-2">
-            <button disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="ds-focus rounded-[8px] border border-hairline-strong px-2.5 py-1 font-montserrat text-[12px] disabled:opacity-40">Anterior</button>
-            <span className="font-jbmono text-[12px] text-[color:var(--fg-3)]">{page + 1}/{pages}</span>
-            <button disabled={page >= pages - 1} onClick={() => setPage((p) => p + 1)} className="ds-focus rounded-[8px] border border-hairline-strong px-2.5 py-1 font-montserrat text-[12px] disabled:opacity-40">Próxima</button>
+            <button disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="ds-focus rounded-[8px] border border-hairline-strong px-2.5 py-1 font-montserrat text-[13px] disabled:opacity-40">Anterior</button>
+            <span className="font-jbmono text-[13px] text-[color:var(--fg-3)]">{page + 1}/{pages}</span>
+            <button disabled={page >= pages - 1} onClick={() => setPage((p) => p + 1)} className="ds-focus rounded-[8px] border border-hairline-strong px-2.5 py-1 font-montserrat text-[13px] disabled:opacity-40">Próxima</button>
           </div>
         </div>
       )}

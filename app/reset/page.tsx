@@ -42,7 +42,7 @@ export default function ResetPage() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="card w-full max-w-md p-9">
-        <p className="text-[11px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
+        <p className="text-[13px] uppercase tracking-[.28em] text-gold mb-3">AI Operation System</p>
         <h1 className="font-serif text-4xl font-semibold mb-1">Redefinir senha</h1>
         <p className="text-sm text-muted mb-8">Escolha uma nova senha para sua conta.</p>
 

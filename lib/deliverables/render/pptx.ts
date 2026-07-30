@@ -1,12 +1,12 @@
 import "server-only";
 import type { RenderInput, KPI } from "../types";
-import { brandSignature, isV2Accent } from "../types";
+import { brandSignature, isAccentPermitido } from "../types";
 import { deckToPptx } from "@/lib/studio/render/slides/render";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** DESIGN ÚNICO v2 (R3.2) — todo slide sai em ink/violeta/sans. A marca é só atribuição (assinatura). */
 function pptxTheme(input: RenderInput) {
-  const acc = isV2Accent(input.accent) ? input.accent!.replace("#", "") : "8B5CFF";
+  const acc = isAccentPermitido(input.accent) ? input.accent!.replace("#", "") : "00B4D8";
   return { primary: "0B0B16", accent: acc, kpi: "EBF212", cream: "F4F4FA", muted: "AFAFC6", surface: "1C1C2B", head: "Arial" };
 }
 

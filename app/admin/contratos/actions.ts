@@ -10,6 +10,7 @@ import { sendEmail } from "@/lib/email";
 import { contractHtml } from "@/lib/contract-html";
 import { docusignConfigured, sendEnvelope } from "@/lib/docusign";
 import { runKickoff } from "@/lib/kickoff";
+import { currentMembership } from "@/lib/auth";
 import { getContractSettings } from "@/lib/settings";
 import { runCopilot } from "@/lib/agents/copilot";
 import { brl, proposalTotals, type ProposalItem } from "@/lib/types";
@@ -127,5 +128,69 @@ export async function registerManualSignature(contractId: string, formData: Form
 
 export async function reexecuteKickoff(contractId: string) {
   await runKickoff(contractId);
+  revalidatePath(`/admin/contratos/${contractId}`);
+}
+
+/**
+ * Gera a minuta A PARTIR DA BIBLIOTECA — determinística, sem IA.
+ *
+ * A geração por IA (`draftContractWithAI`) continua existindo para casos fora do padrão, mas não
+ * deveria ser o caminho normal: ela reescreve o contrato a cada execução, e duas minutas do mesmo
+ * serviço saem diferentes. Num documento que vai a assinatura, "parecido" não serve — o texto
+ * precisa ser o mesmo que o jurídico revisou.
+ *
+ * Ao gerar, as cláusulas são CONGELADAS no contrato: a partir daí, editar a biblioteca não muda
+ * este documento.
+ */
+export async function gerarMinutaDaBiblioteca(contractId: string, valores: Record<string, string>) {
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) throw new Error("Apenas admin Salestrack.");
+
+  const svc = createServiceClient();
+  const { data: c } = await svc.from("contracts")
+    .select("id, org_id, status, signer_name, organizations(name, cnpj)").eq("id", contractId).single();
+  if (!c) throw new Error("Contrato não encontrado.");
+  if (c.status === "assinado") throw new Error("Contrato assinado é imutável — gere um termo aditivo.");
+
+  const { listarClausulas, montarMinuta, variaveisFaltantes, congelarNoContrato } =
+    await import("@/lib/juridico/clausulas");
+  const clausulas = (await listarClausulas()).filter((cl) => cl.vigente);
+  if (clausulas.length === 0) throw new Error("A biblioteca de cláusulas está vazia.");
+
+  const org = c.organizations as unknown as { name: string; cnpj: string | null } | null;
+  const preenchidos: Record<string, string> = {
+    cliente_nome: org?.name ?? c.signer_name ?? "",
+    comarca: "São Paulo/SP",
+    ...valores,
+  };
+
+  /**
+   * Variável sem valor não passa. Um contrato que vai a assinatura com "no valor de ⟨valor_total⟩"
+   * é pior que nenhum contrato — e o buraco costuma passar despercebido justamente porque o resto
+   * do documento parece pronto.
+   */
+  const faltando = variaveisFaltantes(clausulas, preenchidos);
+  if (faltando.length) {
+    throw new Error(`Faltam preencher: ${faltando.join(", ")}. Sem isso a minuta sai com buracos.`);
+  }
+
+  const texto = montarMinuta(clausulas, preenchidos);
+  const html = `<div style="font-family:Montserrat,Arial,sans-serif;font-size:14px;line-height:1.7;color:#1A1A2E">`
+    + texto.split("\n\n").map((p) =>
+        p.startsWith("CLÁUSULA")
+          ? `<h2 style="margin:28px 0 10px;font-size:15px;font-weight:800">${p}</h2>`
+          : `<p style="margin:0 0 12px;white-space:pre-wrap">${p}</p>`).join("")
+    + `<p style="margin-top:48px">_____________________________________<br/>/assinatura_contratante/<br/>${org?.name ?? c.signer_name ?? "CONTRATANTE"}</p></div>`;
+
+  const { error } = await svc.from("contracts").update({ content_html: html }).eq("id", contractId);
+  if (error) throw new Error(error.message);
+
+  const congeladas = await congelarNoContrato(contractId, preenchidos);
+  await svc.from("contract_events").insert({
+    contract_id: contractId, kind: "minuta_biblioteca",
+    payload: { clausulas: congeladas || clausulas.length },
+  });
+  await audit("contract.minuta_biblioteca", "contracts", contractId,
+    { clausulas: clausulas.length }, c.org_id ?? undefined);
   revalidatePath(`/admin/contratos/${contractId}`);
 }

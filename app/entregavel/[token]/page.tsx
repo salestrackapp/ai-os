@@ -6,6 +6,7 @@ import { sanitizeEmailHtml } from "@/lib/relacionamento/sanitize-email";
 import { tipoDef, familiaLabel, progressoModulos } from "@/lib/estudio/catalogo";
 import { SalestrackLogo } from "@/components/ds/SalestrackLogo";
 import { marcarModuloAction } from "./actions";
+import { botaoClasses } from "@/components/ds";
 
 export const dynamic = "force-dynamic";
 
@@ -62,8 +63,8 @@ export default async function PublicDeliverable({ params }: { params: Promise<{ 
     const pct = progressoModulos(total, feitos.size);
     corpo = (
       <div>
-        <div className="mb-4"><div className="mb-1 flex justify-between font-montserrat text-[12px] text-[color:var(--fg-3)]"><span>Progresso</span><span>{feitos.size}/{total} · {pct}%</span></div><div className="h-2 w-full rounded-full bg-[var(--bg-2)]"><div className="h-2 rounded-full bg-[var(--brand)]" style={{ width: `${pct}%` }} /></div></div>
-        {pct === 100 && total > 0 && <div className="mb-4 rounded-ds-input bg-[var(--tile)] px-4 py-3 font-montserrat text-[13px] text-[color:var(--brand-deep)]">🎉 Você concluiu <b>{d.title}</b>! Fale com a Salestrack para receber seu certificado.</div>}
+        <div className="mb-4"><div className="mb-1 flex justify-between font-montserrat text-[13px] text-[color:var(--fg-3)]"><span>Progresso</span><span>{feitos.size}/{total} · {pct}%</span></div><div className="h-2 w-full rounded-full bg-[var(--bg-2)]"><div className="h-2 rounded-full bg-[var(--brand)]" style={{ width: `${pct}%` }} /></div></div>
+        {pct === 100 && total > 0 && <div className="mb-4 rounded-ds-input bg-[var(--tile)] px-4 py-3 font-montserrat text-[14px] text-[color:var(--brand-deep)]">🎉 Você concluiu <b>{d.title}</b>! Fale com a Salestrack para receber seu certificado.</div>}
         <ol className="space-y-3">
           {(mods ?? []).map((mod) => {
             const feito = feitos.has(mod.ordem);
@@ -72,19 +73,19 @@ export default async function PublicDeliverable({ params }: { params: Promise<{ 
               <li key={mod.id} className={`rounded-ds-card border p-4 ${feito ? "border-[color:var(--brand-light)] bg-[var(--tile)]" : "border-hairline bg-[var(--bg-1)]"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-montserrat text-[11px] font-semibold uppercase tracking-[.1em] text-[color:var(--fg-4)]">Módulo {mod.ordem}</p>
+                    <p className="font-montserrat text-[13px] font-semibold uppercase tracking-[.1em] text-[color:var(--fg-4)]">Módulo {mod.ordem}</p>
                     <p className="font-montserrat text-[15px] font-semibold text-[color:var(--fg-1)]">{mod.titulo}</p>
-                    {obj && <p className="mt-1 font-montserrat text-[13px] text-[color:var(--fg-2)]">{obj}</p>}
-                    {mod.url && <a href={mod.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-montserrat text-[12px] font-semibold text-[color:var(--brand)] hover:underline">Abrir conteúdo →</a>}
+                    {obj && <p className="mt-1 font-montserrat text-[14px] text-[color:var(--fg-2)]">{obj}</p>}
+                    {mod.url && <a href={mod.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-montserrat text-[13px] font-semibold text-[color:var(--brand)] hover:underline">Abrir conteúdo →</a>}
                   </div>
                   <form action={marcarModuloAction.bind(null, token, d.id, d.org_id, mod.ordem, !feito)}>
-                    <button className={`ds-focus shrink-0 rounded-ds-input px-3 py-2 font-montserrat text-[12px] font-semibold ${feito ? "border border-hairline-strong text-[color:var(--fg-2)]" : "bg-brand text-white shadow-ds-brand hover:bg-brand-hover"}`}>{feito ? "✓ concluído" : "Concluir"}</button>
+                    <button className={`ds-focus shrink-0 rounded-ds-input px-3 py-2 font-montserrat text-[13px] font-semibold ${feito ? "border border-hairline-strong text-[color:var(--fg-2)]" : "bg-brand text-white shadow-ds-brand hover:bg-brand-hover"}`}>{feito ? "✓ concluído" : "Concluir"}</button>
                   </form>
                 </div>
               </li>
             );
           })}
-          {total === 0 && <li className="font-montserrat text-[13px] text-[color:var(--fg-3)]">Os módulos serão publicados em breve.</li>}
+          {total === 0 && <li className="font-montserrat text-[14px] text-[color:var(--fg-3)]">Os módulos serão publicados em breve.</li>}
         </ol>
       </div>
     );
@@ -97,8 +98,8 @@ export default async function PublicDeliverable({ params }: { params: Promise<{ 
       : <video controls src={midiaUrl} className="w-full rounded-ds-card">Seu navegador não suporta vídeo.</video>;
   } else if (def.consumo === "externo") {
     corpo = midiaUrl
-      ? <a href={midiaUrl} target="_blank" rel="noopener noreferrer" className="ds-focus inline-flex h-12 items-center rounded-ds-input bg-brand px-6 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover">Abrir {def.label} →</a>
-      : <p className="font-montserrat text-[13px] text-[color:var(--fg-3)]">O link será disponibilizado em breve.</p>;
+      ? <a href={midiaUrl} target="_blank" rel="noopener noreferrer" className={botaoClasses({ size: "lg" })}>Abrir {def.label} →</a>
+      : <p className="font-montserrat text-[14px] text-[color:var(--fg-3)]">O link será disponibilizado em breve.</p>;
   } else {
     // single: HTML sanitizado ou texto
     corpo = content.html
@@ -111,14 +112,14 @@ export default async function PublicDeliverable({ params }: { params: Promise<{ 
       <div className="mx-auto max-w-3xl px-5">
         <header className="mb-6 flex items-center justify-between gap-4">
           <SalestrackLogo />
-          <span className="rounded-ds-pill bg-[var(--tile)] px-3 py-1 font-montserrat text-[12px] font-semibold text-[color:var(--brand-deep)]">{familiaLabel(def.familia)}</span>
+          <span className="rounded-ds-pill bg-[var(--tile)] px-3 py-1 font-montserrat text-[13px] font-semibold text-[color:var(--brand-deep)]">{familiaLabel(def.familia)}</span>
         </header>
         <div className="rounded-ds-card border border-hairline bg-[var(--bg-1)] p-6 shadow-ds-card sm:p-8">
           <p className="ds-eyebrow">{def.label}</p>
-          <h1 className="mt-1 mb-5 font-montserrat text-[26px] font-bold leading-tight text-[color:var(--fg-1)]">{d.title}</h1>
+          <h1 className="mt-1 mb-5 font-montserrat text-[24px] font-bold leading-tight text-[color:var(--fg-1)]">{d.title}</h1>
           {corpo}
         </div>
-        <p className="mt-6 text-center font-montserrat text-[11px] text-[color:var(--fg-4)]">Entregue por Salestrack AI</p>
+        <p className="mt-6 text-center font-montserrat text-[13px] text-[color:var(--fg-4)]">Entregue por Salestrack AI</p>
       </div>
     </main>
   );

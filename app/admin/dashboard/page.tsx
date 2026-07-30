@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { emailMap } from "@/lib/supabase/admin";
 import { DashboardCharts } from "@/components/DashboardCharts";
 import { AiAssist } from "@/components/AiAssist";
+import { ContentArea } from "@/components/ds";
 import {
   DEAL_STAGES, STAGE_LABELS, STAGE_PROB, BRAND_LABELS, brl, daysSince, dealBrandValues, STAGNATION_DAYS, type Deal,
 } from "@/lib/types";
@@ -16,7 +17,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const supabase = await createClient();
 
   const [{ data: allDeals }, { count: reviewCount }, { data: acts }, { data: logs }, { data: openTasks }] = await Promise.all([
-    supabase.from("deals").select("*"),
+    supabase.from("deals").select("*").is("deleted_at", null),
     supabase.from("catalog_items").select("*", { count: "exact", head: true }).eq("needs_review", true),
     supabase.from("activities").select("id, kind, payload, created_at, ref_table, ref_id, actor_id").order("created_at", { ascending: false }).limit(15),
     supabase.from("audit_logs").select("id, action, resource, resource_id, created_at, actor_id").order("created_at", { ascending: false }).limit(15),
@@ -138,135 +139,137 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   ].filter(Boolean).join("\n");
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
-        <div>
-          <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">Fase 1.5 · Comando</p>
-          <h1 className="font-serif text-4xl font-semibold">Dashboard Executivo</h1>
+    <ContentArea>
+      <div>
+        <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
+          <div>
+            <p className="text-[13px] uppercase tracking-[.24em] text-muted2 mb-1">Fase 1.5 · Comando</p>
+            <h1 className="font-serif text-4xl font-semibold">Dashboard Executivo</h1>
+          </div>
+          <div className="flex gap-2 items-center self-end">
+            {brands.map((b) => (
+              <Link key={b.k} href={b.k ? `/admin/dashboard?brand=${b.k}` : "/admin/dashboard"}
+                className={`badge-muted ${(brand ?? "") === b.k ? "!text-gold !border-goldline" : ""}`}>{b.l}</Link>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-2 items-center self-end">
-          {brands.map((b) => (
-            <Link key={b.k} href={b.k ? `/admin/dashboard?brand=${b.k}` : "/admin/dashboard"}
-              className={`badge-muted ${(brand ?? "") === b.k ? "!text-gold !border-goldline" : ""}`}>{b.l}</Link>
+
+        {/* Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+          {cards.map((c) => (
+            <div key={c.label} className="card p-6">
+              <p className="label">{c.label}</p>
+              <p className="font-serif text-3xl font-semibold text-gold mt-1">{c.value}</p>
+              <p className="mt-2 text-xs text-muted">{c.note}</p>
+            </div>
           ))}
         </div>
-      </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-        {cards.map((c) => (
-          <div key={c.label} className="card p-6">
-            <p className="label">{c.label}</p>
-            <p className="font-serif text-3xl font-semibold text-gold mt-1">{c.value}</p>
-            <p className="mt-2 text-xs text-muted">{c.note}</p>
+        {/* Copiloto executivo (IA) */}
+        <div className="mb-5">
+          <AiAssist context={dashContext} title="Copiloto executivo" actions={[
+            { label: "Insights do dia", task: "A partir do pipeline abaixo, gere 3 insights executivos e 3 ações prioritárias para hoje. Bullets curtos e diretos." },
+            { label: "Resumo para reunião", task: "Escreva um resumo executivo do momento comercial (pipeline, riscos, foco) em 1 parágrafo, pronto para uma reunião de liderança." },
+            { label: "Onde estou perdendo dinheiro?", task: "Aponte os gargalos do funil e onde há mais valor parado ou em risco, com a ação recomendada para cada." },
+          ]} />
+        </div>
+
+        {/* Método (Fase 4b): adoção do Playbook + entrega ao vivo */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+          <Link href="/admin/estudio" className="card p-6 hover:border-goldline transition-colors">
+            <p className="label">Receitas publicadas</p><p className="font-serif text-3xl font-semibold text-cream mt-1">{recipesPub ?? 0}</p><p className="mt-2 text-xs text-muted">Playbook · Estúdio do Método</p>
+          </Link>
+          <div className="card p-6"><p className="label">Receitas concluídas</p><p className="font-serif text-3xl font-semibold text-gold mt-1">{conclusoes ?? 0}</p><p className="mt-2 text-xs text-muted">adoção pelos clientes</p></div>
+          <div className="card p-6"><p className="label">Sessões realizadas</p><p className="font-serif text-3xl font-semibold text-cream mt-1">{sessoesRealizadas ?? 0}</p><p className="mt-2 text-xs text-muted">entrega ao vivo</p></div>
+          <div className="card p-6"><p className="label">Saldo de sessões</p><p className="font-serif text-3xl font-semibold text-cream mt-1">{saldoSessoes}</p><p className="mt-2 text-xs text-muted">créditos disponíveis (todos os clientes)</p></div>
+        </div>
+
+        {/* Consultor & Sucesso (Fase 5) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+          <Link href="/admin/consultor" className="card p-6 hover:border-goldline transition-colors"><p className="label">Conversas (7 dias)</p><p className="font-serif text-3xl font-semibold text-gold mt-1">{convWeek ?? 0}</p><p className="mt-2 text-xs text-muted">Consultor do Programa</p></Link>
+          <Link href="/admin/roi" className="card p-6 hover:border-goldline transition-colors"><p className="label">ROI a publicar</p><p className="font-serif text-3xl font-semibold text-cream mt-1">{roiPending ?? 0}</p><p className="mt-2 text-xs text-muted">relatórios em rascunho</p></Link>
+        </div>
+
+        {/* Ações do Dia + Próximas */}
+        <div className="grid md:grid-cols-2 gap-5 mb-5">
+          <div className="card p-6 border-goldline bg-[rgba(0, 122, 148,.05)]">
+            <p className="text-[13px] uppercase tracking-[.24em] text-gold mb-3">Ações do Dia</p>
+            {acoes.length === 0 ? <p className="text-sm text-muted">Nada urgente — pipeline saudável.</p> : (
+              <ul className="space-y-2">
+                {acoes.map((a, i) => (
+                  <li key={i}>
+                    <Link href={a.href} className="flex items-center gap-2 text-sm text-cream hover:text-gold">
+                      <span className={`shrink-0 ${a.tag === "vencida" ? "badge inline-flex text-[11px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-red-400 border-red-500/40 bg-red-500/10" : a.tag === "hoje" ? "badge-teal" : "badge-muted"}`}>{a.tag}</span>
+                      <span className="flex-1">{a.text}</span><span className="text-muted2">→</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        ))}
-      </div>
 
-      {/* Copiloto executivo (IA) */}
-      <div className="mb-5">
-        <AiAssist context={dashContext} title="Copiloto executivo" actions={[
-          { label: "Insights do dia", task: "A partir do pipeline abaixo, gere 3 insights executivos e 3 ações prioritárias para hoje. Bullets curtos e diretos." },
-          { label: "Resumo para reunião", task: "Escreva um resumo executivo do momento comercial (pipeline, riscos, foco) em 1 parágrafo, pronto para uma reunião de liderança." },
-          { label: "Onde estou perdendo dinheiro?", task: "Aponte os gargalos do funil e onde há mais valor parado ou em risco, com a ação recomendada para cada." },
-        ]} />
-      </div>
-
-      {/* Método (Fase 4b): adoção do Playbook + entrega ao vivo */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-        <Link href="/admin/estudio" className="card p-6 hover:border-goldline transition-colors">
-          <p className="label">Receitas publicadas</p><p className="font-serif text-3xl font-semibold text-cream mt-1">{recipesPub ?? 0}</p><p className="mt-2 text-xs text-muted">Playbook · Estúdio do Método</p>
-        </Link>
-        <div className="card p-6"><p className="label">Receitas concluídas</p><p className="font-serif text-3xl font-semibold text-gold mt-1">{conclusoes ?? 0}</p><p className="mt-2 text-xs text-muted">adoção pelos clientes</p></div>
-        <div className="card p-6"><p className="label">Sessões realizadas</p><p className="font-serif text-3xl font-semibold text-cream mt-1">{sessoesRealizadas ?? 0}</p><p className="mt-2 text-xs text-muted">entrega ao vivo</p></div>
-        <div className="card p-6"><p className="label">Saldo de sessões</p><p className="font-serif text-3xl font-semibold text-cream mt-1">{saldoSessoes}</p><p className="mt-2 text-xs text-muted">créditos disponíveis (todos os clientes)</p></div>
-      </div>
-
-      {/* Consultor & Sucesso (Fase 5) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-        <Link href="/admin/consultor" className="card p-6 hover:border-goldline transition-colors"><p className="label">Conversas (7 dias)</p><p className="font-serif text-3xl font-semibold text-gold mt-1">{convWeek ?? 0}</p><p className="mt-2 text-xs text-muted">Consultor do Programa</p></Link>
-        <Link href="/admin/roi" className="card p-6 hover:border-goldline transition-colors"><p className="label">ROI a publicar</p><p className="font-serif text-3xl font-semibold text-cream mt-1">{roiPending ?? 0}</p><p className="mt-2 text-xs text-muted">relatórios em rascunho</p></Link>
-      </div>
-
-      {/* Ações do Dia + Próximas */}
-      <div className="grid md:grid-cols-2 gap-5 mb-5">
-        <div className="card p-6 border-goldline bg-[rgba(79, 31, 255,.05)]">
-          <p className="text-[11px] uppercase tracking-[.24em] text-gold mb-3">Ações do Dia</p>
-          {acoes.length === 0 ? <p className="text-sm text-muted">Nada urgente — pipeline saudável.</p> : (
-            <ul className="space-y-2">
-              {acoes.map((a, i) => (
-                <li key={i}>
-                  <Link href={a.href} className="flex items-center gap-2 text-sm text-cream hover:text-gold">
-                    <span className={`shrink-0 ${a.tag === "vencida" ? "badge inline-flex text-[10px] uppercase tracking-[.14em] px-2.5 py-1 rounded-full border text-red-400 border-red-500/40 bg-red-500/10" : a.tag === "hoje" ? "badge-teal" : "badge-muted"}`}>{a.tag}</span>
-                    <span className="flex-1">{a.text}</span><span className="text-muted2">→</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="card p-6">
+            <p className="text-[13px] uppercase tracking-[.24em] text-muted2 mb-3">Próximas tarefas e ações · 14 dias</p>
+            {proximas.length === 0 ? <p className="text-sm text-muted2">Nada agendado para os próximos 14 dias.</p> : (
+              <ul className="space-y-2">
+                {proximas.slice(0, 8).map((p, i) => (
+                  <li key={i}>
+                    <Link href={p.href} className="flex items-center gap-2 text-sm text-muted hover:text-gold">
+                      <span className="text-[13px] text-muted2 w-14 shrink-0 font-mono">{new Date(p.date + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>
+                      <span className={`shrink-0 ${p.tag === "deal" ? "badge-gold" : "badge-muted"}`}>{p.tag}</span>
+                      <span className="flex-1 text-cream">{p.text}</span>
+                    </Link>
+                  </li>
+                ))}
+                {proximas.length > 8 && <li className="text-xs text-muted2 pl-1">+{proximas.length - 8} mais…</li>}
+              </ul>
+            )}
+          </div>
         </div>
 
-        <div className="card p-6">
-          <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-3">Próximas tarefas e ações · 14 dias</p>
-          {proximas.length === 0 ? <p className="text-sm text-muted2">Nada agendado para os próximos 14 dias.</p> : (
-            <ul className="space-y-2">
-              {proximas.slice(0, 8).map((p, i) => (
-                <li key={i}>
-                  <Link href={p.href} className="flex items-center gap-2 text-sm text-muted hover:text-gold">
-                    <span className="text-[11px] text-muted2 w-14 shrink-0 font-mono">{new Date(p.date + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>
-                    <span className={`shrink-0 ${p.tag === "deal" ? "badge-gold" : "badge-muted"}`}>{p.tag}</span>
-                    <span className="flex-1 text-cream">{p.text}</span>
-                  </Link>
-                </li>
-              ))}
-              {proximas.length > 8 && <li className="text-xs text-muted2 pl-1">+{proximas.length - 8} mais…</li>}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      {/* Análise por marca: separada × integrada */}
-      <div className="card p-6 mb-5">
-        <div className="flex items-center justify-between mb-4">
-          <p className="label">Pipeline por marca — separado × integrado</p>
-          <p className="text-sm text-muted">Integrado (total): <span className="text-gold font-mono">{brl(integrated)}</span></p>
-        </div>
-        {brandRows.length === 0 ? <p className="text-sm text-muted2">Sem valores alocados no pipeline ativo.</p> : (
-          <div className="space-y-2">
-            {brandRows.map((r) => {
-              const pct = integrated ? Math.round((r.valor / integrated) * 100) : 0;
-              return (
-                <div key={r.brand} className="flex items-center gap-3">
-                  <span className="w-32 text-sm text-muted">{r.label}</span>
-                  <div className="flex-1 h-2 rounded-full bg-navy3 overflow-hidden">
-                    <div className="h-full bg-gold" style={{ width: `${pct}%` }} />
+        {/* Análise por marca: separada × integrada */}
+        <div className="card p-6 mb-5">
+          <div className="flex items-center justify-between mb-4">
+            <p className="label">Pipeline por marca — separado × integrado</p>
+            <p className="text-sm text-muted">Integrado (total): <span className="text-gold font-mono">{brl(integrated)}</span></p>
+          </div>
+          {brandRows.length === 0 ? <p className="text-sm text-muted2">Sem valores alocados no pipeline ativo.</p> : (
+            <div className="space-y-2">
+              {brandRows.map((r) => {
+                const pct = integrated ? Math.round((r.valor / integrated) * 100) : 0;
+                return (
+                  <div key={r.brand} className="flex items-center gap-3">
+                    <span className="w-32 text-sm text-muted">{r.label}</span>
+                    <div className="flex-1 h-2 rounded-full bg-navy3 overflow-hidden">
+                      <div className="h-full bg-gold" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="w-28 text-right font-mono text-sm text-cream">{brl(r.valor)}</span>
+                    <span className="w-10 text-right text-xs text-muted2">{pct}%</span>
                   </div>
-                  <span className="w-28 text-right font-mono text-sm text-cream">{brl(r.valor)}</span>
-                  <span className="w-10 text-right text-xs text-muted2">{pct}%</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-      {/* Charts */}
-      <div className="mb-5"><DashboardCharts funnel={funnel} weekly={weekly} byIcp={byIcp} split={split} /></div>
+        {/* Charts */}
+        <div className="mb-5"><DashboardCharts funnel={funnel} weekly={weekly} byIcp={byIcp} split={split} /></div>
 
-      {/* Feed */}
-      <div className="card p-6">
-        <p className="label mb-4">Atividade recente</p>
-        <ul className="space-y-3">
-          {feed.map((f) => (
-            <li key={f.id} className="flex items-baseline gap-3 text-sm">
-              <span className="text-[11px] text-muted2 w-28 shrink-0">{new Date(f.when).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
-              <span className="text-muted2">{f.who}</span>
-              {f.href ? <Link href={f.href} className="text-cream hover:text-gold">{f.text}</Link> : <span className="text-cream">{f.text}</span>}
-            </li>
-          ))}
-          {feed.length === 0 && <li className="text-sm text-muted2">Sem atividades ainda.</li>}
-        </ul>
+        {/* Feed */}
+        <div className="card p-6">
+          <p className="label mb-4">Atividade recente</p>
+          <ul className="space-y-3">
+            {feed.map((f) => (
+              <li key={f.id} className="flex items-baseline gap-3 text-sm">
+                <span className="text-[13px] text-muted2 w-28 shrink-0">{new Date(f.when).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+                <span className="text-muted2">{f.who}</span>
+                {f.href ? <Link href={f.href} className="text-cream hover:text-gold">{f.text}</Link> : <span className="text-cream">{f.text}</span>}
+              </li>
+            ))}
+            {feed.length === 0 && <li className="text-sm text-muted2">Sem atividades ainda.</li>}
+          </ul>
+        </div>
       </div>
-    </div>
+    </ContentArea>
   );
 }

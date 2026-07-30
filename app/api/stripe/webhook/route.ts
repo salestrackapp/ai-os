@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import crypto from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
+import { ativarPorPagamento } from "@/lib/academy/matricula";
 import { notifyAdmin } from "@/lib/whatsapp";
 import { emailAdmin } from "@/lib/email";
 import { brl } from "@/lib/types";
@@ -26,6 +27,18 @@ export async function POST(req: NextRequest) {
   const type = evt.type ?? "";
   const obj = evt.data?.object ?? {};
   const sb = createServiceClient();
+
+  // Academy: a sessão de checkout pode ser de um curso. Resolve antes de cair no fluxo de
+  // faturas de contrato — senão o aluno paga e continua sem acesso, em silêncio.
+  if (type === "checkout.session.completed" || type === "invoice.paid") {
+    const ref = String(obj.id ?? "");
+    const { data: pedido } = await sb.from("academy_orders")
+      .select("id").eq("provider_ref", ref).maybeSingle();
+    if (pedido) {
+      await ativarPorPagamento(pedido.id, "stripe");
+      return NextResponse.json({ received: true, academy: true });
+    }
+  }
 
   if (type === "invoice.paid") {
     await sb.from("invoices").update({ status: "paga", paid_at: new Date().toISOString() }).eq("stripe_invoice_id", String(obj.id));

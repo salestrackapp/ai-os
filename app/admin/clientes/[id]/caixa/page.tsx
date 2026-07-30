@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { googleConfigured, listGmail } from "@/lib/google";
-import { ContentArea, PageHeader, Card } from "@/components/ds";
+import { ContentArea, PageHeader, Card, botaoClasses } from "@/components/ds";
 import { Breadcrumbs } from "@/components/ds/nav";
 import { Icon } from "@/components/ui/icons";
 import { sendClientEmail } from "./actions";
@@ -11,7 +11,7 @@ import { sendClientEmail } from "./actions";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-const lbl = "mb-1.5 block font-montserrat text-[12px] font-medium text-[color:var(--fg-2)]";
+const lbl = "mb-1.5 block font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]";
 const inp = "w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 py-2 font-montserrat text-sm text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]";
 
 export default async function CaixaCliente({ params }: { params: Promise<{ id: string }> }) {
@@ -50,7 +50,7 @@ export default async function CaixaCliente({ params }: { params: Promise<{ id: s
         <Card className="!p-0 overflow-hidden">
           <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
             <p className="ds-eyebrow !mb-0">Conversas recentes</p>
-            <span className="font-jbmono text-[11px] text-[color:var(--fg-4)]">{threads.length} no Gmail</span>
+            <span className="font-jbmono text-[13px] text-[color:var(--fg-4)]">{threads.length} no Gmail</span>
           </div>
           {emails.length === 0 ? (
             <div className="p-6"><p className="ds-small">Este cliente ainda não tem contatos com e-mail. Cadastre um contato na ficha para ver a conversa aqui.</p></div>
@@ -62,10 +62,10 @@ export default async function CaixaCliente({ params }: { params: Promise<{ id: s
                 <li key={t.ref} className="px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-montserrat text-[13px] font-medium text-[color:var(--fg-1)]">{t.summary}</p>
-                      <p className="truncate font-montserrat text-[12px] text-[color:var(--fg-3)]">{t.from ?? "—"}</p>
+                      <p className="truncate font-montserrat text-[14px] font-medium text-[color:var(--fg-1)]">{t.summary}</p>
+                      <p className="truncate font-montserrat text-[13px] text-[color:var(--fg-3)]">{t.from ?? "—"}</p>
                     </div>
-                    <span className="shrink-0 font-jbmono text-[10px] text-[color:var(--fg-4)]">{t.when ? new Date(t.when).toLocaleDateString("pt-BR") : ""}</span>
+                    <span className="shrink-0 font-jbmono text-[11px] text-[color:var(--fg-4)]">{t.when ? new Date(t.when).toLocaleDateString("pt-BR") : ""}</span>
                   </div>
                 </li>
               ))}
@@ -84,7 +84,7 @@ export default async function CaixaCliente({ params }: { params: Promise<{ id: s
             </div>
             <div><label className={lbl} htmlFor="subject">Assunto</label><input id="subject" name="subject" defaultValue={defaultSubject} className={inp} /></div>
             <div><label className={lbl} htmlFor="body">Mensagem</label><textarea id="body" name="body" rows={9} defaultValue={defaultBody} className={inp} /></div>
-            <button className="ds-focus inline-flex h-10 w-full items-center justify-center gap-2 rounded-ds-input bg-brand px-4 font-montserrat text-sm font-semibold text-white shadow-ds-brand hover:bg-brand-hover">
+            <button className={botaoClasses({ className: "w-full" })}>
               <Icon name="sparkles" size={15} /> {gOn ? "Enviar pela minha caixa do Gmail" : "Registrar para envio manual"}
             </button>
             <p className="ds-small !mt-2">Sai da sua conta do Gmail (remetente configurado no Console). O corpo não é armazenado — só o registro do envio.</p>

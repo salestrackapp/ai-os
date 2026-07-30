@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ProposalBuilder } from "@/components/proposals/ProposalBuilder";
 import type { CatalogItem } from "@/lib/types";
+import { ContentArea } from "@/components/ds";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +16,12 @@ export default async function NovaProposta({ searchParams }: { searchParams: Pro
   ]);
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6"><Link href="/admin/propostas" className="text-muted2 hover:text-gold text-sm">← Propostas</Link></div>
-      <h1 className="font-serif text-4xl font-semibold mb-6">Nova proposta</h1>
-      <ProposalBuilder catalog={(catalog as CatalogItem[]) ?? []} deals={(deals as { id: string; title: string; org_id: string | null }[]) ?? []} orgs={(orgs as { id: string; name: string }[]) ?? []} initialDealId={deal} />
-    </div>
+    <ContentArea>
+      <div>
+        <div className="flex items-center gap-3 mb-6"><Link href="/admin/propostas" className="text-muted2 hover:text-gold text-sm">← Propostas</Link></div>
+        <h1 className="font-serif text-4xl font-semibold mb-6">Nova proposta</h1>
+        <ProposalBuilder catalog={(catalog as CatalogItem[]) ?? []} deals={(deals as { id: string; title: string; org_id: string | null }[]) ?? []} orgs={(orgs as { id: string; name: string }[]) ?? []} initialDealId={deal} />
+      </div>
+    </ContentArea>
   );
 }

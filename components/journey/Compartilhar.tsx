@@ -18,7 +18,7 @@ export function Compartilhar({ orgId, url, titulo = "sua entrega", compact = fal
       <button type="button" onClick={copiar} className={btn}>{copied ? "copiado!" : "Copiar link"}</button>
       <button type="button" disabled={pending} onClick={wa} className={btn}>WhatsApp</button>
       <button type="button" disabled={pending} onClick={mail} className={btn}>E-mail</button>
-      {msg && <span className={`font-montserrat text-[11px] ${msg.tone === "ok" ? "text-[color:var(--brand-deep)]" : "text-[#B42318]"}`}>{msg.text}</span>}
+      {msg && <span className={`font-montserrat text-[13px] ${msg.tone === "ok" ? "text-[color:var(--brand-deep)]" : "text-[#B42318]"}`}>{msg.text}</span>}
     </div>
   );
 }

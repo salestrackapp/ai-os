@@ -15,8 +15,8 @@ export const dynamic = "force-dynamic";
 type Phase = { n: number; titulo: string; meses: number; descricao: string };
 const DEL_STATUS = Object.keys(DELIVERABLE_STATUS_LABELS);
 const inputCls = "ds-focus w-full rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-3 py-2 font-montserrat text-sm text-[color:var(--fg-1)]";
-const saveBtn = "ds-focus inline-flex h-9 items-center rounded-ds-input bg-brand px-3 font-montserrat text-[13px] font-semibold text-white hover:bg-brand-hover";
-const ghostBtn = "ds-focus rounded-[8px] border border-hairline-strong px-2 py-1 font-montserrat text-[12px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]";
+const saveBtn = "ds-focus inline-flex h-9 items-center rounded-ds-input bg-brand px-3 font-montserrat text-[14px] font-semibold text-white hover:bg-brand-hover";
+const ghostBtn = "ds-focus rounded-[8px] border border-hairline-strong px-2 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]";
 
 export default async function ProgramEditor({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -37,7 +37,7 @@ export default async function ProgramEditor({ params }: { params: Promise<{ id: 
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Programas", href: "/admin/programas" }, { label: "Editar" }]} className="mb-4" />
       <PageHeader eyebrow="Clientes" title={p.name} subtitle={`Cliente: ${org?.name ?? "—"}`}
         actions={<div className="flex items-center gap-2">
-          <Link href={`/admin/programas/${id}`} className="ds-focus inline-flex h-10 items-center gap-1.5 rounded-ds-input border border-hairline px-3 font-montserrat text-[13px] font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="rocket" size={15} /> Operação</Link>
+          <Link href={`/admin/programas/${id}`} className="ds-focus inline-flex h-10 items-center gap-1.5 rounded-ds-input border border-hairline px-3 font-montserrat text-[14px] font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="rocket" size={15} /> Operação</Link>
         </div>} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -58,11 +58,11 @@ export default async function ProgramEditor({ params }: { params: Promise<{ id: 
                   <li key={i} className="rounded-ds-card border border-hairline bg-[var(--bg-2)]">
                     <details>
                       <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-2.5">
-                        <span className="min-w-0"><span className="font-montserrat text-[13px] font-semibold text-[color:var(--fg-1)]">{i + 1}. {ph.titulo}</span> <span className="ds-small">· {ph.meses} {ph.meses === 1 ? "mês" : "meses"}</span></span>
+                        <span className="min-w-0"><span className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">{i + 1}. {ph.titulo}</span> <span className="ds-small">· {ph.meses} {ph.meses === 1 ? "mês" : "meses"}</span></span>
                         <span className="flex items-center gap-1">
                           <form action={fMovePhase.bind(null, id, i, -1)}><button className={ghostBtn} title="Subir">↑</button></form>
                           <form action={fMovePhase.bind(null, id, i, 1)}><button className={ghostBtn} title="Descer">↓</button></form>
-                          <form action={fRemovePhase.bind(null, id, i)}><button className="ds-focus rounded-[8px] px-2 py-1 font-montserrat text-[12px] text-[color:var(--danger)] hover:bg-[var(--danger-tint)]" title="Remover">×</button></form>
+                          <form action={fRemovePhase.bind(null, id, i)}><button className="ds-focus rounded-[8px] px-2 py-1 font-montserrat text-[13px] text-[color:var(--danger)] hover:bg-[var(--danger-tint)]" title="Remover">×</button></form>
                         </span>
                       </summary>
                       <form action={fUpdatePhase.bind(null, id, i)} className="space-y-2 border-t border-hairline px-4 py-3">
@@ -96,10 +96,10 @@ export default async function ProgramEditor({ params }: { params: Promise<{ id: 
                   <li key={d.id} className="rounded-ds-card border border-hairline bg-[var(--bg-2)]">
                     <details>
                       <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-2.5">
-                        <span className="min-w-0"><span className="font-montserrat text-[13px] text-[color:var(--fg-1)]">{d.title}</span>{d.frente && <span className="ds-small"> · {d.frente}</span>}</span>
+                        <span className="min-w-0"><span className="font-montserrat text-[14px] text-[color:var(--fg-1)]">{d.title}</span>{d.frente && <span className="ds-small"> · {d.frente}</span>}</span>
                         <span className="flex items-center gap-2">
                           <Badge tone={d.status === "entregue" ? "success" : d.status === "bloqueado" ? "danger" : "neutral"}>{DELIVERABLE_STATUS_LABELS[d.status] ?? d.status}</Badge>
-                          <form action={fRemoveDeliverable.bind(null, id, d.id)}><button className="ds-focus rounded-[8px] px-2 py-1 font-montserrat text-[12px] text-[color:var(--danger)] hover:bg-[var(--danger-tint)]" title="Remover">×</button></form>
+                          <form action={fRemoveDeliverable.bind(null, id, d.id)}><button className="ds-focus rounded-[8px] px-2 py-1 font-montserrat text-[13px] text-[color:var(--danger)] hover:bg-[var(--danger-tint)]" title="Remover">×</button></form>
                         </span>
                       </summary>
                       <form action={fUpdateDeliverable.bind(null, id, d.id)} className="space-y-2 border-t border-hairline px-4 py-3">

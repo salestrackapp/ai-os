@@ -3,8 +3,9 @@ import type { ResourceDef } from "./types";
 import { signalsResource } from "./resources/signals";
 import { programaResource } from "./resources/programa";
 import { ofertaResource } from "./resources/oferta";
+import { academyReferenciasResource } from "./resources/academy-referencias";
 
-const ALL: ResourceDef[] = [signalsResource as ResourceDef, programaResource as ResourceDef, ofertaResource as ResourceDef];
+const ALL: ResourceDef[] = [signalsResource as ResourceDef, programaResource as ResourceDef, ofertaResource as ResourceDef, academyReferenciasResource as ResourceDef];
 
 const BY_NAME: Record<string, ResourceDef> = Object.fromEntries(ALL.map((r) => [r.name, r]));
 

@@ -41,7 +41,7 @@ export default async function DiagnosticoAdmin({ params }: { params: Promise<{ i
           <Badge tone={intake.status === "enviado" ? "success" : "warn"}>{intake.status === "enviado" ? "enviado pelo cliente" : "aguardando preenchimento"}</Badge>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <code className="min-w-0 flex-1 truncate rounded-ds-input border border-hairline bg-[var(--bg-2)] px-3 py-2.5 font-jbmono text-[12px] text-[color:var(--fg-2)]">{url}</code>
+          <code className="min-w-0 flex-1 truncate rounded-ds-input border border-hairline bg-[var(--bg-2)] px-3 py-2.5 font-jbmono text-[13px] text-[color:var(--fg-2)]">{url}</code>
           <CopyButton text={url} />
           <a href={url} target="_blank" rel="noopener noreferrer" className="ds-focus inline-flex h-10 items-center gap-2 rounded-ds-input border border-hairline-strong bg-[var(--bg-1)] px-4 font-montserrat text-sm font-medium text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]"><Icon name="activity" size={14} /> Abrir</a>
         </div>
@@ -62,7 +62,7 @@ export default async function DiagnosticoAdmin({ params }: { params: Promise<{ i
                 <dl className="divide-y divide-[color:var(--border)]">
                   {comValor.map((c) => (
                     <div key={c.id} className="px-4 py-3">
-                      <dt className="font-montserrat text-[12px] font-medium text-[color:var(--fg-3)]">{c.label}</dt>
+                      <dt className="font-montserrat text-[13px] font-medium text-[color:var(--fg-3)]">{c.label}</dt>
                       <dd className="mt-0.5 whitespace-pre-wrap font-montserrat text-[13.5px] text-[color:var(--fg-1)]">{d[c.id]}</dd>
                     </div>
                   ))}

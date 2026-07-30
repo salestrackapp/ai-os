@@ -11,7 +11,7 @@ export function FirstSteps({ surface, guide }: { surface: "admin" | "portal"; gu
   if (guide.dismissed) {
     return (
       <form action={reopenGuide.bind(null, surface)} className="mb-6">
-        <button className="ds-focus inline-flex items-center gap-1.5 font-montserrat text-[12px] font-medium text-[color:var(--fg-3)] hover:text-[color:var(--brand)]">
+        <button className="ds-focus inline-flex items-center gap-1.5 font-montserrat text-[13px] font-medium text-[color:var(--fg-3)] hover:text-[color:var(--brand)]">
           <Icon name="rocket" size={13} /> Reabrir os primeiros passos
         </button>
       </form>
@@ -25,10 +25,10 @@ export function FirstSteps({ surface, guide }: { surface: "admin" | "portal"; gu
         <div className="flex items-center gap-2">
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-[9px] bg-[var(--tile)] text-[color:var(--brand)]"><Icon name="rocket" size={15} /></span>
           <p className="font-montserrat text-[15px] font-semibold text-[color:var(--fg-1)]">Primeiros passos</p>
-          <span className="font-jbmono text-[11px] text-[color:var(--fg-3)]">{doneCount}/{guide.steps.length}</span>
+          <span className="font-jbmono text-[13px] text-[color:var(--fg-3)]">{doneCount}/{guide.steps.length}</span>
         </div>
         <form action={dismissGuide.bind(null, surface)}>
-          <button className="ds-focus rounded-[8px] px-2 py-1 font-montserrat text-[12px] text-[color:var(--fg-3)] hover:bg-[var(--bg-2)] hover:text-[color:var(--fg-1)]">Dispensar</button>
+          <button className="ds-focus rounded-[8px] px-2 py-1 font-montserrat text-[13px] text-[color:var(--fg-3)] hover:bg-[var(--bg-2)] hover:text-[color:var(--fg-1)]">Dispensar</button>
         </form>
       </div>
       <div className="mt-3 h-1.5 w-full bg-[var(--gray-100)]">
@@ -40,11 +40,11 @@ export function FirstSteps({ surface, guide }: { surface: "admin" | "portal"; gu
             <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${s.done ? "border-transparent bg-[color:var(--success)] text-white" : "border-hairline-strong text-transparent"}`}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
             </span>
-            <Link href={s.href} className={`min-w-0 flex-1 font-montserrat text-[13px] ${s.done ? "text-[color:var(--fg-3)] line-through" : "text-[color:var(--fg-1)] hover:text-[color:var(--brand)]"}`}>{s.label}</Link>
+            <Link href={s.href} className={`min-w-0 flex-1 font-montserrat text-[14px] ${s.done ? "text-[color:var(--fg-3)] line-through" : "text-[color:var(--fg-1)] hover:text-[color:var(--brand)]"}`}>{s.label}</Link>
             {!s.done && (
               <div className="flex items-center gap-2">
-                <Link href={s.href} className="font-montserrat text-[12px] font-medium text-[color:var(--brand)] hover:underline">abrir</Link>
-                <form action={markGuideStep.bind(null, surface, s.key)}><button className="ds-focus rounded-[8px] border border-hairline-strong px-2 py-1 font-montserrat text-[11px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">marcar</button></form>
+                <Link href={s.href} className="font-montserrat text-[13px] font-medium text-[color:var(--brand)] hover:underline">abrir</Link>
+                <form action={markGuideStep.bind(null, surface, s.key)}><button className="ds-focus rounded-[8px] border border-hairline-strong px-2 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">marcar</button></form>
               </div>
             )}
           </li>

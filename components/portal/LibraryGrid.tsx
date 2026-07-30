@@ -24,8 +24,8 @@ export function LibraryGrid({ items }: { items: Item[] }) {
           <div key={i.id} className="card p-5 flex flex-col">
             <span className="badge-muted self-start mb-3">{ASSET_TYPE_LABELS[i.type] ?? i.type}</span>
             <p className="font-serif text-lg font-semibold flex-1">{i.title}</p>
-            {i.tags.length > 0 && <div className="flex flex-wrap gap-1 mt-2">{i.tags.slice(0, 4).map((t) => <span key={t} className="text-[10px] text-muted2 border border-line rounded px-1.5 py-0.5">{t}</span>)}</div>}
-            <p className="text-[11px] text-muted2 mt-2">{new Date(i.created_at).toLocaleDateString("pt-BR")}</p>
+            {i.tags.length > 0 && <div className="flex flex-wrap gap-1 mt-2">{i.tags.slice(0, 4).map((t) => <span key={t} className="text-[11px] text-muted2 border border-line rounded px-1.5 py-0.5">{t}</span>)}</div>}
+            <p className="text-[13px] text-muted2 mt-2">{new Date(i.created_at).toLocaleDateString("pt-BR")}</p>
             {i.url && <a href={i.url} target="_blank" className="btn-gold justify-center mt-3">Abrir / baixar</a>}
           </div>
         ))}

@@ -25,7 +25,7 @@ async function salestrackOrgId(sb: ReturnType<typeof createServiceClient>): Prom
  * conversa channel=whatsapp, external_ref=telefone; mensagem in dedup por providerRef.
  * Auto-vincula contato/cliente pelo telefone (etiqueta CRM). Idempotente. Graceful. Server-only.
  */
-export async function ingestWhatsAppInbound(msg: WaInbound): Promise<{ conversaId: string | null; nova: boolean }> {
+export async function ingestWhatsAppInbound(msg: WaInbound): Promise<{ conversaId: string | null; nova: boolean; mensagemId?: string | null }> {
   const sb = createServiceClient();
   const orgId = await salestrackOrgId(sb);
   if (!orgId) return { conversaId: null, nova: false };
@@ -69,14 +69,14 @@ export async function ingestWhatsAppInbound(msg: WaInbound): Promise<{ conversaI
     const { data: exists } = await sb.from("rel_mensagens").select("id").eq("external_ref", msg.providerRef).maybeSingle();
     if (exists) return { conversaId, nova: false };
   }
-  const { error: insErr } = await sb.from("rel_mensagens").insert({
+  const { data: nova_msg, error: insErr } = await sb.from("rel_mensagens").insert({
     conversa_id: conversaId, direction: "in", corpo,
     media: msg.media ?? null, status_entrega: "recebido",
     external_ref: msg.providerRef ?? null, provider_ref: msg.providerRef ?? null, created_at: at,
-  });
+  }).select("id").maybeSingle();
   if (insErr) { console.error("[whatsapp] falha ao gravar rel_mensagens:", insErr.message, { conversaId, providerRef: msg.providerRef }); }
   await auditService("rel.wa_inbound", "rel_conversas", conversaId, { phone, nova, erro: insErr?.message ?? null }, orgId);
-  return { conversaId, nova };
+  return { conversaId, nova, mensagemId: (nova_msg?.id as string | undefined) ?? null };
 }
 
 /**

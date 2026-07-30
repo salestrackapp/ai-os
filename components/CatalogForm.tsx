@@ -9,7 +9,7 @@ export function CatalogForm({ item, action, title }: {
 }) {
   return (
     <div className="max-w-2xl">
-      <p className="text-[11px] uppercase tracking-[.24em] text-muted2 mb-1">Catálogo</p>
+      <p className="text-[13px] uppercase tracking-[.24em] text-muted2 mb-1">Catálogo</p>
       <h1 className="font-serif text-4xl font-semibold mb-8">{title}</h1>
       <form action={action} className="card p-8 space-y-5">
         <div>
@@ -17,7 +17,7 @@ export function CatalogForm({ item, action, title }: {
           <input className="input" name="name" defaultValue={item?.name} required />
         </div>
         <div className="border-y border-line py-5">
-          <p className="text-[11px] uppercase tracking-[.2em] text-gold mb-3">Conteúdo do serviço</p>
+          <p className="text-[13px] uppercase tracking-[.2em] text-gold mb-3">Conteúdo do serviço</p>
           <ServiceContentEditor defaultValue={item?.description ?? ""} />
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -61,10 +61,10 @@ export function CatalogForm({ item, action, title }: {
         </div>
         <div className="flex gap-8 pt-2">
           <label className="flex items-center gap-2 text-sm text-muted">
-            <input type="checkbox" name="active" defaultChecked={item?.active ?? true} className="accent-[#4F1FFF]" /> Ativo
+            <input type="checkbox" name="active" defaultChecked={item?.active ?? true} className="accent-[#007A94]" /> Ativo
           </label>
           <label className="flex items-center gap-2 text-sm text-muted">
-            <input type="checkbox" name="needs_review" defaultChecked={item?.needs_review ?? false} className="accent-[#4F1FFF]" /> Preço a revisar
+            <input type="checkbox" name="needs_review" defaultChecked={item?.needs_review ?? false} className="accent-[#007A94]" /> Preço a revisar
           </label>
         </div>
         <div className="pt-4 flex gap-3">

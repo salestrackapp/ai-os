@@ -5,6 +5,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { currentMembership } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { generateDossier, generateOutreach, classifyResponse } from "@/lib/prospecting/agents";
+import { registrarSinal } from "@/lib/prospecting/engajamento";
+import { dispararGatilho } from "@/lib/agents/gatilhos";
 import { enrollProspect, pauseEnrollments, deliverApproved, processDueEnrollments } from "@/lib/prospecting/cadence";
 import { ingestProspectTimeline } from "@/lib/prospecting/timeline";
 import { addToNurture } from "@/lib/mailerlite";
@@ -56,26 +58,88 @@ export async function registerResponse(prospectId: string, formData: FormData) {
   await pauseEnrollments(prospectId, cls.label === "positiva" || cls.label === "encaminhou" ? "respondida" : "pausada");
   const newStatus = cls.label === "positiva" ? "respondeu" : cls.label === "nao" ? "descartado" : cls.label === "fora_do_momento" ? "respondeu" : "respondeu";
   await svc.from("prospects").update({ status: newStatus }).eq("id", prospectId);
+  // Responder é o sinal mais forte antes de marcar reunião — e quem disse "não" registra a saída,
+  // que zera o engajamento em vez de deixar a pessoa na fila quente por inércia.
+  await registrarSinal({
+    tipo: cls.label === "nao" ? "descadastrou" : "respondeu",
+    prospectId, detalhe: { classificacao: cls.label }, fonte: "resposta",
+  });
+  const { data: pr } = await svc.from("prospects")
+    .select("name, title, prospect_accounts(name)").eq("id", prospectId).maybeSingle();
+  await dispararGatilho("prospect_respondeu", {
+    nome: pr?.name, cargo: pr?.title,
+    empresa: (pr?.prospect_accounts as unknown as { name: string } | null)?.name,
+    resposta: text, classificacao: cls.label,
+  }, { tipo: "prospect", id: prospectId });
+
   await audit("prospect.response", "prospects", prospectId, { label: cls.label }, undefined);
   revalidatePath(`/admin/prospeccao/${prospectId}`);
 }
 
+function slugify(name: string) {
+  const base = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  return (base || "org") + "-" + Math.random().toString(36).slice(2, 8);
+}
+
 export async function convertToDeal(prospectId: string) {
-  const m = await requireAdmin();
+  await requireAdmin();
   const sb = await createClient();
   const { data: p } = await sb.from("prospects").select("*").eq("id", prospectId).single();
   if (!p) throw new Error("Prospect não encontrado.");
   if (p.deal_id) throw new Error("Já convertido.");
+
+  // Organização: reaproveita a que a conta já gerou; só cria na primeira conversão dela.
   let accName = p.name;
-  if (p.account_id) { const { data: a } = await sb.from("prospect_accounts").select("name").eq("id", p.account_id).single(); accName = a?.name ?? accName; }
+  let orgId: string | null = null;
+  if (p.account_id) {
+    const { data: acc } = await sb.from("prospect_accounts").select("name, org_id, icp").eq("id", p.account_id).single();
+    accName = acc?.name ?? accName;
+    orgId = acc?.org_id ?? null;
+    if (!orgId && acc) {
+      const { data: org, error: orgErr } = await sb.from("organizations")
+        .insert({ name: acc.name, slug: slugify(acc.name), status: "prospect", is_salestrack: false })
+        .select("id").single();
+      if (orgErr) throw new Error(orgErr.message);
+      const createdOrgId: string = org.id;
+      orgId = createdOrgId;
+      await sb.from("prospect_accounts").update({ org_id: createdOrgId }).eq("id", p.account_id);
+      await audit("org.create_from_prospect", "organizations", createdOrgId, { prospectId, accountId: p.account_id }, createdOrgId);
+    }
+  }
+
+  // Contato: reaproveita por e-mail dentro da org; só cria se não existir.
+  let contactId: string | null = null;
+  if (p.email && orgId) {
+    const { data: found } = await sb.from("contacts").select("id")
+      .eq("org_id", orgId).eq("email", p.email).is("deleted_at", null).maybeSingle();
+    contactId = found?.id ?? null;
+  }
+  if (!contactId) {
+    const { data: contact, error: cErr } = await sb.from("contacts").insert({
+      org_id: orgId, name: p.name, email: p.email, phone: p.phone,
+      role: p.title, linkedin_url: p.linkedin_url, apollo_id: p.apollo_id,
+    }).select("id").single();
+    if (cErr) throw new Error(cErr.message);
+    contactId = contact.id;
+  }
+
+  const icp = p.icp === "icp1" ? 1 : p.icp === "icp2" ? 2 : p.icp === "icp3" ? 3 : null;
   const { data: deal, error } = await sb.from("deals").insert({
     title: `${accName} — ${p.name}`, stage: "qualificado", brand: "andre_kachan",
-    icp: p.icp === "icp1" ? 1 : p.icp === "icp2" ? 2 : p.icp === "icp3" ? 3 : null,
+    org_id: orgId, contact_id: contactId, icp,
     score: p.score, next_step: "Primeira conversa (origem: prospecção)",
   }).select("id").single();
   if (error) throw new Error(error.message);
+
   await sb.from("prospects").update({ deal_id: deal.id, status: "virou_deal" }).eq("id", prospectId);
-  await audit("prospect.convert_deal", "deals", deal.id, { prospectId }, undefined);
+  // O histórico de prospecção não é movido: a view deal_timeline o alcança via prospects.deal_id,
+  // então ele aparece no negócio sem sumir da ficha do prospect.
+  await sb.from("activities").insert({
+    org_id: orgId, kind: "origem", ref_table: "deals", ref_id: deal.id,
+    payload: { event: "convertido_da_prospeccao", prospect_id: prospectId },
+  });
+  await audit("prospect.convert_deal", "deals", deal.id, { prospectId, orgId, contactId }, orgId ?? undefined);
   revalidatePath(`/admin/prospeccao/${prospectId}`);
   revalidatePath("/admin/crm");
 }
