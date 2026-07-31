@@ -9,12 +9,30 @@ import { cn } from "@/lib/ds/cn";
 import { StatusDot } from "./primitives";
 import { Button } from "./Button";
 
-export function CopilotCard({ agent = "Copiloto", status = "ativo", finding, actionLabel, onAction, metric, className }: {
+/**
+ * O fundo do card carrega a gravidade.
+ *
+ * Sem isto, seis achados lado a lado ficam idênticos — e uma fatura vencida há 19 dias compete em
+ * pé de igualdade com "publicar um relatório de ROI". Hierarquia visual não é enfeite aqui: é o que
+ * decide o que a pessoa olha primeiro.
+ */
+// Os dois tons foram escolhidos pelo contraste com o texto branco que vive em cima deles, não pela
+// aparência: #B91C1C dá 6,5:1 e #9A3412 dá 7,1:1. O laranja mais claro que eu queria usar no
+// "atenção" ficava em 4,0:1 — bonito e ilegível no corpo de 15px.
+const FUNDO: Record<string, string> = {
+  brand: "var(--grad-brand)",
+  grave: "linear-gradient(135deg, #7F1D1D 0%, #B91C1C 100%)",
+  atencao: "linear-gradient(135deg, #7C2D12 0%, #9A3412 100%)",
+};
+
+export function CopilotCard({ agent = "Copiloto", status = "ativo", finding, actionLabel, onAction, metric, className, tone = "brand" }: {
   agent?: string; status?: string; finding: string; actionLabel?: string;
   onAction?: () => void; metric?: { value: string; label: string }; className?: string;
+  /** brand (padrão) · atencao · grave. Só muda a cor de fundo; a estrutura é a mesma. */
+  tone?: "brand" | "atencao" | "grave";
 }) {
   return (
-    <div className={cn("relative overflow-hidden rounded-ds-card p-5 text-white shadow-ds-brand", className)} style={{ background: "var(--grad-brand)" }}>
+    <div className={cn("relative overflow-hidden rounded-ds-card p-5 text-white shadow-ds-brand", className)} style={{ background: FUNDO[tone] ?? FUNDO.brand }}>
       <span aria-hidden className="absolute right-4 top-4 text-spark">✳</span>
       <div className="flex items-center gap-2 text-white/85">
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white/15">

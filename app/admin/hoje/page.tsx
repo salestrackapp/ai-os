@@ -8,6 +8,7 @@ import { HelpButton } from "@/components/guidance/HelpButton";
 import { FirstSteps } from "@/components/guidance/FirstSteps";
 import { computeGuide } from "@/lib/guidance/first-steps";
 import { countNotificacoes } from "@/lib/relacionamento/notify";
+import { oQuePrecisaDeVoce, type ItemDoDia } from "@/lib/admin/hoje";
 import { DEAL_STAGES, STAGE_LABELS, brl, daysSince, STAGNATION_DAYS, type Deal } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -42,15 +43,35 @@ export default async function Hoje() {
   const stagnant = active.find((d) => { const dd = daysSince(d.last_activity_at); return dd !== null && dd >= STAGNATION_DAYS && ["diagnostico", "proposta", "fechamento"].includes(d.stage); });
   const hotSignal = active.find((d) => d.score >= 20 && ["sinal", "qualificado"].includes(d.stage));
 
-  // 3 ações do dia — tom copiloto (achado + ação)
-  type Acao = { finding: string; label: string; href: string; metric?: { value: string; label: string } };
-  const acoes: Acao[] = [];
-  if (overdue.length) acoes.push({ finding: `Você tem ${overdue.length} ${overdue.length === 1 ? "tarefa vencida" : "tarefas vencidas"} pedindo follow-up.`, label: "Ver tarefas", href: "/admin/tarefas", metric: { value: String(overdue.length), label: "vencidas" } });
-  if (revisaoList.length) acoes.push({ finding: `${revisaoList.length} ${revisaoList.length === 1 ? "entregável aguarda" : "entregáveis aguardam"} sua aprovação antes de ir ao cliente.`, label: "Revisar no Estúdio", href: "/admin/entregaveis", metric: { value: String(revisaoList.length), label: "em revisão" } });
-  if (stagnant) { const dd = daysSince(stagnant.last_activity_at); acoes.push({ finding: `"${stagnant.title}" está parado há ${dd} dias na fase ${STAGE_LABELS[stagnant.stage]}.`, label: "Retomar deal", href: `/admin/crm/${stagnant.id}` }); }
-  if (acoes.length < 3 && hotSignal) acoes.push({ finding: `"${hotSignal.title}" tem score ${hotSignal.score} e ainda não foi abordado.`, label: "Abordar agora", href: `/admin/crm/${hotSignal.id}` });
-  if (acoes.length < 3 && roiList.length) acoes.push({ finding: `${roiList.length} ${roiList.length === 1 ? "relatório de ROI" : "relatórios de ROI"} em rascunho, prontos para revisar e publicar.`, label: "Publicar ROI", href: "/admin/roi", metric: { value: String(roiList.length), label: "a publicar" } });
-  const top3 = acoes.slice(0, 3);
+  /**
+   * O que precisa de você hoje.
+   *
+   * A lista vem inteira de `oQuePrecisaDeVoce()`, que varre cobrança, entregas, caixa, jurídico e
+   * stand-by. Os dois itens abaixo continuam aqui porque dependem de leitura do funil que só esta
+   * tela faz — e nenhum dos dois é urgente, então entram no fim.
+   */
+  const doDia = await oQuePrecisaDeVoce();
+  const extras: ItemDoDia[] = [];
+  if (stagnant) {
+    const dd = daysSince(stagnant.last_activity_at);
+    extras.push({ chave: `parado_${stagnant.id}`, peso: "normal", achado: `"${stagnant.title}" está parado há ${dd} dias na fase ${STAGE_LABELS[stagnant.stage]}.`, acao: "Retomar negócio", href: `/admin/crm/${stagnant.id}`, fonte: "Negócios sem atividade no funil." });
+  }
+  if (hotSignal) {
+    extras.push({ chave: `quente_${hotSignal.id}`, peso: "normal", achado: `"${hotSignal.title}" tem score ${hotSignal.score} e ainda não foi abordado.`, acao: "Abordar agora", href: `/admin/crm/${hotSignal.id}`, fonte: "Sinais de prospecção acumulados." });
+  }
+  if (roiList.length) {
+    extras.push({ chave: "roi_rascunho", peso: "normal", achado: `${roiList.length} relatório(s) de ROI em rascunho, prontos para revisar e publicar.`, acao: "Publicar ROI", href: "/admin/roi", fonte: "Relatórios de ROI não publicados.", metrica: { valor: String(roiList.length), rotulo: "a publicar" } });
+  }
+  const agenda = [...doDia, ...extras];
+  const graves = agenda.filter((i) => i.peso === "grave").length;
+  /**
+   * Seis, não três.
+   *
+   * Cortar em três era uma escolha estética de quando a tela via só tarefa e entregável. Com
+   * cobrança e prazo de cliente na mesma lista, esconder o quarto item significa esconder uma
+   * fatura vencida — e o que fica de fora não deixa de existir por não ser mostrado.
+   */
+  const topo = agenda.slice(0, 6);
 
   // Pipeline em movimento
   const funnel = DEAL_STAGES.map((s) => ({ stage: STAGE_LABELS[s], qtd: active.filter((d) => d.stage === s).length, valor: active.filter((d) => d.stage === s).reduce((a, d) => a + (d.value_estimated ?? 0), 0) }));
@@ -64,8 +85,8 @@ export default async function Hoje() {
   return (
     <ContentArea>
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Hoje" }]} className="mb-4" />
-      <PageHeader eyebrow="Hoje" title={`Bom dia — ${top3.length ? `${top3.length} ${top3.length === 1 ? "ação" : "ações"} para agora` : "tudo sob controle"}`}
-        subtitle="O cockpit do sistema: o que precisa de você, os alertas, o funil em movimento e a semana pela frente."
+      <PageHeader eyebrow="Hoje" title={`Bom dia — ${agenda.length ? `${agenda.length} ${agenda.length === 1 ? "coisa pedindo" : "coisas pedindo"} você${graves ? `, ${graves} sem poder esperar` : ""}` : "tudo sob controle"}`}
+        subtitle="O cockpit do sistema: cobrança, entregas, caixa, prazos e o funil — tudo o que precisa de você, num lugar só."
         comoUsar={<HelpButton routeKey="/admin/hoje" />}
         actions={<Link href="/admin/jornadas" className={botaoClasses()}><Icon name="rocket" size={15} /> Painel de jornadas</Link>} />
 
@@ -78,17 +99,26 @@ export default async function Hoje() {
         </Link>
       )}
 
-      {/* 3 ações do dia */}
+      {/* o que precisa de você */}
       <section className="mb-8" data-tour="admin-hoje">
-        <p className="ds-eyebrow mb-3">Ações do dia</p>
-        {top3.length === 0 ? (
-          <EmptyState icon={<Icon name="tasks" size={22} />} title="Nada urgente por agora"
-            description="Sem tarefas vencidas, aprovações ou deals parados. Bom momento para prospectar." />
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <p className="ds-eyebrow !mb-0">O que precisa de você</p>
+          {agenda.length > topo.length && <span className="font-montserrat text-[13px] text-[color:var(--fg-3)]">mostrando {topo.length} de {agenda.length}</span>}
+        </div>
+        {topo.length === 0 ? (
+          <EmptyState icon={<Icon name="tasks" size={22} />} title="Nada pendente por agora"
+            description="Sem fatura vencida, entrega atrasada, conversa esperando ou aprovação na fila. Bom momento para prospectar." />
         ) : (
           <div className="grid gap-4 lg:grid-cols-3">
-            {top3.map((a, i) => (
-              <Link key={i} href={a.href} className="block">
-                <CopilotCard agent="Copiloto de operações" status="ativo" finding={a.finding} actionLabel={a.label} metric={a.metric} />
+            {topo.map((a) => (
+              <Link key={a.chave} href={a.href} className="block">
+                <CopilotCard
+                  tone={a.peso === "grave" ? "grave" : a.peso === "atencao" ? "atencao" : "brand"}
+                  agent={a.peso === "grave" ? "Não pode esperar" : a.peso === "atencao" ? "Pede atenção" : "Quando der"}
+                  status={a.peso === "grave" ? "urgente" : a.peso === "atencao" ? "hoje" : "quando der"}
+                  finding={a.achado} actionLabel={a.acao}
+                  metric={a.metrica ? { value: a.metrica.valor, label: a.metrica.rotulo } : undefined} />
+                <p className="mt-1 px-1 font-montserrat text-[12px] text-[color:var(--fg-4)]">{a.fonte}</p>
               </Link>
             ))}
           </div>
