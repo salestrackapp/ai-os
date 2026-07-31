@@ -9,6 +9,7 @@ export function AcceptInvite({ token, email }: { token: string; email: string })
   const [pw2, setPw2] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [pronto, setPronto] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -17,11 +18,31 @@ export function AcceptInvite({ token, email }: { token: string; email: string })
     if (pw !== pw2) return setErr("As senhas não coincidem.");
     setLoading(true);
     try {
-      await acceptInvite(token, pw);
+      const r = await acceptInvite(token, pw);
+      /**
+       * Quem já tinha conta continua com a senha dele — o convite dá acesso ao programa, não troca
+       * credencial. Entrar com a senha recém-digitada falharia, e a mensagem de erro do Supabase
+       * ("Invalid login credentials") faria a pessoa achar que o convite não funcionou. Ele
+       * funcionou: o que mudou foi o acesso, não a senha.
+       */
+      if (r.jaTinhaConta) {
+        setLoading(false);
+        setPronto("Seu acesso ao programa foi liberado. Você já tinha conta neste e-mail, então entre com a sua senha de sempre — ela não foi alterada.");
+        return;
+      }
       const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
       if (error) throw error;
       window.location.assign("/portal");
     } catch (e) { setLoading(false); setErr((e as Error).message); }
+  }
+
+  if (pronto) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-cream">{pronto}</p>
+        <a href="/entrar" className="btn-gold w-full justify-center inline-flex">Ir para o login</a>
+      </div>
+    );
   }
 
   return (

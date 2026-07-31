@@ -18,6 +18,20 @@ export async function createClientInvite(orgId: string, formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const role = String(formData.get("role") ?? "client_member");
   if (!email || !["client_admin", "client_member"].includes(role)) throw new Error("E-mail e papel válidos são obrigatórios.");
+
+  /**
+   * Um cliente não convida gente da Salestrack para dentro da própria conta.
+   *
+   * Segunda camada da correção do aceite: mesmo sem poder trocar senha alheia, deixar um
+   * `client_admin` criar convites para o nosso time abre porta para engenharia social — um convite
+   * legítimo, vindo do sistema, pedindo para alguém nosso "criar a senha". Quem precisa de acesso a
+   * uma org cliente é a equipe Salestrack por `salestrack_admin`, que já enxerga tudo.
+   */
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin && /@(salestrack\.com\.br|andrekachan\.com\.br)$/i.test(email)) {
+    throw new Error("Endereços da Salestrack não podem ser convidados por aqui — a equipe já tem acesso ao programa.");
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data, error } = await supabase.from("invites").insert({ org_id: orgId, email, role, invited_by: user?.id ?? null }).select("token").single();
@@ -59,8 +73,28 @@ export async function removeClientMember(userId: string, orgId: string) {
   revalidatePath("/portal/equipe");
 }
 
-/** Aceite público do convite: cria conta (ou reaproveita) + membership. */
-export async function acceptInvite(token: string, password: string): Promise<{ email: string }> {
+/**
+ * Aceite público do convite.
+ *
+ * ── A tomada de conta que existia aqui ────────────────────────────────────────────────────────
+ * Quando o e-mail convidado JÁ tinha conta, esta função chamava `updateUserById({ password })` —
+ * ou seja, aceitar um convite REDEFINIA a senha de uma conta existente, para a senha digitada por
+ * quem estivesse com o link na mão.
+ *
+ * O caminho de ataque era curto: `createClientInvite` aceita qualquer e-mail e qualquer
+ * `client_admin` de qualquer organização cliente pode criar um convite. Bastava convidar o e-mail
+ * de um admin da Salestrack, abrir o próprio link e escolher a senha dele. Cliente vira admin do
+ * sistema inteiro.
+ *
+ * O fluxo nunca tinha sido usado (zero convites em produção), então o defeito nunca se manifestou.
+ *
+ * ── A regra ───────────────────────────────────────────────────────────────────────────────────
+ * Convite concede ACESSO A UMA ORGANIZAÇÃO. Não concede posse de uma identidade. Quem já tem conta
+ * ganha o vínculo e entra com a senha que já usa; quem não tem, cria a dele. Em nenhum caminho uma
+ * credencial existente é tocada — trocar senha só se faz por "esqueci minha senha", que passa pela
+ * caixa de e-mail da própria pessoa.
+ */
+export async function acceptInvite(token: string, password: string): Promise<{ email: string; jaTinhaConta: boolean }> {
   const admin = createServiceClient();
   const { data: inv } = await admin.from("invites").select("*").eq("token", token).single();
   if (!inv) throw new Error("Convite inválido.");
@@ -68,20 +102,35 @@ export async function acceptInvite(token: string, password: string): Promise<{ e
   if (new Date(inv.expires_at) < new Date()) throw new Error("Convite expirado.");
   if (!password || password.length < 8) throw new Error("Senha deve ter ao menos 8 caracteres.");
 
-  // cria ou localiza o usuário
   let userId: string | undefined;
+  let jaTinhaConta = false;
+
   const created = await admin.auth.admin.createUser({ email: inv.email, password, email_confirm: true });
   if (created.error) {
-    if (/registered|already|exists/i.test(created.error.message)) {
-      const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-      userId = list?.users.find((u) => u.email?.toLowerCase() === inv.email.toLowerCase())?.id;
-      if (userId) await admin.auth.admin.updateUserById(userId, { password, email_confirm: true });
+    if (!/registered|already|exists/i.test(created.error.message)) throw new Error(created.error.message);
+
+    /**
+     * Já existe conta com este e-mail. O vínculo é criado; a senha NÃO é tocada.
+     *
+     * A busca é paginada porque `listUsers` devolve uma página por vez: parar na primeira faria a
+     * função dizer "não encontrei" para o usuário 201 e cair no erro genérico — um convite que
+     * falha sem explicação a partir de um certo tamanho da base.
+     */
+    jaTinhaConta = true;
+    const alvo = inv.email.toLowerCase();
+    for (let page = 1; page <= 20 && !userId; page++) {
+      const { data: list } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+      if (!list?.users.length) break;
+      userId = list.users.find((u) => u.email?.toLowerCase() === alvo)?.id;
+      if (list.users.length < 200) break;
     }
-    if (!userId) throw new Error(created.error.message);
-  } else userId = created.data.user.id;
+    if (!userId) throw new Error("Já existe uma conta com este e-mail, mas não consegui localizá-la. Fale com a Salestrack.");
+  } else {
+    userId = created.data.user.id;
+  }
 
   await admin.from("memberships").upsert({ org_id: inv.org_id, user_id: userId, role: inv.role }, { onConflict: "org_id,user_id" });
   await admin.from("invites").update({ accepted_at: new Date().toISOString() }).eq("id", inv.id);
-  await admin.from("audit_logs").insert({ org_id: inv.org_id, actor_id: userId, action: "invite.accept", resource: "invites", resource_id: inv.id, payload: { email: inv.email, role: inv.role }, hash: "pending" });
-  return { email: inv.email };
+  await admin.from("audit_logs").insert({ org_id: inv.org_id, actor_id: userId, action: "invite.accept", resource: "invites", resource_id: inv.id, payload: { email: inv.email, role: inv.role, conta_preexistente: jaTinhaConta }, hash: "pending" });
+  return { email: inv.email, jaTinhaConta };
 }
