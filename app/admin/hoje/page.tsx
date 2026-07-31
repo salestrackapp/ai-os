@@ -109,16 +109,16 @@ export default async function Hoje() {
           <EmptyState icon={<Icon name="tasks" size={22} />} title="Nada pendente por agora"
             description="Sem fatura vencida, entrega atrasada, conversa esperando ou aprovação na fila. Bom momento para prospectar." />
         ) : (
-          <div className="grid gap-4 lg:grid-cols-3">
+          // items-stretch + h-full nos filhos: a fileira inteira fica com a altura do maior card.
+          <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {topo.map((a) => (
-              <Link key={a.chave} href={a.href} className="block">
-                <CopilotCard
+              <Link key={a.chave} href={a.href} className="block h-full">
+                <CopilotCard compact rodape={a.fonte}
                   tone={a.peso === "grave" ? "grave" : a.peso === "atencao" ? "atencao" : "brand"}
                   agent={a.peso === "grave" ? "Não pode esperar" : a.peso === "atencao" ? "Pede atenção" : "Quando der"}
                   status={a.peso === "grave" ? "urgente" : a.peso === "atencao" ? "hoje" : "quando der"}
                   finding={a.achado} actionLabel={a.acao}
                   metric={a.metrica ? { value: a.metrica.valor, label: a.metrica.rotulo } : undefined} />
-                <p className="mt-1 px-1 font-montserrat text-[12px] text-[color:var(--fg-4)]">{a.fonte}</p>
               </Link>
             ))}
           </div>

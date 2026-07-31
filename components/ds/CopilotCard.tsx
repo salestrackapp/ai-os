@@ -25,37 +25,50 @@ const FUNDO: Record<string, string> = {
   atencao: "linear-gradient(135deg, #7C2D12 0%, #9A3412 100%)",
 };
 
-export function CopilotCard({ agent = "Copiloto", status = "ativo", finding, actionLabel, onAction, metric, className, tone = "brand" }: {
+export function CopilotCard({ agent = "Copiloto", status = "ativo", finding, actionLabel, onAction, metric, className, tone = "brand", compact = false, rodape }: {
   agent?: string; status?: string; finding: string; actionLabel?: string;
   onAction?: () => void; metric?: { value: string; label: string }; className?: string;
   /** brand (padrão) · atencao · grave. Só muda a cor de fundo; a estrutura é a mesma. */
   tone?: "brand" | "atencao" | "grave";
+  /**
+   * Versão apertada, para quando vários cards dividem a mesma faixa da tela. Um card sozinho pode
+   * respirar; seis lado a lado com a mesma folga empurram o resto da página para fora da dobra.
+   */
+  compact?: boolean;
+  /** Linha miúda no pé — de onde veio o achado. Fica DENTRO do card para as alturas baterem. */
+  rodape?: string;
 }) {
+  /**
+   * `flex h-full flex-col` no card e `mt-auto` no botão: é o que faz um card de duas linhas ficar
+   * da mesma altura de um de quatro, com os botões alinhados na fileira. Sem isso, cada card
+   * termina onde seu texto acabou e a linha vira escada.
+   */
   return (
-    <div className={cn("relative overflow-hidden rounded-ds-card p-5 text-white shadow-ds-brand", className)} style={{ background: FUNDO[tone] ?? FUNDO.brand }}>
-      <span aria-hidden className="absolute right-4 top-4 text-spark">✳</span>
+    <div className={cn("relative flex h-full flex-col overflow-hidden rounded-ds-card text-white shadow-ds-brand", compact ? "p-4" : "p-5", className)} style={{ background: FUNDO[tone] ?? FUNDO.brand }}>
+      <span aria-hidden className="absolute right-3 top-3 text-spark">✳</span>
       {/* pr-6 reserva o canto do ✳: sem isso, um rótulo de estado mais longo que "ativo" passa por baixo dele. */}
       <div className="flex items-center gap-2 pr-6 text-white/85">
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white/15">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.29 1.29L3 12l5.8 1.9a2 2 0 0 1 1.29 1.29L12 21l1.9-5.8a2 2 0 0 1 1.29-1.29L21 12l-5.8-1.9a2 2 0 0 1-1.29-1.29Z" /></svg>
+        <span className={cn("inline-flex items-center justify-center rounded-md bg-white/15", compact ? "h-5 w-5" : "h-6 w-6")}>
+          <svg width={compact ? 12 : 14} height={compact ? 12 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.29 1.29L3 12l5.8 1.9a2 2 0 0 1 1.29 1.29L12 21l1.9-5.8a2 2 0 0 1 1.29-1.29L21 12l-5.8-1.9a2 2 0 0 1-1.29-1.29Z" /></svg>
         </span>
-        <span className="font-montserrat text-[14px] font-semibold">{agent}</span>
-        <span className="ml-auto inline-flex items-center gap-1.5 text-[13px] font-medium text-white/80">
+        <span className={cn("font-montserrat font-semibold", compact ? "text-[13px]" : "text-[14px]")}>{agent}</span>
+        <span className={cn("ml-auto inline-flex items-center gap-1.5 font-medium text-white/80", compact ? "text-[12px]" : "text-[13px]")}>
           <span className="h-1.5 w-1.5 rounded-full bg-spark ds-dot-live" /> {status}
         </span>
       </div>
-      <p className="mt-3 font-montserrat text-[15px] font-medium leading-snug text-white">{finding}</p>
+      <p className={cn("font-montserrat font-medium leading-snug text-white", compact ? "mt-2 text-[13.5px]" : "mt-3 text-[15px]")}>{finding}</p>
       {metric && (
-        <div className="mt-3 flex items-baseline gap-2">
-          <span className="font-montserrat text-2xl font-extrabold tracking-[-0.02em] text-white tabular-nums">{metric.value}</span>
+        <div className={cn("flex items-baseline gap-2", compact ? "mt-1.5" : "mt-3")}>
+          <span className={cn("font-montserrat font-extrabold tracking-[-0.02em] text-white tabular-nums", compact ? "text-lg" : "text-2xl")}>{metric.value}</span>
           <span className="text-xs text-white/75">{metric.label}</span>
         </div>
       )}
       {actionLabel && (
-        <div className="mt-4">
+        <div className={cn("mt-auto", compact ? "pt-3" : "pt-4")}>
           <Button variant="accent" size="sm" onClick={onAction}>{actionLabel}</Button>
         </div>
       )}
+      {rodape && <p className="mt-2 font-montserrat text-[11.5px] leading-snug text-white/60">{rodape}</p>}
     </div>
   );
 }
