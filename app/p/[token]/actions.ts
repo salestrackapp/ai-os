@@ -4,15 +4,32 @@ import { auditService } from "@/lib/audit";
 import { notifyAdmin } from "@/lib/whatsapp";
 import { emailAdmin } from "@/lib/email";
 import { proposalHash } from "@/lib/proposal-hash";
+import { propostaVencida } from "@/lib/proposta-validade";
 import type { ProposalItem, TimelinePhase } from "@/lib/types";
 
 const DECIDED = ["aprovada", "recusada"];
 
+/**
+ * Carrega a proposta e prova que ela ainda pode ser decidida.
+ *
+ * ── O prazo era verificado só na TELA ─────────────────────────────────────────────────────────
+ * A página checava `valid_until` e mostrava "esta proposta expirou"; estas ações, não. Só que uma
+ * proposta vencida continua com status `enviada`, e Server Action é um endpoint: quem já abriu a
+ * página uma vez consegue reenviar a decisão depois do prazo. Uma aprovação fora da validade não é
+ * um detalhe de interface — ela move o negócio para "fechamento" e destrava a geração do contrato,
+ * com valores que a Salestrack já não se comprometeu a praticar.
+ *
+ * Validação em duas camadas é a regra da casa aqui: a tela evita o erro honesto, a ação impede o
+ * resto. A tela nunca é a defesa.
+ */
 async function loadOpen(token: string) {
   const sb = createServiceClient();
   const { data } = await sb.from("proposals").select("*").eq("access_token", token).single();
   if (!data) throw new Error("Proposta não encontrada.");
   if (DECIDED.includes(data.status)) throw new Error("Esta proposta já foi decidida.");
+  if (propostaVencida(data.valid_until as string | null)) {
+    throw new Error("Esta proposta expirou. Fale com a Salestrack para receber uma versão atualizada.");
+  }
   return { sb, prop: data };
 }
 

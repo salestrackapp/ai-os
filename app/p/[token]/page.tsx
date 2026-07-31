@@ -8,6 +8,7 @@ import { ReadTracker } from "@/components/proposals/ReadTracker";
 import { DecisionBar } from "@/components/proposals/DecisionBar";
 import { PROPOSAL_STATUS_LABELS, type ProposalItem, type TimelinePhase } from "@/lib/types";
 import { avisarPropostaLida } from "@/lib/notifications/eventos";
+import { propostaVencida } from "@/lib/proposta-validade";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,8 @@ export default async function PublicProposal({ params }: { params: Promise<{ tok
   const sb = createServiceClient();
   const { data: prop } = await sb.from("proposals").select("*").eq("access_token", token).single();
   if (!prop) return <Indisponivel msg="O link é inválido ou foi revogado." />;
-  if (prop.valid_until && new Date(prop.valid_until + "T23:59:59") < new Date()) {
+  // Mesma função que as ações usam — a tela e o servidor não podem discordar sobre o que venceu.
+  if (propostaVencida(prop.valid_until as string | null)) {
     return <Indisponivel msg="Esta proposta expirou. Fale com a Salestrack para uma versão atualizada." />;
   }
 

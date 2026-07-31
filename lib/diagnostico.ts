@@ -1,4 +1,5 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/service";
 
 // Schema (campos/seções) é dado puro — vive em lib/diagnostico-schema.ts (sem "server-only")
@@ -32,7 +33,15 @@ export async function getOrCreateIntakeForOrg(orgId: string, titulo = "Diagnóst
   const sb = createServiceClient();
   const { data } = await sb.from("diagnostico_intake").select("*").eq("org_id", orgId).maybeSingle();
   if (data) return data as Intake;
-  const token = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}${Math.round(Math.random() * 1e9)}`).replace(/-/g, "");
+  /**
+   * O token é a ÚNICA credencial desta rota pública — quem o tem preenche o diagnóstico do cliente.
+   *
+   * A versão anterior tinha um fallback: se `crypto.randomUUID` não existisse, caía para
+   * `Date.now() + Math.random()`. No Node de hoje o fallback nunca roda, o que é justamente o
+   * problema — um caminho que degrada silenciosamente uma credencial para relógio mais gerador
+   * previsível, e que ninguém veria falhar. `randomBytes` não precisa de plano B.
+   */
+  const token = randomBytes(24).toString("hex");
   const { data: ins } = await sb.from("diagnostico_intake").insert({ org_id: orgId, token, titulo }).select("*").single();
   return ins as Intake;
 }
