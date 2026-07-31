@@ -94,6 +94,50 @@ export async function gerarSugestao(opts: {
 }
 
 /**
+ * Prepara rascunhos para as conversas que a triagem marcou como "precisa de você".
+ *
+ * ── Por que passa pela triagem, e não por toda mensagem que chega ─────────────────────────────
+ * Metade da caixa é máquina. Escrever resposta para um relatório DMARC ou para uma newsletter
+ * custa dinheiro e, pior, enche a lista de "resposta pronta" onde não há nada a responder — o
+ * mesmo problema que a triagem existe para resolver, agora com um selo de IA em cima.
+ *
+ * ── Por que só quando a última palavra é do outro lado ────────────────────────────────────────
+ * Se a última mensagem é nossa, a bola está com ele. Um rascunho ali seria cobrança disfarçada de
+ * ajuda, e ninguém pediu isso.
+ */
+export async function gerarSugestoesPendentes(max = 5): Promise<{ geradas: number }> {
+  const sb = createServiceClient();
+  const { data: convs } = await sb.from("rel_conversas")
+    .select("id, channel").eq("triagem", "precisa_resposta").eq("status", "aberta")
+    .is("deleted_at", null).order("last_message_at", { ascending: false }).limit(max * 4);
+
+  let geradas = 0;
+  for (const c of convs ?? []) {
+    if (geradas >= max) break;
+
+    const { data: ultima } = await sb.from("rel_mensagens")
+      .select("id, direction").eq("conversa_id", c.id)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (!ultima || ultima.direction !== "in") continue;
+
+    const { data: ja } = await sb.from("rel_sugestoes")
+      .select("id").eq("mensagem_id", ultima.id).limit(1).maybeSingle();
+    if (ja) continue;
+
+    // No e-mail, o que a sincronização guarda é o trecho; o corpo completo só chega quando alguém
+    // abre. Rascunhar em cima de duas linhas produz resposta genérica — que é pior do que nenhuma.
+    if (c.channel === "email") {
+      const { carregarCorposEmailService } = await import("./sync-email");
+      await carregarCorposEmailService(c.id as string);
+    }
+
+    const r = await gerarSugestao({ conversaId: c.id as string, mensagemId: ultima.id as string });
+    if (r) geradas++;
+  }
+  return { geradas };
+}
+
+/**
  * Foi aceita como estava, ou reescrita?
  *
  * Vive aqui, e não dentro da action, porque é a regra que sustenta o painel de acerto do agente: se

@@ -12,7 +12,8 @@ import { googleConfigured } from "@/lib/google";
 import { zapiConfigured } from "@/lib/whatsapp";
 import { FILTER_LABELS, STATUS_LABELS, isSlaBreached, type InboxFilter, type Channel, type ConvStatus } from "@/lib/relacionamento/types";
 import { getNumber } from "@/lib/settings/resolve";
-import { syncInboxAction, bulkAction } from "./actions";
+import { CATEGORIA_ROTULO, contagemPorTriagem, type Categoria } from "@/lib/relacionamento/triagem";
+import { syncInboxAction, bulkAction, triarCaixaAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -21,7 +22,15 @@ const FILTERS: InboxFilter[] = ["todas", "minhas", "nao_atribuidas"];
 const chip = (active: boolean) => `rounded-ds-pill border px-3 py-1 font-montserrat text-[13px] transition-colors ${active ? "border-[color:var(--brand)] bg-[var(--tile)] text-[color:var(--brand-deep)]" : "border-hairline text-[color:var(--fg-3)] hover:border-[color:var(--brand-light)]"}`;
 const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—";
 
-export default async function Relacionamento({ searchParams }: { searchParams: Promise<{ canal?: string; filtro?: string; q?: string }> }) {
+/**
+ * As faixas da triagem. "resto" junta as três que não pedem ação porque, na prática, a pergunta que
+ * a pessoa faz é binária — preciso agir ou não? Separar máquina de newsletter numa aba própria seria
+ * dar à distinção uma importância que ela não tem para quem está lendo a caixa.
+ */
+const TRIAGENS = { todas: "Todas", precisa: "Precisam de você", resto: "Ruído", sem: "Ainda não triadas" } as const;
+type Faixa = keyof typeof TRIAGENS;
+
+export default async function Relacionamento({ searchParams }: { searchParams: Promise<{ canal?: string; filtro?: string; q?: string; tri?: string }> }) {
   const sp = await searchParams;
   const canalParam: "email" | "whatsapp" | "todos" = sp.canal === "whatsapp" ? "whatsapp" : sp.canal === "todos" ? "todos" : "email";
   const isTodos = canalParam === "todos";
@@ -34,9 +43,14 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
   const nowISO = new Date().toISOString();
   const m = await currentMembership();
 
+  const faixa: Faixa = (Object.keys(TRIAGENS) as Faixa[]).includes(sp.tri as Faixa) ? (sp.tri as Faixa) : "todas";
+
   const sb = await createClient();
-  let query = sb.from("rel_conversas").select("id, channel, assunto, contato_nome, contato_email, contato_phone, status, assigned_to, unread, last_message_at, client_id")
+  let query = sb.from("rel_conversas").select("id, channel, assunto, contato_nome, contato_email, contato_phone, status, assigned_to, unread, last_message_at, client_id, triagem, triagem_motivo")
     .is("deleted_at", null).order("last_message_at", { ascending: false, nullsFirst: false }).limit(100);
+  if (faixa === "precisa") query = query.eq("triagem", "precisa_resposta");
+  else if (faixa === "resto") query = query.in("triagem", ["informativo", "promocional", "automatico"]);
+  else if (faixa === "sem") query = query.is("triagem", null);
   if (!isTodos) query = query.eq("channel", canalParam);
   if (filtro === "minhas") query = query.eq("assigned_to", m?.userId ?? "");
   else if (filtro === "nao_atribuidas") query = query.is("assigned_to", null);
@@ -55,7 +69,16 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
   const naoLidas = list.filter((c) => c.unread).length;
   const atrasadas = list.filter((c) => isSlaBreached({ status: c.status as ConvStatus, last_message_at: c.last_message_at }, sla, nowISO)).length;
   const canalHref = (c: "email" | "whatsapp" | "todos") => `/admin/relacionamento?canal=${c}`;
-  const filtroHref = (f: InboxFilter) => `/admin/relacionamento?canal=${canalParam}&filtro=${f}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+  const filtroHref = (f: InboxFilter) => `/admin/relacionamento?canal=${canalParam}&filtro=${f}&tri=${faixa}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+  const triHref = (t: Faixa) => `/admin/relacionamento?canal=${canalParam}&filtro=${filtro}&tri=${t}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+
+  const tri = await contagemPorTriagem();
+  const contaFaixa: Record<Faixa, number | null> = {
+    todas: null,
+    precisa: tri.precisa_resposta ?? 0,
+    resto: (tri.informativo ?? 0) + (tri.promocional ?? 0) + (tri.automatico ?? 0),
+    sem: tri.sem_triagem ?? 0,
+  };
 
   return (
     <ContentArea>
@@ -94,11 +117,27 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
       )}
       {(
         <>
+          {/* triagem: a pergunta que a lista responde antes de qualquer outra */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {(Object.keys(TRIAGENS) as Faixa[]).map((t) => (
+              <Link key={t} href={triHref(t)} className={chip(faixa === t)}>
+                {TRIAGENS[t]}{contaFaixa[t] === null ? "" : ` · ${contaFaixa[t]}`}
+              </Link>
+            ))}
+            {(contaFaixa.sem ?? 0) > 0 && (
+              <form action={triarCaixaAction}>
+                <button className="ds-focus rounded-ds-pill border border-[color:var(--brand-light)] bg-[var(--tile)] px-3 py-1 font-montserrat text-[13px] text-[color:var(--brand-deep)]">
+                  Triar {Math.min(contaFaixa.sem ?? 0, 30)} conversa(s)
+                </button>
+              </form>
+            )}
+          </div>
+
           {/* filtros + busca */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex gap-2">{FILTERS.map((f) => <Link key={f} href={filtroHref(f)} className={chip(filtro === f)}>{FILTER_LABELS[f]}</Link>)}</div>
             <form className="flex gap-2" method="get">
-              <input type="hidden" name="canal" value={canalParam} /><input type="hidden" name="filtro" value={filtro} />
+              <input type="hidden" name="canal" value={canalParam} /><input type="hidden" name="filtro" value={filtro} /><input type="hidden" name="tri" value={faixa} />
               <input name="q" defaultValue={q} placeholder={isEmail ? "Buscar por remetente ou assunto…" : "Buscar por contato ou telefone…"} aria-label="Buscar na caixa"
                 className="h-10 w-64 rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 font-montserrat text-sm text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand-light)]" />
               <button className="ds-focus rounded-ds-input border border-hairline-strong px-3 font-montserrat text-sm text-[color:var(--fg-2)] hover:bg-[var(--bg-2)]">Buscar</button>
@@ -134,6 +173,9 @@ export default async function Relacionamento({ searchParams }: { searchParams: P
                         </span>
                         <span className="flex shrink-0 items-center gap-2">
                           {comSugestao.has(c.id) && <Badge tone="brand">resposta pronta</Badge>}
+                          {c.triagem && c.triagem !== "precisa_resposta" && (
+                            <span title={c.triagem_motivo ?? undefined}><Badge tone="neutral">{CATEGORIA_ROTULO[c.triagem as Categoria]}</Badge></span>
+                          )}
                           {isSlaBreached({ status: c.status as ConvStatus, last_message_at: c.last_message_at }, sla, nowISO) && <Badge tone="warn">atrasada</Badge>}
                           {c.client_id && <Badge tone="brand">cliente</Badge>}
                           <Badge tone={c.status === "aberta" ? "warn" : "neutral"}>{STATUS_LABELS[c.status as ConvStatus] ?? c.status}</Badge>

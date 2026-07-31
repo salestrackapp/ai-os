@@ -63,12 +63,20 @@ export async function runAgentCore(opts: {
   agentKey: string; guardrails: string; userMessages: ChatMsg[]; extraContext?: string; contextLabel?: string; maxTokens?: number;
   /** Cliente para quem o trabalho é feito. É o que permite dizer quanto de IA cada um consumiu. */
   orgId?: string | null;
+  /**
+   * Sobrepõe o modelo desta chamada.
+   *
+   * Existe para trabalho que é classificação, não escrita: rotular centenas de e-mails no modelo
+   * que redige proposta é pagar preço de redação por uma decisão de três opções. Só passe quando a
+   * tarefa for mesmo dessa natureza — o padrão continua sendo o modelo configurado.
+   */
+  modelo?: string | null;
 }): Promise<AgentResult> {
   if (!anthropicConfigured()) {
     return { text: "Agente temporariamente indisponível (sem ANTHROPIC_API_KEY).", tokens: 0, degraded: true, model: null };
   }
   const base = await activeSystemPrompt(opts.agentKey);
-  const model = await activeModel();
+  const model = opts.modelo || await activeModel();
   const system = `${base}\n${opts.guardrails}${opts.extraContext ? `\n\n=== ${opts.contextLabel ?? "CONTEXTO"} ===\n${opts.extraContext}` : ""}`;
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const inicio = Date.now();

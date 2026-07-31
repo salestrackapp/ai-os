@@ -21,7 +21,8 @@ import { sanitizeEmailHtml } from "@/lib/relacionamento/sanitize-email";
 import { whatsappContext } from "@/lib/relacionamento/sync-whatsapp";
 import { classifyIntent } from "@/lib/prospecting/agents";
 import { anthropicConfigured } from "@/lib/agents/runner";
-import { assignToMeAction, unassignAction, statusAction, snoozeAction, linkClienteAction, aprovarEnvioFormAction, descartarEnvioAction } from "../actions";
+import { CATEGORIA_ROTULO, type Categoria } from "@/lib/relacionamento/triagem";
+import { assignToMeAction, unassignAction, statusAction, snoozeAction, linkClienteAction, aprovarEnvioFormAction, descartarEnvioAction, reclassificarAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -175,6 +176,25 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
               <Badge tone={c.status === "aberta" ? "warn" : "neutral"}>{STATUS_LABELS[c.status as ConvStatus] ?? c.status}</Badge>
               {c.assigned_to ? <Badge tone="brand">{mine ? "atribuída a você" : "atribuída"}</Badge> : <Badge tone="neutral">não atribuída</Badge>}
               {c.snooze_until && <Badge tone="warn">follow-up {new Date(c.snooze_until).toLocaleDateString("pt-BR")}</Badge>}
+            </div>
+
+            <p className={lbl}>Triagem</p>
+            <div className="mb-3">
+              {c.triagem ? (
+                <>
+                  <div className="mb-1 flex items-center gap-2">
+                    <Badge tone={c.triagem === "precisa_resposta" ? "brand" : "neutral"}>{CATEGORIA_ROTULO[c.triagem as Categoria]}</Badge>
+                  </div>
+                  {c.triagem_motivo && <p className="ds-small !mt-0 mb-2">{c.triagem_motivo}</p>}
+                </>
+              ) : <p className="ds-small !mt-0 mb-2">Ainda não triada.</p>}
+              <div className="flex flex-wrap gap-1.5">
+                {(Object.keys(CATEGORIA_ROTULO) as Categoria[]).filter((k) => k !== c.triagem).map((k) => (
+                  <form key={k} action={reclassificarAction.bind(null, id, k)}>
+                    <button className="ds-focus rounded-ds-pill border border-hairline px-2.5 py-1 font-montserrat text-[13px] text-[color:var(--fg-2)] hover:border-[color:var(--brand-light)]">{CATEGORIA_ROTULO[k]}</button>
+                  </form>
+                ))}
+              </div>
             </div>
 
             <p className={lbl}>Atribuição</p>

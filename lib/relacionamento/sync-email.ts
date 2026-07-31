@@ -11,6 +11,18 @@ import { avaliarRegras } from "./responder";
  */
 export async function carregarCorposEmail(conversaId: string): Promise<{ carregados: number }> {
   await requireTeam();
+  return carregarCorposEmailService(conversaId);
+}
+
+/**
+ * A mesma coisa, sem exigir sessão — para o cron.
+ *
+ * Separado de propósito: `requireTeam()` protege o acesso de UMA PESSOA ao conteúdo de uma caixa
+ * corporativa, e é a guarda certa quando a chamada vem de um clique. O cron não tem pessoa nenhuma
+ * atrás dele; exigir sessão ali não protegeria coisa alguma, só impediria o trabalho de acontecer.
+ * Quem chama esta versão precisa estar num caminho que já é do servidor e não recebe entrada de fora.
+ */
+export async function carregarCorposEmailService(conversaId: string): Promise<{ carregados: number }> {
   if (!(await googleConfigured())) return { carregados: 0 };
   const sb = createServiceClient();
   const { data: conv } = await sb.from("rel_conversas").select("channel").eq("id", conversaId).maybeSingle();

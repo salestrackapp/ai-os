@@ -288,11 +288,13 @@ O número mostra o tamanho: **204 conversas de e-mail ativas contra 1 de WhatsAp
 5. Mande uma mensagem para o número e confirme que a conversa aparece.
 
 **Ligar a resposta assistida (opcional, depois que o canal funcionar):**
-Em **Configurar → Agentes de IA**, o agente **`resposta_whatsapp`** existe e está **desligado de
-propósito** — um agente que começa a escrever no WhatsApp sem ninguém ter pedido é surpresa no canal
-errado. Ligue quando quiser: ele passa a preparar um rascunho a cada mensagem recebida, e o rascunho
-espera na conversa. **Nada é enviado sem alguém clicar em enviar.** A tela de Agentes mostra quantos
-rascunhos saíram como estavam, quantos foram editados e quantos foram descartados.
+Em **Configurar → Agentes de IA**, o agente **Resposta assistida da caixa** existe e está **desligado
+de propósito** — um agente que começa a escrever no WhatsApp sem ninguém ter pedido é surpresa no
+canal errado. Ligue quando quiser: ele passa a preparar um rascunho a cada mensagem que a triagem
+marcar como "precisa de você", e o rascunho espera na conversa. **Nada é enviado sem alguém clicar em
+enviar.** A tela de Agentes mostra quantos rascunhos saíram como estavam, quantos foram editados e
+quantos foram descartados. O mesmo agente serve o e-mail — e no e-mail ele já pode rodar hoje, sem
+depender da Z-API.
 
 ## 15. 🟢 Opcionais (só se precisar)
 - **Stripe:** cobrança internacional (alternativa à ASAAS). Envs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` e `PAYMENT_PROVIDER=stripe`. Só se for cobrar fora do Brasil.

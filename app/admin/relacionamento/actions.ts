@@ -36,6 +36,34 @@ export async function ativarRecebimentoWhatsAppAction(): Promise<{ ok: boolean; 
   return { ok: r.ok, url: r.url, erro: r.erro };
 }
 
+/**
+ * Tria o que ainda não foi olhado e prepara rascunho para o que precisa de pessoa.
+ *
+ * Um clique faz as duas coisas porque a segunda só faz sentido depois da primeira: rascunhar antes
+ * de triar é escrever resposta para newsletter.
+ */
+export async function triarCaixaAction() {
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) return;
+  const { triarPendentes } = await import("@/lib/relacionamento/triagem");
+  const { gerarSugestoesPendentes } = await import("@/lib/relacionamento/sugestao");
+  await triarPendentes(30);
+  await gerarSugestoesPendentes(5);
+  revalidatePath("/admin/relacionamento");
+}
+
+/** Corrige a triagem de uma conversa. Sem isto, um erro do classificador vira verdade permanente. */
+export async function reclassificarAction(id: string, categoria: string) {
+  const m = await currentMembership();
+  if (!m?.isSalestrackAdmin) return;
+  const { reclassificar } = await import("@/lib/relacionamento/triagem");
+  const validas = ["precisa_resposta", "informativo", "promocional", "automatico"] as const;
+  if (!validas.includes(categoria as (typeof validas)[number])) return;
+  await reclassificar(id, categoria as (typeof validas)[number], m.userId);
+  revalidatePath(`/admin/relacionamento/${id}`);
+  revalidatePath("/admin/relacionamento");
+}
+
 export async function markReadAction(id: string, unread: boolean) {
   await setUnread(id, unread);
   revalidatePath("/admin/relacionamento");
