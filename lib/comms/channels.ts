@@ -1,5 +1,5 @@
 import "server-only";
-import { canalWhatsApp } from "@/lib/whatsapp";
+import { canalWhatsApp, zapiConfigured } from "@/lib/whatsapp";
 import { googleConfigured, sendGmail } from "@/lib/google";
 
 /** Resultado de um despacho de canal. 'manual' = sem credencial (conteúdo pronto para copiar). */
@@ -9,7 +9,15 @@ export type DispatchInput = {
   subject?: string; html?: string; text?: string; ref?: { table?: string; id?: string };
 };
 
-export type Channel = { key: "whatsapp" | "email"; label: string; configured(): boolean; dispatch(input: DispatchInput): Promise<DispatchResult> };
+/**
+ * `configured` é ASSÍNCRONA de propósito.
+ *
+ * As credenciais de canal moram em `integration_secrets`, editáveis no Console — não em variáveis
+ * de ambiente. A versão síncrona anterior só sabia olhar `process.env`, então respondia "não
+ * configurado" mesmo com o canal ligado. Como ninguém chamava, a mentira passou despercebida; quem
+ * chamasse primeiro é que descobriria.
+ */
+export type Channel = { key: "whatsapp" | "email"; label: string; configured(): Promise<boolean>; dispatch(input: DispatchInput): Promise<DispatchResult> };
 
 /** Abstração declarativa de canal (segredos server-only; graceful sem credencial). */
 export function defineChannel(ch: Channel): Channel { return ch; }
@@ -17,7 +25,7 @@ export function defineChannel(ch: Channel): Channel { return ch; }
 // ── WhatsApp (Z-API, ferramenta da Salestrack) ──
 export const whatsappChannel = defineChannel({
   key: "whatsapp", label: "WhatsApp (Z-API)",
-  configured: () => !!(process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN && process.env.ZAPI_CLIENT_TOKEN),
+  configured: () => zapiConfigured(),
   async dispatch(input) {
     const text = input.text ?? "";
     if (!input.recipient.phone) return { status: "falhou", erro: "Sem telefone do destinatário." };
@@ -33,7 +41,7 @@ const RESEND_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM || "Salestrack AI <no-reply@salestrack.com.br>";
 export const emailChannel = defineChannel({
   key: "email", label: "E-mail (Gmail / Resend)",
-  configured: () => !!(RESEND_KEY || process.env.GOOGLE_OAUTH_REFRESH_TOKEN), // best-effort (Console resolvido no dispatch)
+  configured: async () => !!RESEND_KEY || (await googleConfigured()),
   async dispatch(input) {
     const html = input.html ?? "";
     if (!input.recipient.email) return { status: "falhou", erro: "Sem e-mail do destinatário." };

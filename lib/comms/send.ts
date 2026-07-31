@@ -9,13 +9,29 @@ import type { DeliverableContent } from "@/lib/deliverables/types";
 
 export type SendResult = { status: "enviado" | "falhou" | "manual" | "bloqueado"; motivo?: string; providerRef?: string | null; content?: string; deliveryId?: string };
 
-/** Gate de consentimento: opt-in do destinatário (passado) OU registrado; senão bloqueia. Persiste a base. */
+/**
+ * Este endereço pode receber por este canal?
+ *
+ * ── O que estava errado ───────────────────────────────────────────────────────────────────────
+ * A versão anterior, ao receber `optIn: true` de quem chamou, GRAVAVA em `comms_consent` uma linha
+ * dizendo "confirmado no envio (admin)". Só que quem chamava marcava `optIn: true` para todo e-mail
+ * automaticamente — ninguém tinha confirmado nada. O resultado era uma tabela de consentimento
+ * cheia de consentimentos inventados, e num pedido de titular ou numa auditoria essa tabela seria
+ * a prova. Registro falso de consentimento é pior do que ausência de registro: um diz "não sei", o
+ * outro afirma uma coisa que não aconteceu.
+ *
+ * ── A regra agora ─────────────────────────────────────────────────────────────────────────────
+ * E-MAIL de programa não depende de opt-in e sim de execução de contrato: a pessoa é do cliente e a
+ * mensagem é sobre o serviço contratado. Passa, e não grava consentimento nenhum — porque não há
+ * consentimento a registrar. (Marketing é outra coisa, barrada logo abaixo por `podeEnviarMarketing`.)
+ *
+ * WHATSAPP depende de aceite explícito, porque o canal é pessoal. A fonte é `contacts.opt_in_whatsapp`,
+ * marcado por quem falou com a pessoa, ou uma linha prévia em `comms_consent`. Nunca o próprio envio.
+ */
 async function consentOk(orgId: string | null, canal: string, endereco: string, optIn?: boolean): Promise<boolean> {
+  if (canal === "email") return true;
+  if (optIn) return true;   // veio de contacts.opt_in_whatsapp — aceite dado antes, fora daqui
   const sb = createServiceClient();
-  if (optIn) {
-    await sb.from("comms_consent").upsert({ org_id: orgId, canal, endereco, opt_in: true, base: "confirmado no envio (admin)" }, { onConflict: "org_id,canal,endereco" });
-    return true;
-  }
   const { data } = await sb.from("comms_consent").select("opt_in").eq("org_id", orgId ?? "").eq("canal", canal).eq("endereco", endereco).maybeSingle();
   return !!data?.opt_in;
 }

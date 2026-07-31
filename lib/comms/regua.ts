@@ -47,6 +47,46 @@ export function stepCompleteness(step: ReguaStep, asset: AssetRow): { status: "c
   return { status: "completo" };
 }
 
+/**
+ * O que este passo FAZ, na prática — inclusive quando a resposta é "nada".
+ *
+ * ── Por que existe ────────────────────────────────────────────────────────────────────────────
+ * A régua padrão tem um passo "Reengajar se inativo", com gatilho de estado. O avaliador não
+ * implementa gatilho de estado: `isDue` devolve `false` para ele, sempre. Ou seja, o passo aparece
+ * na tela como qualquer outro, pode ser marcado como "completo", e nunca vai disparar — e não havia
+ * nada, em lugar nenhum, dizendo isso a quem monta a régua.
+ *
+ * O mesmo vale para o público: um passo dirigido ao "admin" não manda nada, porque a régua fala com
+ * o cliente. Melhor dizer na tela do que deixar a pessoa esperando por um envio que não vem.
+ */
+export type AvisoDoPasso = { grave: boolean; texto: string };
+
+export function diagnosticarPasso(step: Pick<ReguaStep, "gatilho" | "asset_type" | "publico">): AvisoDoPasso[] {
+  const avisos: AvisoDoPasso[] = [];
+  const g = step.gatilho as { tipo?: string; quando?: string; offset_dias?: number };
+
+  const cond = (step.gatilho as { condicao?: string })?.condicao;
+  if (g?.tipo === "estado" && cond === "baixo_engajamento") {
+    avisos.push({ grave: true, texto: "“Baixo engajamento” ainda não é avaliado pelo motor — este passo nunca vai disparar. Use inatividade, tempo ou evento." });
+  }
+  if (g?.tipo === "estado" && cond === "inatividade") {
+    avisos.push({ grave: false, texto: "Conta como inatividade não entrar no Portal, não aparecer em sessão e não responder mensagem. Cliente que nunca teve atividade nenhuma não é cobrado." });
+  }
+  if (!assetTypeIsMessage(step.asset_type)) {
+    avisos.push({ grave: true, texto: `“${assetTypeLabel(step.asset_type)}” não é um canal de envio — a régua só dispara e-mail e WhatsApp. Este passo fica como material de apoio.` });
+  }
+  if (step.publico === "admin") {
+    avisos.push({ grave: true, texto: "Público “Admin”: a régua fala com o cliente e não envia nada para a equipe Salestrack. Use as notificações do sistema." });
+  }
+  if (step.publico === "cliente") {
+    avisos.push({ grave: false, texto: "Vai só para quem tem papel de patrocinador ou administrador na conta do cliente — não para toda a equipe." });
+  }
+  if (g?.tipo === "tempo" && (g.offset_dias ?? 0) > 0) {
+    avisos.push({ grave: false, texto: `Sai ${g.offset_dias} dia(s) depois do gatilho, não na hora.` });
+  }
+  return avisos;
+}
+
 /** Régua-template padrão (engajamento AI Operating System) — instanciada por programa. */
 export const DEFAULT_REGUA_NOME = "Engajamento AI Operating System";
 export const DEFAULT_REGUA_STEPS: ReguaStep[] = [

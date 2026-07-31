@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/icons";
 import { HelpButton } from "@/components/guidance/HelpButton";
 import { AI_METHOD } from "@/lib/ds/method";
 import { gatilhoLabel, EVENTOS, type Gatilho } from "@/lib/comms/triggers";
-import { ASSET_TYPES, assetTypeLabel, stepCompleteness, type ReguaStep } from "@/lib/comms/regua";
+import { ASSET_TYPES, assetTypeLabel, stepCompleteness, diagnosticarPasso, type ReguaStep } from "@/lib/comms/regua";
 import { seedDefaultTemplateAction, addStepAction, toggleStepAction, removeStepAction, bindAssetAction, aprovarEnvioAction, cancelarItemAction, retryEnvioAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -110,6 +110,12 @@ export default async function ComunicacaoPage() {
                         <div className="min-w-0">
                           <p className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">{s.titulo}</p>
                           <p className="ds-small !mt-0.5">{gatilhoLabel(s.gatilho as Gatilho)} · material: <b className="text-[color:var(--fg-2)]">{assetTypeLabel(s.asset_type)}</b> · para {s.publico}</p>
+                          {/* O que o motor faz com este passo — inclusive quando a resposta é "nada". */}
+                          {diagnosticarPasso(s).map((a, i) => (
+                            <p key={i} className={`mt-1 font-montserrat text-[12.5px] leading-snug ${a.grave ? "text-[#B42318]" : "text-[color:var(--fg-3)]"}`}>
+                              {a.grave ? "⚠ " : "• "}{a.texto}
+                            </p>
+                          ))}
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge tone={comp.status === "completo" ? "success" : "warn"}>{comp.status === "completo" ? "completo" : "incompleto"}</Badge>
