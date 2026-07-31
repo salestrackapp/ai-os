@@ -8,6 +8,25 @@ import { sendGmail, googleConfigured } from "@/lib/google";
 import { sendToContact } from "@/lib/whatsapp";
 import type { CadenceStep } from "./types";
 
+/**
+ * Empurra para segunda o que cairia no fim de semana.
+ *
+ * A cadência agenda por deslocamento em dias — dia 0, 2, 4, 6… — e ninguém tinha visto o resultado
+ * porque o motor nunca rodou. A prévia mostrou: numa inscrição de sexta, o convite de LinkedIn cai
+ * no domingo e a ligação fria no sábado. E-mail de prospecção que chega no fim de semana é lido na
+ * segunda junto com o resto da caixa, na melhor das hipóteses; ligação de sábado é invasão.
+ *
+ * O deslocamento preserva a ORDEM e o espaçamento relativo, porque move sempre para frente.
+ */
+export function diaUtil(d: Date): Date {
+  const dia = d.getDay();
+  if (dia === 6) return new Date(d.getTime() + 2 * 86400000);  // sábado → segunda
+  if (dia === 0) return new Date(d.getTime() + 1 * 86400000);  // domingo → segunda
+  return d;
+}
+
+const emDias = (n: number, base = Date.now()) => diaUtil(new Date(base + n * 86400000)).toISOString();
+
 /** Inscreve um prospect numa cadência — BLOQUEIA se score < mínimo do ICP (regra de ouro do funil). */
 export async function enrollProspect(prospectId: string, cadenceId: string): Promise<{ ok: boolean; reason?: string }> {
   const sb = createServiceClient();
@@ -17,8 +36,7 @@ export async function enrollProspect(prospectId: string, cadenceId: string): Pro
   if (!gate.ok) return { ok: false, reason: `Score ${p.score} abaixo do mínimo do ICP (${gate.min}). Prospecção é por sinal, não volume.` };
   const { data: cad } = await sb.from("cadences").select("steps").eq("id", cadenceId).single();
   const steps = (Array.isArray(cad?.steps) ? cad!.steps : []) as CadenceStep[];
-  const firstDelayDays = steps[0]?.dia ?? 0;
-  const next = new Date(Date.now() + firstDelayDays * 86400000).toISOString();
+  const next = emDias(steps[0]?.dia ?? 0);
   const { error } = await sb.from("cadence_enrollments").insert({ prospect_id: prospectId, cadence_id: cadenceId, current_step: 0, status: "ativa", next_action_at: next });
   if (error) return { ok: false, reason: error.message };
   await sb.from("prospects").update({ status: "em_cadencia" }).eq("id", prospectId);
@@ -64,13 +82,27 @@ export async function processDueEnrollments(limit = 50): Promise<{ processed: nu
     const nextStep = steps[e.current_step + 1];
     if (nextStep) {
       const deltaDays = Math.max(0, (nextStep.dia ?? 0) - (step.dia ?? 0));
-      await sb.from("cadence_enrollments").update({ current_step: e.current_step + 1, next_action_at: new Date(Date.now() + deltaDays * 86400000).toISOString() }).eq("id", e.id);
+      await sb.from("cadence_enrollments").update({ current_step: e.current_step + 1, next_action_at: emDias(deltaDays) }).eq("id", e.id);
     } else {
       await sb.from("cadence_enrollments").update({ current_step: e.current_step + 1, status: "concluida", next_action_at: null }).eq("id", e.id);
     }
     processed++;
   }
   return { processed, drafts, tasks };
+}
+
+/**
+ * O aviso de LGPD já pode ser dado por cumprido?
+ *
+ * Par de `deveEscreverRodape`: aquele decide se o texto sai, este decide se a obrigação foi
+ * cumprida. Separados porque escrever e entregar são momentos diferentes — e foi exatamente essa
+ * distância que o código anterior ignorava, marcando como avisado quem só teve um rascunho
+ * reprovado.
+ *
+ * `manual` não conta: sem canal configurado, ninguém sabe se a mensagem foi copiada e enviada.
+ */
+export function deveCarimbarAviso(r: { enviado: boolean; manual: boolean; avisoEm: string | null }): boolean {
+  return r.enviado && !r.manual && !r.avisoEm;
 }
 
 /** Envia uma mensagem APROVADA pelo canal (Gmail/Z-API). Sem env de canal → marca como tarefa manual. */
@@ -103,6 +135,26 @@ export async function deliverApproved(messageId: string, approverId: string): Pr
   } else manual = true;
 
   await sb.from("outreach_messages").update({ status: sent ? "enviada" : "aprovada", approved_by: approverId, sent_at: sent ? new Date().toISOString() : null }).eq("id", messageId);
+
+  /**
+   * O aviso de LGPD só conta como dado depois que a mensagem SAIU.
+   *
+   * O rodapé de transparência é escrito na geração (para quem revisa poder ver o que a pessoa vai
+   * receber), mas o carimbo é aqui. Carimbar na geração marcava como avisado quem só teve um
+   * rascunho reprovado — e o contato seguinte, o real, sairia sem o aviso.
+   *
+   * `manual` não carimba de propósito: sem canal configurado, não sabemos se alguém copiou e
+   * mandou. Diante da dúvida, o próximo rascunho traz o rodapé de novo. Repetir o aviso incomoda;
+   * não avisar quebra a base legal.
+   */
+  if (deveCarimbarAviso({ enviado: sent, manual, avisoEm: null })) {
+    // O `is("aviso_em", null)` é a outra metade da condição, aplicada no próprio UPDATE: quem já
+    // tinha data mantém a do PRIMEIRO contato, que é a que interessa numa eventual auditoria.
+    await sb.from("prospects")
+      .update({ aviso_em: new Date().toISOString() })
+      .eq("id", msg.prospect_id).is("aviso_em", null);
+  }
+
   if (sent) {
     await sb.from("timeline_events").insert({ subject_type: "prospect", subject_id: msg.prospect_id, source: "cadence", kind: "toque", summary: `${msg.channel}: ${msg.subject ?? (msg.body ?? "").slice(0, 60)}`, occurred_at: new Date().toISOString() });
   }

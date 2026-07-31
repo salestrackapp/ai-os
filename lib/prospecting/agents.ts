@@ -52,6 +52,19 @@ export async function generateDossier(prospectId: string): Promise<{ ok: boolean
 }
 
 /** prospect_writer — gera o toque (rascunho) encodificando a doutrina. Salva em outreach_messages status=rascunho. */
+/**
+ * O rodapé de transparência entra nesta mensagem?
+ *
+ * Exportado, e não escondido dentro do gerador, porque é uma obrigação legal e obrigação legal
+ * precisa ser testável sem subir banco nem chamar modelo. As três condições: o dado veio de coleta
+ * (não de quem procurou a gente), há e-mail para onde mandar a via de oposição, e a pessoa ainda
+ * não foi avisada DE FATO — ver `deveCarimbarAviso` para o que "de fato" quer dizer.
+ */
+export function deveEscreverRodape(p: { procedencia: string | null; email: string | null; avisoEm: string | null }): boolean {
+  const coletado = ["coleta_publica", "terceiro"].includes(p.procedencia ?? "");
+  return coletado && !p.avisoEm && !!p.email;
+}
+
 export async function generateOutreach(prospectId: string, opts?: { warm?: boolean; channel?: string; modelo?: string; agendaUrl?: string }): Promise<{ id: string | null; degraded: boolean }> {
   const ctx = await buildProspectContext(prospectId);
   if (!ctx) return { id: null, degraded: false };
@@ -103,11 +116,19 @@ export async function generateOutreach(prospectId: string, opts?: { warm?: boole
    *
    * É acrescentado por CÓDIGO, nunca pedido ao modelo: obrigação legal não pode depender de o
    * gerador ter lembrado. E só no primeiro toque — repetir em todos vira ruído.
+   *
+   * ── Por que o carimbo NÃO acontece aqui ─────────────────────────────────────────────────────
+   * A versão anterior gravava `aviso_em` ao gerar o rascunho. Como todo rascunho passa por uma fila
+   * de aprovação e pode ser reprovado, bastava descartar um para o prospect ficar marcado como
+   * avisado sem nunca ter recebido nada — e o próximo toque, o de verdade, sairia SEM o aviso. Um
+   * campo dizendo que a obrigação foi cumprida quando ela não foi é pior do que campo nenhum.
+   *
+   * Agora o carimbo é de `deliverApproved`, na hora em que a mensagem realmente sai. Enquanto não
+   * sair, todo rascunho novo continua nascendo com o rodapé — repetição é o erro barato aqui.
    */
   const { data: pr } = await sb.from("prospects")
     .select("email, procedencia, aviso_em, source").eq("id", prospectId).maybeSingle();
-  const coletado = pr && ["coleta_publica", "terceiro"].includes(pr.procedencia as string);
-  if (coletado && !pr!.aviso_em && pr!.email) {
+  if (pr && deveEscreverRodape({ procedencia: pr.procedencia as string | null, email: pr.email as string | null, avisoEm: pr.aviso_em as string | null })) {
     const fonte = pr!.source === "apollo" ? "uma base profissional de terceiro" : "seu perfil profissional público";
     const saida = await linkDescadastro(pr!.email as string);
     const via = saida
@@ -119,7 +140,6 @@ export async function generateOutreach(prospectId: string, opts?: { warm?: boole
         + `Encarregado de dados: André Kachan · andre.kachan@salestrack.com.br.`
       : `\n\nCheguei por ${fonte}, com dados profissionais. Se preferir não receber contato, responda "sair".`;
     body = `${body}${rodape}`;
-    await sb.from("prospects").update({ aviso_em: new Date().toISOString() }).eq("id", prospectId);
   }
 
   const { data } = await sb.from("outreach_messages").insert({ prospect_id: prospectId, channel, subject, body, variant: warm ? "warm" : "cold", agent_generated: true, status: "rascunho" }).select("id").single();

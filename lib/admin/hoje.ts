@@ -65,6 +65,16 @@ export async function oQuePrecisaDeVoce(): Promise<ItemDoDia[]> {
     sb.from("legal_matters").select("id, titulo, prazo").is("concluida_em", null).lte("prazo", hoje),
   ]);
 
+  /**
+   * Rascunhos de prospecção esperando aprovação.
+   *
+   * Fica fora do Promise.all acima só para não crescer mais a desestruturação. O motor de cadências
+   * gera toque e para na fila — se a fila não aparece aqui, o rascunho envelhece sozinho e a
+   * cadência trava sem ninguém perceber que travou.
+   */
+  const fila = await sb.from("outreach_messages")
+    .select("id", { count: "exact", head: true }).eq("status", "rascunho");
+
   // ── Dinheiro parado ─────────────────────────────────────────────────────────────────────────
   const vencidas = faturas.data ?? [];
   if (vencidas.length) {
@@ -112,6 +122,17 @@ export async function oQuePrecisaDeVoce(): Promise<ItemDoDia[]> {
       acao: "Revisar rascunhos", href: "/admin/relacionamento?tri=precisa",
       fonte: "Resposta assistida — nada sai sem aprovação.",
       metrica: { valor: String(pend), rotulo: "prontas" },
+    });
+  }
+
+  const naFila = fila.count ?? 0;
+  if (naFila) {
+    itens.push({
+      chave: "prospeccao_fila", peso: "atencao",
+      achado: `${naFila} toque(s) de prospecção escritos e parados na fila — nada sai sem você aprovar.`,
+      acao: "Abrir a fila de aprovação", href: "/admin/prospeccao/aprovacao",
+      fonte: "Cadências: rascunhos gerados e ainda não decididos.",
+      metrica: { valor: String(naFila), rotulo: "a decidir" },
     });
   }
 

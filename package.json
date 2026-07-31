@@ -8,7 +8,7 @@
     "start": "next start",
     "test:rls": "vitest run tests/rls.test.ts",
     "test:ds": "vitest run --config vitest.ds.config.ts",
-    "test:unit": "vitest run tests/apollo-merge.test.ts tests/academy-content.test.ts tests/academy-ferramentas.test.ts tests/lgpd-corporativo.test.ts tests/formato-data.test.ts tests/nav-cobertura.test.ts tests/resposta-assistida.test.ts tests/triagem-caixa.test.ts"
+    "test:unit": "vitest run tests/apollo-merge.test.ts tests/academy-content.test.ts tests/academy-ferramentas.test.ts tests/lgpd-corporativo.test.ts tests/formato-data.test.ts tests/nav-cobertura.test.ts tests/resposta-assistida.test.ts tests/triagem-caixa.test.ts tests/aviso-lgpd-prospeccao.test.ts tests/cadencia-dia-util.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { readTimeline } from "@/lib/prospecting/timeline";
 import { AiAssist } from "@/components/AiAssist";
 import { canEnroll } from "@/lib/prospecting/score";
+import { simularCadencia } from "@/lib/prospecting/simulacao";
 import { googleConfigured } from "@/lib/google";
 import { ICP_LABELS, PROSPECT_STATUS_LABELS, type Prospect, type ProspectAccount, type Cadence } from "@/lib/prospecting/types";
 import { runDossier, runOutreach, enrollInCadence, ingestTimeline, registerResponse, convertToDeal, markNurture } from "../ops";
@@ -31,6 +32,13 @@ export default async function ProspectFicha({ params }: { params: Promise<{ id: 
   const cadList = (cadences as Cadence[]) ?? [];
   const gate = canEnroll(prospect);
   const signals = Array.isArray(account?.signals) ? (account!.signals as string[]) : [];
+
+  /**
+   * O que a cadência FARIA — calculado antes de qualquer clique, para a primeira cadência do ICP
+   * do prospect. Não escreve nada; só mostra o calendário e onde ele esbarra em canal desligado.
+   */
+  const cadenciaSugerida = cadList.find((c) => c.icp === prospect.icp) ?? cadList[0] ?? null;
+  const previa = gate.ok && cadenciaSugerida ? await simularCadencia(id, cadenciaSugerida.id) : null;
 
   return (
     <ContentArea>
@@ -113,10 +121,32 @@ export default async function ProspectFicha({ params }: { params: Promise<{ id: 
               {!gate.ok ? (
                 <p className="text-sm text-muted2"><Icon name="lock" size={13} className="inline -mt-0.5" /> Score {prospect.score} abaixo do mínimo do ICP (<b className="text-cream">{gate.min}</b>). Prospecção é por <b>sinal, não volume</b> — enriqueça sinais/cargo para qualificar.</p>
               ) : (
-                <form action={enrollInCadence.bind(null, id)} className="space-y-2">
-                  <select name="cadence_id" className="input w-full text-sm" required><option value="">Escolha a cadência…</option>{cadList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-                  <button className="btn-gold w-full justify-center text-sm">Inscrever na cadência</button>
-                </form>
+                <>
+                  {/* O que vai acontecer, antes de acontecer. Ver §simulacao.ts: nada aqui escreve. */}
+                  {previa && (
+                    <div className="mb-3 rounded-ds-card border border-hairline bg-[var(--bg-2)] p-3">
+                      <p className="text-[13px] font-semibold text-cream">Se inscrever agora, em <b>{previa.cadencia}</b>:</p>
+                      <ul className="mt-2 space-y-1.5">
+                        {previa.passos.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2 text-[12.5px] leading-snug">
+                            <span className="w-24 shrink-0 text-muted2">{s.quando}</span>
+                            <span className="w-20 shrink-0 text-cream">{s.canal}</span>
+                            <span className={s.desfecho === "rascunho_para_aprovar" ? "text-cream" : "text-muted2"}>{s.explicacao}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-2 text-[12px] text-muted2">
+                        {previa.manuais === 0
+                          ? "Todos os toques chegam prontos na fila para você aprovar."
+                          : <>Dos {previa.passos.length} passos, <b className="text-cream">{previa.manuais}</b> viram trabalho manual seu. <b>Nenhuma mensagem sai sem sua aprovação.</b></>}
+                      </p>
+                    </div>
+                  )}
+                  <form action={enrollInCadence.bind(null, id)} className="space-y-2">
+                    <select name="cadence_id" defaultValue={cadenciaSugerida?.id ?? ""} className="input w-full text-sm" required><option value="">Escolha a cadência…</option>{cadList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+                    <button className="btn-gold w-full justify-center text-sm">Inscrever na cadência</button>
+                  </form>
+                </>
               )}
               {(enrollments ?? []).length > 0 && (
                 <div className="mt-3 space-y-1">
