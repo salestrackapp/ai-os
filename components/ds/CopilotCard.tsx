@@ -34,7 +34,8 @@ export function CopilotCard({ agent = "Copiloto", status = "ativo", finding, act
   return (
     <div className={cn("relative overflow-hidden rounded-ds-card p-5 text-white shadow-ds-brand", className)} style={{ background: FUNDO[tone] ?? FUNDO.brand }}>
       <span aria-hidden className="absolute right-4 top-4 text-spark">✳</span>
-      <div className="flex items-center gap-2 text-white/85">
+      {/* pr-6 reserva o canto do ✳: sem isso, um rótulo de estado mais longo que "ativo" passa por baixo dele. */}
+      <div className="flex items-center gap-2 pr-6 text-white/85">
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white/15">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.29 1.29L3 12l5.8 1.9a2 2 0 0 1 1.29 1.29L12 21l1.9-5.8a2 2 0 0 1 1.29-1.29L21 12l-5.8-1.9a2 2 0 0 1-1.29-1.29Z" /></svg>
         </span>
