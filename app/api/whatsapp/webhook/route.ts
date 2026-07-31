@@ -22,13 +22,28 @@ const STATUS_MAP: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
-  // Segredo via query. Se WHATSAPP_WEBHOOK_KEY estiver definido, exige match; senão, aceita (piloto) e loga.
-  const key = req.nextUrl.searchParams.get("key");
+  /**
+   * FAIL-CLOSED, como todo o resto do sistema.
+   *
+   * A guarda anterior era `if (expected && key !== expected) → 401`: sem a env definida, o webhook
+   * aceitava QUALQUER chamada. Quem descobrisse a URL — que é pública por natureza, vai configurada
+   * na Z-API — inseria mensagem forjada na inbox da equipe, criava conversa em nome de qualquer
+   * telefone e, com a resposta assistida ligada, faria a IA redigir em cima do texto plantado.
+   *
+   * É exatamente o defeito que `/api/leads/novo` documenta ter corrigido em `/api/cron/orchestrate`.
+   * A casa já decidiu: sem segredo configurado, a rota não passa livre — ela para.
+   *
+   * Custo hoje: zero. A Z-API não está configurada (item 14 do CONFIG_PENDENTE), então não há
+   * entrega chegando. E isto força a ordem certa de ativação: primeiro a chave, depois o webhook.
+   */
   const expected = process.env.WHATSAPP_WEBHOOK_KEY;
-  if (expected && key !== expected) {
+  if (!expected) {
+    console.warn("[whatsapp] webhook recusado: WHATSAPP_WEBHOOK_KEY não configurada.");
+    return NextResponse.json({ error: "not_configured" }, { status: 503 });
+  }
+  if (req.nextUrl.searchParams.get("key") !== expected) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (!expected) console.warn("[whatsapp] webhook sem WHATSAPP_WEBHOOK_KEY — aceitando (defina a env para exigir chave).");
   const sb = createServiceClient();
   const body = await req.json().catch(() => ({}));
   console.log("[whatsapp] webhook recebido:", JSON.stringify({ type: body?.type, phone: body?.phone, fromMe: body?.fromMe, hasText: !!(body?.text?.message ?? body?.message), status: body?.status }));

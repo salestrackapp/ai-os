@@ -280,9 +280,9 @@ O número mostra o tamanho: **204 conversas de e-mail ativas contra 1 de WhatsAp
    sua conta exigir, o **Client-Token**.
 2. No AI OS: **Configurar → Parâmetros e integrações** → provedor **`zapi`** → cole
    `instance_id`, `token` e (se houver) `client_token`.
-3. Na Vercel, defina `WHATSAPP_WEBHOOK_KEY` com um valor aleatório e longo. **Enquanto estiver
-   vazio, o webhook aceita qualquer chamada** — qualquer um que descubra a URL consegue inserir uma
-   mensagem falsa na sua inbox.
+3. Na Vercel, defina `WHATSAPP_WEBHOOK_KEY` com um valor aleatório e longo. **Sem ela o webhook
+   responde 503 e não recebe nada** — é proposital: antes ele aceitava qualquer chamada, e quem
+   descobrisse a URL inseria mensagem forjada na sua inbox. Defina a chave ANTES do passo 4.
 4. Faça o deploy e, na inbox (**Relacionamento**), clique em **Ativar recebimento** — o AI OS
    registra o webhook na Z-API sozinho, já com a chave.
 5. Mande uma mensagem para o número e confirme que a conversa aparece.
