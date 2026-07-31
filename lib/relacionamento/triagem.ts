@@ -48,13 +48,29 @@ const PLATAFORMA_ENVIO = /(beehiiv|mailerlite|substack|mailchimp|mandrill|sendgr
 /** Nosso próprio endereço: é o sistema avisando a gente, ou nós mesmos em cópia. */
 const NOSSO_DOMINIO = /@(salestrack\.com\.br|andrekachan\.com\.br)$/i;
 
+/**
+ * Aviso do calendário, não mensagem de gente.
+ *
+ * Achado na primeira rodada real: de 10 conversas marcadas "precisa de você", 5 eram
+ * "Aceito: Reunião…" — o Google avisando que alguém clicou em aceitar. O classificador acertou ao
+ * hesitar (o remetente É uma pessoa), mas ninguém responde a um aceite de convite. Como o prefixo é
+ * gerado pelo próprio calendário, isto é decidível sem IA — e sem custo.
+ *
+ * Só casa no COMEÇO do assunto: "Re: Convite…" é alguém escrevendo de volta, e aí é conversa.
+ */
+const ASSUNTO_CALENDARIO = /^(aceito|aceita|accepted|recusado|recusada|declined|tentative|provisório|provisorio|cancelado|canceled|cancelled|convite|invitation|updated invitation|convite atualizado)\s*:/i;
+
 export type Veredito = { categoria: Categoria; motivo: string };
 
 /**
  * Camada 1. Devolve `null` quando não consegue decidir sozinha — e não decidir é a resposta certa
  * na maior parte dos casos interessantes.
  */
-export function triarPeloRemetente(email: string | null): Veredito | null {
+export function triarPeloRemetente(email: string | null, assunto?: string | null): Veredito | null {
+  if (ASSUNTO_CALENDARIO.test((assunto ?? "").trim())) {
+    return { categoria: "informativo", motivo: "Aviso do calendário sobre um convite — não espera resposta." };
+  }
+
   const e = (email ?? "").trim().toLowerCase();
   if (!e || !e.includes("@")) return null;
   const [local, dominio] = [e.split("@")[0], e.split("@").slice(1).join("@")];
@@ -130,7 +146,7 @@ export async function triarPendentes(max = 30): Promise<{ olhadas: number; porIA
      */
     let v: Veredito | null = c.channel === "whatsapp"
       ? { categoria: "precisa_resposta", motivo: "Mensagem de WhatsApp — sempre de uma pessoa." }
-      : triarPeloRemetente(c.contato_email as string | null);
+      : triarPeloRemetente(c.contato_email as string | null, c.assunto as string | null);
 
     if (!v) {
       const { data: ms } = await sb.from("rel_mensagens")

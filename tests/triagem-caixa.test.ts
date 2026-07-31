@@ -79,6 +79,26 @@ describe("triagem pelo remetente (camada sem IA)", () => {
     expect(triarPeloRemetente("fulano")).toBeNull();
   });
 
+  /**
+   * Achado na primeira rodada em produção: metade do que entrou em "precisa de você" eram avisos
+   * de calendário. O remetente é uma pessoa de verdade — por isso a camada de julgamento hesitou —
+   * mas ninguém responde a "Aceito: Reunião".
+   */
+  it.each([
+    "Aceito: Reunião André x Luciano — Assuntos de IA",
+    "Accepted: Treinamento de IA para Equipe | Salestrack AI",
+    "Aceita: Agentes no Claude — André & René",
+    "Declined: Diagnóstico comercial",
+    "Convite: Kickoff do programa",
+  ])("assunto %s é aviso de calendário, mesmo vindo de gente", (assunto) => {
+    const v = triarPeloRemetente("jorge.freire@grupopbe.com", assunto);
+    expect(v?.categoria).toBe("informativo");
+  });
+
+  it("mas responder a um convite É conversa — o Re: na frente muda tudo", () => {
+    expect(triarPeloRemetente("lco.souza@gmail.com", "Re: Convite de remetente desconhecido: Reunião")).toBeNull();
+  });
+
   it("não confunde nome de pessoa que contenha uma palavra da lista", () => {
     // "newsletter" é bloqueio; "newton" não pode ser. O separador na regex é o que garante isso.
     expect(triarPeloRemetente("newton.alves@empresa.com.br")).toBeNull();
