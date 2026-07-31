@@ -7,6 +7,7 @@ import { ProposalDocument } from "@/components/proposals/ProposalDocument";
 import { ReadTracker } from "@/components/proposals/ReadTracker";
 import { DecisionBar } from "@/components/proposals/DecisionBar";
 import { PROPOSAL_STATUS_LABELS, type ProposalItem, type TimelinePhase } from "@/lib/types";
+import { avisarPropostaLida } from "@/lib/notifications/eventos";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,14 @@ export default async function PublicProposal({ params }: { params: Promise<{ tok
     const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || null;
     await sb.from("proposal_events").insert({ proposal_id: prop.id, kind: "viewed", ip });
     if (prop.status === "enviada") await sb.from("proposals").update({ status: "em_leitura" }).eq("id", prop.id);
+    // Dois destinos de propósito: o WhatsApp chega no bolso (quando a Z-API estiver ligada) e o
+    // aviso do sistema fica registrado e chega por e-mail. Até aqui só existia o primeiro — que
+    // está mudo, porque a Z-API nunca foi configurada. O sinal mais quente do funil não aparecia.
     await notifyAdmin(`👀 ${prop.client_name ?? "O cliente"} abriu a proposta "${prop.title}".`);
+    await avisarPropostaLida({
+      propostaId: prop.id as string, titulo: prop.title as string,
+      cliente: prop.client_name as string | null, orgId: prop.org_id as string | null,
+    });
     // O mesmo evento que já disparava a notificação agora também alimenta o engajamento: abrir a
     // proposta é dos sinais mais fortes que existem, e até aqui não pesava em nada.
     const prospectId = await prospectDoDeal(prop.deal_id as string | null)

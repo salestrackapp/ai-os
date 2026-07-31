@@ -10,6 +10,7 @@ import { dispararGatilho } from "@/lib/agents/gatilhos";
 import { enrollProspect, pauseEnrollments, deliverApproved, processDueEnrollments } from "@/lib/prospecting/cadence";
 import { ingestProspectTimeline } from "@/lib/prospecting/timeline";
 import { addToNurture } from "@/lib/mailerlite";
+import { avisarProspectRespondeu } from "@/lib/notifications/eventos";
 
 async function requireAdmin() {
   const m = await currentMembership();
@@ -71,6 +72,8 @@ export async function registerResponse(prospectId: string, formData: FormData) {
     empresa: (pr?.prospect_accounts as unknown as { name: string } | null)?.name,
     resposta: text, classificacao: cls.label,
   }, { tipo: "prospect", id: prospectId });
+
+  await avisarProspectRespondeu({ prospectId, nome: (pr?.name as string) ?? null, classificacao: cls.label, trecho: text });
 
   await audit("prospect.response", "prospects", prospectId, { label: cls.label }, undefined);
   revalidatePath(`/admin/prospeccao/${prospectId}`);

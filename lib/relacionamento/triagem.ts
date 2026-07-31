@@ -1,6 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/service";
 import { runAgentCore, anthropicConfigured } from "@/lib/agents/runner";
+import { avisarMensagemQuePrecisaDeVoce } from "@/lib/notifications/eventos";
 
 /**
  * Triagem da caixa: o que espera resposta de uma pessoa, e o que é máquina falando.
@@ -133,7 +134,7 @@ async function triarPelaIA(dados: { assunto: string | null; remetente: string | 
 export async function triarPendentes(max = 30): Promise<{ olhadas: number; porIA: number; precisamDeVoce: number }> {
   const sb = createServiceClient();
   const { data: convs } = await sb.from("rel_conversas")
-    .select("id, contato_email, assunto, channel")
+    .select("id, contato_email, contato_nome, assunto, channel")
     .is("triagem", null).is("deleted_at", null)
     .order("last_message_at", { ascending: false }).limit(max);
 
@@ -165,7 +166,24 @@ export async function triarPendentes(max = 30): Promise<{ olhadas: number; porIA
       triagem: v.categoria, triagem_motivo: v.motivo, triagem_em: new Date().toISOString(),
     }).eq("id", c.id);
     olhadas++;
-    if (v.categoria === "precisa_resposta") precisamDeVoce++;
+
+    /**
+     * O aviso de "alguém espera resposta" nasce AQUI, e não na chegada da mensagem.
+     *
+     * Se disparasse a cada mensagem que entra, seriam duzentas notificações de relatório DMARC e
+     * newsletter — e o efeito de duzentas notificações inúteis é ensinar a pessoa a ignorar a
+     * ducentésima primeira, que era a do cliente. Avisar só depois de saber que é gente é o que
+     * torna o aviso digno de confiança.
+     */
+    if (v.categoria === "precisa_resposta") {
+      precisamDeVoce++;
+      await avisarMensagemQuePrecisaDeVoce({
+        conversaId: c.id as string,
+        contato: (c.contato_nome as string | null) ?? (c.contato_email as string | null),
+        assunto: c.assunto as string | null,
+        canal: c.channel as string,
+      });
+    }
   }
   return { olhadas, porIA, precisamDeVoce };
 }

@@ -5,6 +5,7 @@ import { auditService } from "@/lib/audit";
 import { notifyAdmin } from "@/lib/whatsapp";
 import { downloadSignedPdf } from "@/lib/docusign";
 import { runKickoff } from "@/lib/kickoff";
+import { avisarContratoAssinado } from "@/lib/notifications/eventos";
 
 function validHmac(raw: string, header: string | null): boolean {
   const secret = process.env.DOCUSIGN_CONNECT_SECRET;
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
       await sb.from("contract_events").insert({ contract_id: c.id, kind: "assinado", payload: { envelopeId, hash } });
       await auditService("contract.signed", "contracts", c.id, { envelopeId, hash }, c.org_id ?? undefined);
       await notifyAdmin(`✅ Contrato assinado (Docusign): ${c.signer_name ?? ""}. Iniciando kickoff…`);
+      await avisarContratoAssinado({ contratoId: c.id as string, signatario: c.signer_name as string | null, orgId: c.org_id as string | null });
       await runKickoff(c.id);
     } catch (e) {
       await sb.from("contract_events").insert({ contract_id: c.id, kind: "kickoff_erro", payload: { error: (e as Error).message } });

@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { auditService } from "@/lib/audit";
 import { calendlyConfigured, resolveOrgByEmail } from "@/lib/live-sessions";
 import { notifyAdmin } from "@/lib/whatsapp";
+import { avisarSessaoAgendada } from "@/lib/notifications/eventos";
 
 /**
  * Webhook Calendly (modo degradado quando CALENDLY_WEBHOOK_TOKEN não está definido).
@@ -33,11 +34,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, matched: false });
   }
   // tipo padrão: sessao_estrategica (admin pode reclassificar no programa)
-  await sb.from("sessions").insert({
+  const { data: nova } = await sb.from("sessions").insert({
     org_id: orgId, type: "sessao_estrategica", title: eventName, status: "agendada",
     scheduled_at: startTime ? new Date(startTime).toISOString() : null, meet_link: meet, calendly_ref: calendlyRef,
-  });
+  }).select("id").maybeSingle();
   await auditService("session.calendly_created", "sessions", undefined, { email, eventName }, orgId);
   await notifyAdmin(`📅 Nova sessão agendada via Calendly: ${eventName}`);
+  const { data: org } = await sb.from("organizations").select("name").eq("id", orgId).maybeSingle();
+  await avisarSessaoAgendada({
+    sessaoId: (nova?.id as string) ?? null, titulo: eventName,
+    quando: startTime ? new Date(startTime).toISOString() : null,
+    cliente: (org?.name as string) ?? null, orgId,
+  });
   return NextResponse.json({ ok: true, matched: true });
 }
