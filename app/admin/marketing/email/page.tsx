@@ -51,10 +51,14 @@ export default async function EmailMarketing() {
           {podem === 0 && (
             <p className="mt-2 font-montserrat text-[12.5px] leading-snug text-[color:var(--fg-2)]">
               A lista está vazia porque ninguém consentiu ainda — e dado de prospecção não pode virar
-              lista de marketing. Ela cresce pelos formulários dos sites, onde a pessoa marca a caixa
-              de aceite. Você pode montar e testar campanhas desde já.
+              lista de marketing. Você pode montar e testar campanhas desde já.
             </p>
           )}
+          <p className="mt-2 font-montserrat text-[12.5px] leading-snug text-[color:var(--fg-3)]">
+            A lista cresce por <a href="/inscrever" target="_blank" rel="noopener noreferrer" className="text-[color:var(--brand)] hover:underline">salestrack.com.br/inscrever</a> —
+            divulgue esse link. Quem se inscreve confirma por e-mail antes de entrar, e é esse clique
+            que vale como consentimento.
+          </p>
         </Card>
         <Card className={resendConfigurado() ? undefined : "border-[color:var(--warn)]"}>
           <p className="font-montserrat text-[14px] font-semibold text-[color:var(--fg-1)]">
