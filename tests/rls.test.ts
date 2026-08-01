@@ -276,6 +276,97 @@ describe("Resposta assistida · rel_sugestoes (admin-only)", () => {
 });
 
 /**
+ * O RPC das funções internas.
+ *
+ * ── Por que este bloco existe ─────────────────────────────────────────────────────────────────
+ * Toda função no schema `public` do Supabase vira endpoint em `/rest/v1/rpc/<nome>`. A Fase 0
+ * mandou revogar o EXECUTE de `anon` nas internas; meses depois o advisor mostrou que metade
+ * continuava aberta. O motivo é uma armadilha do próprio Supabase: `alter default privileges`
+ * concede a `anon` e `authenticated` EXPLICITAMENTE, então `revoke from public` não tira nada —
+ * e qualquer migration nova reabre tudo em silêncio.
+ *
+ * Ordem escrita não se sustenta contra isso. Teste, sim.
+ */
+describe("Funções internas não são chamáveis por anônimo", () => {
+  it("anon NÃO executa as funções que sustentam a RLS", async () => {
+    for (const fn of ["is_salestrack_admin", "user_org_ids", "academy_manager_org_ids"]) {
+      const { error } = await anon.rpc(fn);
+      expect(error, `anon executou ${fn}()`).not.toBeNull();
+    }
+  });
+
+  it("nem anon nem cliente executam utilitário de manutenção ou função de gatilho", async () => {
+    for (const cli of [anon, userA]) {
+      for (const fn of ["rls_auto_enable", "fn_academy_attempt_guard", "fn_academy_matricula_liberada"]) {
+        const { error } = await cli.rpc(fn);
+        expect(error, `${fn}() ficou chamável`).not.toBeNull();
+      }
+    }
+  });
+
+  /**
+   * A contraparte: `authenticated` PRECISA continuar executando as duas primeiras. Elas aparecem em
+   * 397 e 51 políticas — revogar de quem tem sessão faria toda consulta do sistema falhar por
+   * permissão. Este teste existe para ninguém "fechar mais um pouco" e derrubar tudo.
+   */
+  it("mas quem tem sessão executa — a RLS depende disso", async () => {
+    expect((await userA.rpc("is_salestrack_admin")).error).toBeNull();
+    expect((await userA.rpc("user_org_ids")).error).toBeNull();
+  });
+
+  /** Rate limit dos formulários públicos: devolve número, nunca linha. Aberto de propósito. */
+  it("o contador de limite de taxa segue aberto a anônimo, e devolve só um número", async () => {
+    const { data, error } = await anon.rpc("site_leads_recentes_por_ip", { p_ip_hash: "zzz", p_minutos: 10 });
+    expect(error).toBeNull();
+    expect(typeof data).toBe("number");
+  });
+});
+
+/**
+ * Storage: contrato assinado, entregável e biblioteca do cliente.
+ *
+ * ── O que protege esses arquivos ──────────────────────────────────────────────────────────────
+ * Três coisas, e a terceira é contraintuitiva: os buckets são privados, a RLS está ligada em
+ * `storage.objects`, e NÃO existe política nenhuma ali. Zero política com RLS ligada é o
+ * fechamento mais forte possível — ninguém além do service_role toca em nada. Todo acesso passa
+ * por URL assinada de uma hora, gerada pelo servidor depois de a RLS das tabelas já ter decidido
+ * o que aquela pessoa pode ver.
+ *
+ * ── Por que virou teste ───────────────────────────────────────────────────────────────────────
+ * As duas formas de perder isso são silenciosas e a um clique de distância: marcar um bucket como
+ * público no painel para "só ver rápido um PDF", ou adicionar uma política permissiva em
+ * `storage.objects` para destravar um upload. Nos dois casos, contrato assinado e certificado
+ * passam a ser legíveis por quem tiver a URL — e nada na aplicação avisaria.
+ */
+describe("Storage · arquivos de cliente", () => {
+  it("nenhum bucket é público", async () => {
+    const { data } = await admin.storage.listBuckets();
+    const publicos = (data ?? []).filter((b) => b.public).map((b) => b.name);
+    expect(publicos, `bucket público: ${publicos.join(", ")}`).toHaveLength(0);
+  });
+
+  it("anônimo não lista nem baixa objeto de nenhum bucket", async () => {
+    for (const bucket of ["contratos", "entregaveis", "biblioteca"]) {
+      const { data } = await anon.storage.from(bucket).list();
+      expect(data ?? [], `anon listou ${bucket}`).toHaveLength(0);
+    }
+  });
+
+  it("cliente autenticado também não — o acesso é por URL assinada, não por sessão", async () => {
+    for (const bucket of ["contratos", "entregaveis", "biblioteca"]) {
+      const { data } = await userA.storage.from(bucket).list();
+      expect(data ?? [], `cliente listou ${bucket}`).toHaveLength(0);
+    }
+  });
+
+  it("cliente não sobe arquivo direto para o bucket de contratos", async () => {
+    const { error } = await userA.storage.from("contratos")
+      .upload(`zz-teste/${Date.now()}.txt`, new Blob(["x"]), { upsert: false });
+    expect(error).not.toBeNull();
+  });
+});
+
+/**
  * As tabelas que as Server Actions do admin escrevem SEM guarda própria até hoje.
  *
  * A auditoria das actions mostrou que a proteção delas era só a RLS — e a RLS não estava testada

@@ -137,6 +137,22 @@ e-mail de recuperação da Salestrack com um link que entrega o token de sessão
 1. Admin → **Estúdio do Método** → revisar o campo **Ganho** de cada receita (com números reais quando tiver) e desmarcar "a revisar".
 2. Em **Catálogo de Sessões**, preencher o **Calendly URL** de cada modalidade e marcar **Publicada no portal** — assim o cliente vê o botão "Agendar".
 
+## 8-B. 🟡 Proteção contra senha vazada — um interruptor, 30 segundos
+
+**Ainda desligada.** Consta como resolvida na Fase 0 e não está: o advisor do Supabase acusa
+`auth_leaked_password_protection` desabilitado. Com ela ligada, o Supabase confere toda senha nova
+contra a base do HaveIBeenPwned e recusa as que já vazaram em incidentes conhecidos.
+
+**Por que importa aqui:** as senhas do AI OS são criadas por gente de fora — cliente aceitando
+convite, aluno se matriculando. Senha reaproveitada de um vazamento antigo é o vetor mais comum de
+invasão de conta, e nenhuma outra defesa do sistema pega isso.
+
+**Onde:** Supabase → projeto `ai-os` → **Authentication → Policies** (ou *Providers → Email*) →
+ligar **"Prevent use of leaked passwords"**. Não exige redeploy nem mexe em quem já tem senha.
+
+**Enquanto isso:** o item 9 (MFA) segue valendo, e a sua conta continua sem MFA desde que o
+removemos.
+
 ## 9. 🟢 Segurança extra (MFA) — quando quiser
 **Por que:** já existe suporte a MFA (2 fatores) para o admin; está **desligado** por padrão para não te travar.
 **Passo a passo:**
