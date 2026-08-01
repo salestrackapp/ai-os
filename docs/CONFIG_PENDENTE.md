@@ -305,12 +305,37 @@ produção. O disparo para a lista também funciona.
 **Falta uma coisa só:**
 
 1. **`RESEND_WEBHOOK_SECRET`** — sem ele, abertura, clique, bounce e reclamação ficam em **zero** no
-   painel da campanha. O e-mail sai, mas o retorno não chega. No painel do Resend: *Webhooks → Add
-   Endpoint* → `https://ai-os.salestrack.com.br/api/resend/webhook` (ou o domínio atual), marcando
-   `email.delivered`, `email.opened`, `email.clicked`, `email.bounced` e `email.complained`. Copie o
-   `whsec_…` para a env na Vercel.
+   painel da campanha. O e-mail sai; o retorno não volta.
+
+   **O segredo é emitido pelo Resend**, não escolhido por nós — ele assina cada chamada com esse
+   valor, e a rota confere. Por isso este item depende de alguém abrir o painel do Resend.
+
+   1. Resend → **Webhooks → Add Endpoint**
+      URL: `https://ai-os-sable.vercel.app/api/resend/webhook`
+      *(quando o DNS do item 1 subir, trocar para `https://ai-os.salestrack.com.br/api/resend/webhook`
+      — o Resend permite editar a URL sem gerar segredo novo.)*
+   2. Marcar os cinco eventos: `email.delivered`, `email.opened`, `email.clicked`, `email.bounced`,
+      `email.complained`.
+   3. Copiar o **Signing Secret** (`whsec_…`) → Vercel → env `RESEND_WEBHOOK_SECRET` (Production) →
+      **redeploy** (variável nova só vale a partir do próximo build).
+
+   **O detalhe que costuma passar batido:** abertura e clique dependem de dois interruptores no
+   Resend, em **Domains → salestrack.com.br → Open Tracking / Click Tracking**, que vêm
+   **desligados**. Com o webhook configurado e esses interruptores desligados, `delivered`, `bounced`
+   e `complained` chegam, e `opened`/`clicked` nunca chegam — e a impressão é de que o webhook
+   falhou. *Click tracking reescreve os links do e-mail para passarem por um domínio do Resend;
+   é o preço de saber quem clicou.*
+
    *Bounce e reclamação não são só métrica:* eles bloqueiam o endereço para sempre, e é isso que
    protege a reputação do domínio — a mesma que os e-mails transacionais usam.
+
+   **Como conferir que está fechado agora** (é o esperado enquanto a env não existe):
+   ```
+   curl -s -X POST https://ai-os-sable.vercel.app/api/resend/webhook -d '{}'
+   → {"error":"not_configured"}   ·   HTTP 503
+   ```
+   Depois de configurar, o mesmo comando deve devolver **401** (rota ligada, assinatura inválida).
+   Se continuar 503, a variável não chegou no build.
 2. ~~**`EMAIL_MARKETING_FROM`**~~ — **decidido em 31/07/2026: não configurar.** As campanhas saem
    de `Salestrack AI <aios@salestrack.com.br>`, o mesmo endereço dos avisos do sistema.
 
