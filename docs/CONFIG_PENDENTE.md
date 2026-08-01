@@ -393,6 +393,29 @@ prazo vencido vira alerta crítico. O e-mail do encarregado é avisado no instan
 ## 16. 🟢 Opcionais (só se precisar)
 - **Stripe:** cobrança internacional (alternativa à ASAAS). Envs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` e `PAYMENT_PROVIDER=stripe`. Só se for cobrar fora do Brasil.
 
+## 18. 🟢 Os dois sites no GitHub — dois repositórios a criar
+
+Nem `salestrack.com.br` nem `andrekachan.com.br` publicam por push: os dois sobem por
+`vercel deploy --prod` rodado à mão, porque nenhum dos dois projetos está conectado a um
+repositório remoto. Enquanto for assim, não há histórico do que foi ao ar nem como voltar atrás.
+
+**Já feito:** `~/salestrack-website` virou repositório git (não era) e ganhou o primeiro commit, com
+a identidade `andre.kachan@salestrack.com.br` — o endereço que a Vercel exige, e cuja ausência foi
+o que bloqueou o deploy do outro site. Os dois foram auditados: nenhuma chave em arquivo nem no
+histórico.
+
+**O que falta, e é seu:** criar em github.com/new, na conta `salestrackapp`, dois repositórios
+**privados**, sem README/.gitignore/licença (o conteúdo já existe no disco):
+
+- `salestrack-website`
+- `andrekachan-website`
+
+O token no Keychain é um fine-grained PAT com escopo só do `ai-os` — ele não cria repositório, e é
+por isso que este passo não pôde ser automatizado. Criados os dois, eu ligo os remotos, subo os
+históricos e conecto os projetos da Vercel, e push volta a publicar sozinho.
+
+**Nada quebra enquanto não for feito** — os dois sites seguem publicando pela CLI.
+
 ---
 
 ## Referência rápida de status dos envs (Vercel Production)
