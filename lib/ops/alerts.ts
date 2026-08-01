@@ -41,6 +41,32 @@ export async function scanAlerts(): Promise<{ criados: number }> {
       await raise("custo_ia", "aviso", h.org_id, `Custo de IA acima de ${Math.round(costPctLimit * 100)}% da mensalidade — ${orgName[h.org_id] ?? "cliente"} (US$ ${Number(h.ai_cost_usd).toFixed(2)})`);
   }
 
+  /**
+   * Pedido de titular com prazo chegando.
+   *
+   * A LGPD dá 15 dias para responder (art. 19, II), e um pedido esquecido é a única falha aqui que
+   * a própria empresa nunca sente: o titular some, o dado continua no banco, e o descumprimento só
+   * aparece se ele reclamar na ANPD. Por isso o prazo vira alerta antes de vencer — mesmo defeito,
+   * e mesma correção, da fatura vencida que ninguém via.
+   *
+   * Um alerta agregado por dia, e não um por pedido: com a dedução por (kind, dia), um alerta por
+   * pedido criaria uma linha nova toda manhã para o mesmo pedido parado.
+   */
+  const agora = new Date();
+  const em5dias = new Date(agora.getTime() + 5 * 86400000).toISOString();
+  const { data: dsr } = await sb.from("dsr_requests")
+    .select("email, prazo_em").in("status", ["recebido", "em_analise"]).lte("prazo_em", em5dias);
+
+  const vencidos = (dsr ?? []).filter((p) => new Date(p.prazo_em as string) < agora);
+  const vencendo = (dsr ?? []).length - vencidos.length;
+  if (vencidos.length) {
+    await raise("dsr_prazo_vencido", "critico", null,
+      `${vencidos.length} pedido(s) de titular com prazo VENCIDO — ${vencidos.slice(0, 3).map((p) => p.email).join(", ")}`);
+  }
+  if (vencendo > 0) {
+    await raise("dsr_prazo", "aviso", null, `${vencendo} pedido(s) de titular vencem em menos de 5 dias`);
+  }
+
   const after = (await sb.from("alerts").select("id", { count: "exact", head: true }).gte("created_at", new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString())).count ?? 0;
   return { criados: after - before };
 }

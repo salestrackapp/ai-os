@@ -1226,6 +1226,35 @@ describe("LGPD · consentimento, pedidos do titular e descadastro", () => {
     expect(error, "cliente registrou pedido de titular").not.toBeNull();
   });
 
+  /**
+   * A tabela de espera da página pública.
+   *
+   * Ela guarda "fulano pediu para ser apagado" antes mesmo de o pedido existir — a própria
+   * existência da linha é informação sobre o exercício de um direito. Diferente de
+   * `newsletter_inscricoes`, aqui NÃO há policy de insert anônimo: se houvesse, o navegador
+   * poderia gravar direto, sem passar pelo limite de taxa da Server Action.
+   */
+  it("ninguém além do admin toca a fila de confirmação de pedidos", async () => {
+    const { data } = await userA.from("dsr_confirmacoes").select("id");
+    expect(data ?? [], "cliente leu pedidos em espera").toHaveLength(0);
+
+    const { error: eIns } = await userA.from("dsr_confirmacoes")
+      .insert({ tipo: "exclusao", email: "invasor@x.com" });
+    expect(eIns, "cliente inseriu na fila de confirmação").not.toBeNull();
+
+    const { error: eAnon } = await anon.from("dsr_confirmacoes")
+      .insert({ tipo: "exclusao", email: "invasor@x.com" });
+    expect(eAnon, "anônimo inseriu direto na fila — a Server Action deixou de ser o único caminho").not.toBeNull();
+  });
+
+  it("o pedido em espera só aceita os tipos que dsr_requests grava", async () => {
+    // Um tipo aceito aqui e recusado lá produziria confirmação que morre na gravação: o titular
+    // clica, vê "confirmado", e o pedido não existe.
+    const { error } = await admin.from("dsr_confirmacoes")
+      .insert({ tipo: "inventado", email: alvo });
+    expect(error, "aceitou tipo fora do vocabulário de dsr_requests").not.toBeNull();
+  });
+
   it("o token de descadastro não é legível por cliente — vazaria o e-mail de terceiro", async () => {
     const { data } = await userA.from("descadastro_tokens").select("endereco");
     expect(data ?? [], "cliente leu tokens de descadastro").toHaveLength(0);

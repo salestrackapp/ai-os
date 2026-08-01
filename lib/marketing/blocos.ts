@@ -1,4 +1,4 @@
-import { EMAIL_ENCARREGADO } from "@/lib/lgpd/contato";
+import { EMAIL_ENCARREGADO, urlDireitos } from "@/lib/lgpd/contato";
 
 /**
  * Os blocos de um e-mail e como viram HTML.
@@ -152,9 +152,15 @@ export function renderEmail(input: RenderInput): string {
 
   const assunto = resolver(input.assunto);
   const corpo = blocos.map(renderBloco).join("\n");
-  const saida = input.unsubscribeUrl
+  /**
+   * Duas saídas, e não uma: descadastrar é parar de receber, exercer direito é decidir o que a
+   * empresa guarda. Quem só quer silêncio clica no primeiro; quem quer sumir da base precisa do
+   * segundo, e ele não pode depender de a pessoa adivinhar que o descadastro não apaga nada.
+   */
+  const saida = (input.unsubscribeUrl
     ? `Não quer mais receber? <a href="${esc(input.unsubscribeUrl)}" style="color:${CIANO};text-decoration:underline;">Descadastrar</a>.`
-    : `Para não receber mais, escreva para <a href="mailto:${EMAIL_ENCARREGADO}" style="color:${CIANO};text-decoration:underline;">${EMAIL_ENCARREGADO}</a>.`;
+    : `Para não receber mais, escreva para <a href="mailto:${EMAIL_ENCARREGADO}" style="color:${CIANO};text-decoration:underline;">${EMAIL_ENCARREGADO}</a>.`)
+    + ` <a href="${urlDireitos()}" style="color:${CIANO};text-decoration:underline;">Ver, corrigir ou apagar meus dados</a>.`;
 
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(assunto)}</title></head>
 <body style="margin:0;padding:0;background:#EEF1F5;">

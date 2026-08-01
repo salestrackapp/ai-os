@@ -5,7 +5,7 @@ import { auditService } from "@/lib/audit";
 import { linkDescadastro } from "@/lib/lgpd/consentimento";
 import { getSalesOffer } from "@/lib/settings";
 import { ICP_LABELS } from "./types";
-import { EMAIL_ENCARREGADO, NOME_ENCARREGADO } from "@/lib/lgpd/contato";
+import { EMAIL_ENCARREGADO, NOME_ENCARREGADO, urlDireitos } from "@/lib/lgpd/contato";
 
 /** Guardrails da doutrina comercial — aplicados a TODOS os agentes de prospecção. */
 export const PROSPECT_GUARDRAILS = `
@@ -138,6 +138,7 @@ export async function generateOutreach(prospectId: string, opts?: { warm?: boole
     const rodape = channel === "email"
       ? `\n\n---\nChego até você por ${fonte}, usando dados profissionais (nome, cargo e empresa) — nunca dados pessoais. `
         + `A base legal é legítimo interesse em prospecção B2B. Se preferir não receber contato, ${via}. `
+        + `Para ver ou apagar o que temos sobre você: ${urlDireitos()}. `
         + `Encarregado de dados: ${NOME_ENCARREGADO} · ${EMAIL_ENCARREGADO}.`
       : `\n\nCheguei por ${fonte}, com dados profissionais. Se preferir não receber contato, responda "sair".`;
     body = `${body}${rodape}`;

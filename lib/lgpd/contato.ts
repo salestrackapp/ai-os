@@ -17,3 +17,19 @@ export const EMAIL_ENCARREGADO = "aios@salestrack.com.br";
 
 /** Como o encarregado é nomeado nos textos públicos. A LGPD exige identificação, não só um e-mail. */
 export const NOME_ENCARREGADO = "André Kachan";
+
+/**
+ * A via de exercício dos direitos — a página, não a caixa de e-mail.
+ *
+ * As duas continuam abertas de propósito, mas não são equivalentes: o e-mail depende de alguém
+ * transcrever o pedido à mão para o prazo de 15 dias começar a contar, e um pedido esquecido na
+ * caixa é indistinguível de um pedido que nunca chegou. Pela página o pedido entra sozinho, com
+ * prazo, e vira alerta se ninguém responder. Por isso é ela que vai na frente em todo texto novo.
+ */
+export const CAMINHO_DIREITOS = "/privacidade/direitos";
+
+/** Absoluta, para quando o texto sai do domínio: e-mail, PDF, mensagem de prospecção. */
+export function urlDireitos(): string {
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ai-os-sable.vercel.app";
+  return `${base.replace(/\/$/, "")}${CAMINHO_DIREITOS}`;
+}

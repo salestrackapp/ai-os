@@ -1,7 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { revogarMarketing, registrarOposicao } from "@/lib/lgpd/consentimento";
 import { SalestrackLogo } from "@/components/ds";
-import { EMAIL_ENCARREGADO, NOME_ENCARREGADO } from "@/lib/lgpd/contato";
+import { EMAIL_ENCARREGADO, NOME_ENCARREGADO, CAMINHO_DIREITOS } from "@/lib/lgpd/contato";
 
 export const dynamic = "force-dynamic";
 
@@ -86,8 +86,9 @@ export default async function Descadastro({ params }: { params: Promise<{ token:
             <p className="ds-small">
               Mensagens sobre algo que você pediu diretamente — uma resposta a um contato seu, um
               documento de um projeto em andamento — não fazem parte deste descadastro e continuam
-              chegando. Se quiser sair também dessas, ou apagar seus dados por completo, escreva
-              para <a className="underline" href={`mailto:${EMAIL_ENCARREGADO}`}>{EMAIL_ENCARREGADO}</a>.
+              chegando. Se quiser sair também dessas, ou apagar seus dados por completo, faça o
+              pedido em <a className="underline" href={CAMINHO_DIREITOS}>ver, corrigir ou apagar meus dados</a> —
+              respondemos em até 15 dias.
             </p>
           </div>
           <p className="ds-small mt-6 text-[color:var(--fg-3)]">

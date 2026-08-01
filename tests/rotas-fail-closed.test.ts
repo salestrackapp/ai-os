@@ -49,8 +49,31 @@ describe("rotas de máquina são fail-closed", () => {
   const semComentarios = (src: string) =>
     src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
 
+  /**
+   * A casca dos crons carrega a guarda de todas as 11 rotas.
+   *
+   * Ela é verificada aqui, uma vez, com o mesmo rigor — e é por ela ter passado que uma rota pode
+   * satisfazer a regra delegando. Sem esta asserção, aceitar `comRegistro(` como prova de recusa
+   * seria confiar num arquivo que ninguém olhou: bastaria alguém afrouxar o `if (!secret)` lá
+   * dentro para as 11 rotas abrirem em silêncio, com a suíte verde.
+   */
+  it("a casca dos crons (lib/ops/cron.ts) é fail-closed", () => {
+    const src = semComentarios(readFileSync("lib/ops/cron.ts", "utf8"));
+    expect(/if\s*\(\s*!secret\s*\)/.test(src), "comRegistro deixou de parar quando CRON_SECRET não existe").toBe(true);
+    expect(/503/.test(src), "comRegistro não responde 503 sem segredo").toBe(true);
+    expect(/401/.test(src), "comRegistro não recusa chamada com segredo errado").toBe(true);
+  });
+
   it.each(MAQUINA)("%s recusa quando o segredo não está configurado", (arquivo) => {
     const src = semComentarios(readFileSync(arquivo, "utf8"));
+
+    /**
+     * As rotas de cron delegam a guarda para `comRegistro` — uma casca em vez de 11 cópias do
+     * mesmo bloco de autenticação. Delegar é aceito porque a casca é verificada acima; o que NÃO
+     * é aceito é uma rota de cron que não delega nem tem guarda própria, e essa cai nas asserções
+     * seguintes como qualquer outra.
+     */
+    if (/comRegistro\s*\(/.test(src)) return;
 
     /**
      * A assinatura da falha: uma condição que só bloqueia SE o segredo existir. Em
