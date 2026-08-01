@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { inscreverAction } from "@/app/inscrever/actions";
+import { TEXTO_ACEITE_NEWSLETTER } from "@/lib/marketing/consentimento-texto";
 
 const campo = "w-full rounded-ds-input border border-hairline bg-[var(--bg-1)] px-3 py-2.5 font-montserrat text-[15px] text-[color:var(--fg-1)] outline-none focus:border-[color:var(--brand)]";
 const rotulo = "mb-1 block font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]";
@@ -60,9 +61,9 @@ export function FormularioInscricao() {
       <label className="flex items-start gap-2.5 rounded-ds-card border border-hairline bg-[var(--bg-2)] p-3">
         <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)}
           className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--brand)]" />
+        {/* O MESMO texto que vai gravado como evidência — importado, nunca reescrito aqui. */}
         <span className="font-montserrat text-[13px] leading-relaxed text-[color:var(--fg-2)]">
-          Quero receber e-mails da Salestrack AI sobre IA aplicada a vendas. Sei que posso sair a
-          qualquer momento pelo link no rodapé de cada mensagem.
+          {TEXTO_ACEITE_NEWSLETTER}
         </span>
       </label>
 

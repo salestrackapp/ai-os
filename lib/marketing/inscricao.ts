@@ -19,8 +19,8 @@ import { sendEmail } from "@/lib/email";
  * passa a ter só gente que quis mesmo.
  */
 
-const TEXTO_ACEITE =
-  "Quero receber e-mails da Salestrack AI sobre IA aplicada a vendas. Sei que posso sair a qualquer momento pelo link no rodapé de cada mensagem.";
+// Mesmo texto que a caixa mostra — importado, nunca reescrito aqui. Ver o módulo para o porquê.
+import { TEXTO_ACEITE_NEWSLETTER as TEXTO_ACEITE } from "./consentimento-texto";
 
 function baseUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://ai-os-sable.vercel.app").replace(/\/$/, "");

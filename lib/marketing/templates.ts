@@ -33,9 +33,9 @@ export const TEMPLATES: Template[] = [
     preheader: "O que você vai receber aqui — e com que frequência.",
     blocos: [
       { tipo: "titulo", nivel: 1, texto: "Que bom ter você por aqui" },
-      { tipo: "texto", texto: "Sou o André Kachan, da Salestrack AI. Você vai receber, mais ou menos a cada duas semanas, o que estamos aprendendo colocando IA para trabalhar dentro de operações comerciais de verdade." },
+      { tipo: "texto", texto: "Sou o André Kachan, da Salestrack AI. Você vai receber, mais ou menos a cada duas semanas, o que estamos aprendendo colocando IA para trabalhar dentro de empresas de verdade — em vendas, marketing, operações, atendimento e backoffice." },
       { tipo: "texto", texto: "Sem teoria e sem novidade de LinkedIn: só o que já testamos com cliente e sabemos que funciona — inclusive o que não funcionou." },
-      { tipo: "lista", itens: ["Casos reais, com número", "Agentes e automações que dá para copiar", "O que não vale a pena, para você não perder tempo"] },
+      { tipo: "lista", itens: ["Casos reais por área, com número", "Agentes e automações que dá para copiar", "Governança: usar IA sem shadow AI nem risco de dado", "Como preparar as pessoas, não só as ferramentas", "E o que não vale a pena, para você não perder tempo"] },
       { tipo: "texto", texto: "Se em algum momento não fizer mais sentido, o link de descadastro está no rodapé e funciona no primeiro clique." },
       { tipo: "botao", label: "Ver o que já publicamos", url: "https://salestrack.com.br" },
     ],
@@ -44,7 +44,7 @@ export const TEMPLATES: Template[] = [
     slug: "newsletter",
     nome: "Newsletter",
     quando: "O envio recorrente. Um assunto principal e no máximo dois secundários — newsletter que tenta cobrir tudo não é lida até o fim.",
-    assunto: "{{nome|Olá}}, o que aprendemos este mês com IA em vendas",
+    assunto: "{{nome|Olá}}, o que aprendemos este mês colocando IA para operar",
     preheader: "Um caso real, um número e uma coisa que deu errado.",
     blocos: [
       { tipo: "titulo", nivel: 1, texto: "O agente que cortou 3 horas por semana do time comercial" },

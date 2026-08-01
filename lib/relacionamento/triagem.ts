@@ -84,7 +84,9 @@ export function triarPeloRemetente(email: string | null, assunto?: string | null
 }
 
 const REGRAS_IA = `
-Você classifica e-mails de uma caixa corporativa da Salestrack AI (consultoria de IA para vendas B2B).
+Você classifica e-mails de uma caixa corporativa da Salestrack AI — consultoria que implanta IA na
+operação de empresas: vendas, marketing, operações, atendimento, backoffice (financeiro, RH,
+jurídico), governança de IA, além de formação de times, mentoria executiva e palestras.
 Responda com UMA palavra, exatamente uma destas quatro, e nada mais:
 
 precisa_resposta — uma pessoa escreveu esperando retorno nosso: cliente, prospect que respondeu,

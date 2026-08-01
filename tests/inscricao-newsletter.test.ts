@@ -45,6 +45,7 @@ vi.mock("@/lib/email", () => ({
 }));
 
 const { inscrever, confirmarInscricao } = await import("@/lib/marketing/inscricao");
+const { TEXTO_ACEITE_NEWSLETTER } = await import("@/lib/marketing/consentimento-texto");
 
 beforeEach(() => {
   linhas = {}; inscricaoExistente = null; enviados.length = 0;
@@ -81,10 +82,28 @@ describe("enviar o formulário", () => {
     expect((await inscrever({ email, aceite: true })).ok).toBe(false);
   });
 
-  it("guarda o texto que a pessoa leu — consentimento que não se demonstra é o mesmo que não ter", async () => {
+  /**
+   * O texto gravado precisa ser EXATAMENTE o da caixa que a pessoa marcou. Se os dois divergirem,
+   * a evidência deixa de provar o que ela leu — que é a única coisa que o registro serve para fazer.
+   * Por isso os dois lados importam a mesma constante, e este teste guarda essa amarração.
+   */
+  it("guarda o texto que a pessoa leu, palavra por palavra", async () => {
     await inscrever({ email: "pessoa@empresa.com.br", aceite: true });
     const l = linhas["newsletter_inscricoes"][0] as { texto_aceite: string };
-    expect(l.texto_aceite).toMatch(/sair a qualquer momento/i);
+    expect(l.texto_aceite).toBe(TEXTO_ACEITE_NEWSLETTER);
+  });
+
+  /**
+   * A finalidade tem de ser determinada (art. 6º, I) — "receber e-mails da Salestrack" não diz
+   * sobre o quê. E precisa refletir o que a empresa faz de fato: a redação anterior falava só em
+   * vendas, e a Salestrack implanta IA em operações, atendimento, backoffice e governança também.
+   */
+  it("o texto de aceite descreve o escopo real, não só vendas", () => {
+    const t = TEXTO_ACEITE_NEWSLETTER.toLowerCase();
+    for (const area of ["vendas", "marketing", "opera", "atendimento", "backoffice", "governan"]) {
+      expect(t, `finalidade não menciona ${area}`).toContain(area);
+    }
+    expect(t).toMatch(/sair a qualquer momento/);
   });
 
   /**

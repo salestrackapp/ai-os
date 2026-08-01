@@ -4,7 +4,7 @@ import { FormularioInscricao } from "@/components/marketing/FormularioInscricao"
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Receber os e-mails da Salestrack AI",
-  description: "IA aplicada a vendas: casos reais, com número, e o que não funcionou.",
+  description: "IA que opera de verdade — em vendas, marketing, operações, atendimento e backoffice. Casos reais, com número, e o que não funcionou.",
 };
 
 /**
@@ -22,18 +22,21 @@ export default function InscreverPage() {
         <div className="mb-8"><SalestrackLogo width={140} /></div>
 
         <h1 className="mb-3 font-montserrat text-[30px] font-extrabold leading-tight tracking-[-0.02em] text-[color:var(--fg-1)]">
-          O que aprendemos colocando IA para trabalhar em vendas
+          O que aprendemos colocando IA para trabalhar dentro das empresas
         </h1>
         <p className="mb-6 font-montserrat text-[15px] leading-relaxed text-[color:var(--fg-2)]">
-          A cada duas semanas, o que testamos com cliente de verdade: o caso, o número e o que
-          não funcionou. Sem teoria e sem novidade de LinkedIn.
+          A cada duas semanas, o que testamos com cliente de verdade — em vendas, marketing,
+          operações, atendimento e backoffice. O caso, o número e o que não funcionou. Sem teoria
+          e sem novidade de LinkedIn.
         </p>
 
         <ul className="mb-7 space-y-2">
           {[
-            "Casos reais, com número",
-            "Agentes e automações que dá para copiar",
-            "O que não vale a pena, para você não perder tempo",
+            "Casos reais por área: comercial, marketing, operações, atendimento, financeiro, RH e jurídico",
+            "Agentes e automações que dá para copiar — com o custo mensal de cada um",
+            "Governança: usar IA sem shadow AI, sem risco de dado e sem travar o time",
+            "Como preparar as pessoas, não só as ferramentas",
+            "E o que não vale a pena, para você não perder tempo",
           ].map((t) => (
             <li key={t} className="flex items-start gap-2 font-montserrat text-[14px] text-[color:var(--fg-2)]">
               <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand)]" />{t}
