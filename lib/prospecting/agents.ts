@@ -5,6 +5,7 @@ import { auditService } from "@/lib/audit";
 import { linkDescadastro } from "@/lib/lgpd/consentimento";
 import { getSalesOffer } from "@/lib/settings";
 import { ICP_LABELS } from "./types";
+import { EMAIL_ENCARREGADO, NOME_ENCARREGADO } from "@/lib/lgpd/contato";
 
 /** Guardrails da doutrina comercial — aplicados a TODOS os agentes de prospecção. */
 export const PROSPECT_GUARDRAILS = `
@@ -133,11 +134,11 @@ export async function generateOutreach(prospectId: string, opts?: { warm?: boole
     const saida = await linkDescadastro(pr!.email as string);
     const via = saida
       ? `responda esta mensagem com "sair" ou use este link: ${saida}`
-      : `responda esta mensagem com "sair", ou escreva para andre.kachan@salestrack.com.br`;
+      : `responda esta mensagem com "sair", ou escreva para ${EMAIL_ENCARREGADO}`;
     const rodape = channel === "email"
       ? `\n\n---\nChego até você por ${fonte}, usando dados profissionais (nome, cargo e empresa) — nunca dados pessoais. `
         + `A base legal é legítimo interesse em prospecção B2B. Se preferir não receber contato, ${via}. `
-        + `Encarregado de dados: André Kachan · andre.kachan@salestrack.com.br.`
+        + `Encarregado de dados: ${NOME_ENCARREGADO} · ${EMAIL_ENCARREGADO}.`
       : `\n\nCheguei por ${fonte}, com dados profissionais. Se preferir não receber contato, responda "sair".`;
     body = `${body}${rodape}`;
   }

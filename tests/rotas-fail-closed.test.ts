@@ -29,11 +29,16 @@ function rotas(dir: string): string[] {
  * `resolvePortalOrg`) e as de token público por linha (`/api/e/[token]`, `/api/p/[token]`) seguem
  * outro padrão e são auditadas em `rotas-publicas-token.test.ts`.
  */
-const MAQUINA = rotas("app/api").filter((p) => /\/(cron|webhook|events)\//.test(p) || /\/webhook\/route\.ts$/.test(p) || /leads\/novo/.test(p));
+const MAQUINA = rotas("app/api").filter((p) =>
+  /\/(cron|webhook|events)\//.test(p)
+  || /\/webhook\/route\.ts$/.test(p)
+  || /leads\/novo/.test(p)
+  // Recebe dos sites institucionais com o mesmo segredo dos leads — é rota de máquina como as outras.
+  || /api\/inscrever\/route\.ts$/.test(p));
 
 describe("rotas de máquina são fail-closed", () => {
   it("o levantamento encontrou as rotas — um filtro que não casa nada passaria vazio", () => {
-    expect(MAQUINA.length).toBeGreaterThanOrEqual(14);
+    expect(MAQUINA.length).toBeGreaterThanOrEqual(15);
   });
 
   /**

@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { revogarMarketing, registrarOposicao } from "@/lib/lgpd/consentimento";
 import { SalestrackLogo } from "@/components/ds";
+import { EMAIL_ENCARREGADO, NOME_ENCARREGADO } from "@/lib/lgpd/contato";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,7 @@ export default async function Descadastro({ params }: { params: Promise<{ token:
           <h1 className="ds-h1 mt-2">Link não reconhecido</h1>
           <p className="ds-lead mt-2">
             Este link de descadastro não é válido. Se você continua recebendo mensagens que não
-            quer, escreva para <a className="underline" href="mailto:andre.kachan@salestrack.com.br">andre.kachan@salestrack.com.br</a> e
+            quer, escreva para <a className="underline" href={`mailto:${EMAIL_ENCARREGADO}`}>{EMAIL_ENCARREGADO}</a> e
             resolvemos manualmente — você não precisa de link nenhum para exercer esse direito.
           </p>
         </>) : (<>
@@ -86,7 +87,7 @@ export default async function Descadastro({ params }: { params: Promise<{ token:
               Mensagens sobre algo que você pediu diretamente — uma resposta a um contato seu, um
               documento de um projeto em andamento — não fazem parte deste descadastro e continuam
               chegando. Se quiser sair também dessas, ou apagar seus dados por completo, escreva
-              para <a className="underline" href="mailto:andre.kachan@salestrack.com.br">andre.kachan@salestrack.com.br</a>.
+              para <a className="underline" href={`mailto:${EMAIL_ENCARREGADO}`}>{EMAIL_ENCARREGADO}</a>.
             </p>
           </div>
           <p className="ds-small mt-6 text-[color:var(--fg-3)]">

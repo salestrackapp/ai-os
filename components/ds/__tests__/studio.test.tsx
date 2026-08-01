@@ -209,7 +209,7 @@ describe("R3.6 · Mensagens & Copy (regras por canal + merge fields + PII)", () 
     // resolvido chega ao destinatário como link quebrado — pior que não oferecer.
     const html = buildEmailHtml({ assunto: "Oi", corpo: ["Olá {{nome}}"], cta: { label: "Ver" }, attribution: "salestrack" });
     expect(html).not.toContain("{{unsubscribe}}");
-    expect(html).toContain("andre.kachan@salestrack.com.br");
+    expect(html).toContain("aios@salestrack.com.br");
     const comLink = buildEmailHtml({ assunto: "Oi", corpo: ["Olá"], attribution: "salestrack",
       unsubscribeUrl: "https://ai-os-sable.vercel.app/descadastro/abc-123" });
     expect(comLink).toContain("/descadastro/abc-123");

@@ -1,3 +1,5 @@
+import { EMAIL_ENCARREGADO } from "@/lib/lgpd/contato";
+
 /**
  * Os blocos de um e-mail e como viram HTML.
  *
@@ -152,7 +154,7 @@ export function renderEmail(input: RenderInput): string {
   const corpo = blocos.map(renderBloco).join("\n");
   const saida = input.unsubscribeUrl
     ? `Não quer mais receber? <a href="${esc(input.unsubscribeUrl)}" style="color:${CIANO};text-decoration:underline;">Descadastrar</a>.`
-    : `Para não receber mais, escreva para <a href="mailto:andre.kachan@salestrack.com.br" style="color:${CIANO};text-decoration:underline;">andre.kachan@salestrack.com.br</a>.`;
+    : `Para não receber mais, escreva para <a href="mailto:${EMAIL_ENCARREGADO}" style="color:${CIANO};text-decoration:underline;">${EMAIL_ENCARREGADO}</a>.`;
 
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(assunto)}</title></head>
 <body style="margin:0;padding:0;background:#EEF1F5;">

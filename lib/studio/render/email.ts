@@ -1,4 +1,5 @@
 import { isAccentPermitido } from "@/lib/deliverables/types";
+import { EMAIL_ENCARREGADO } from "@/lib/lgpd/contato";
 
 export type EmailInput = {
   assunto: string;
@@ -32,7 +33,7 @@ export function buildEmailHtml(input: EmailInput): string {
   const font = "font-family:'Montserrat',Arial,Helvetica,sans-serif;";
   const saida = input.unsubscribeUrl
     ? `Não quer mais receber? <a href="${esc(input.unsubscribeUrl)}" style="color:${accent};text-decoration:underline;">Descadastrar</a>.`
-    : `Para não receber mais, escreva para <a href="mailto:andre.kachan@salestrack.com.br" style="color:${accent};text-decoration:underline;">andre.kachan@salestrack.com.br</a>.`;
+    : `Para não receber mais, escreva para <a href="mailto:${EMAIL_ENCARREGADO}" style="color:${accent};text-decoration:underline;">${EMAIL_ENCARREGADO}</a>.`;
   const body = input.corpo.map((p) => `<p style="margin:0 0 16px;${font}font-size:16px;line-height:1.6;color:#26303A;">${esc(p)}</p>`).join("");
   const cta = input.cta ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;"><tr><td style="border-radius:10px;background:${accent};">
     <a href="${esc(input.cta.url ?? "{{cta_url}}")}" style="display:inline-block;padding:13px 26px;${font}font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">${esc(input.cta.label)}</a></td></tr></table>` : "";

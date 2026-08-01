@@ -52,13 +52,43 @@ function excedeuLimite(ip: string): boolean {
 
 export type ResultadoInscricao = { ok: boolean; mensagem: string };
 
-export async function inscrever(dados: { email: string; nome?: string; empresa?: string; aceite: boolean }): Promise<ResultadoInscricao> {
+/**
+ * De onde a inscrição veio. Conjunto FECHADO, e validado no servidor.
+ *
+ * Alimenta o filtro "por origem" do estúdio de e-mail — dá para mandar uma campanha só para quem
+ * entrou pelo site do André, por exemplo. Aceitar texto livre transformaria esse filtro num campo
+ * que qualquer chamada pode inventar, e a segmentação passaria a depender de quem chamou.
+ */
+export const ORIGENS = {
+  inscricao_publica: "página de inscrição (AI OS)",
+  salestrack_site: "salestrack.com.br",
+  andrekachan_site: "andrekachan.com.br",
+} as const;
+export type Origem = keyof typeof ORIGENS;
+
+export type DadosInscricao = {
+  email: string; nome?: string; empresa?: string; aceite: boolean;
+  origem?: Origem;
+  /**
+   * IP e agente de quem preencheu. Vêm por parâmetro porque a chamada pode chegar de duas formas:
+   * direto da página (e aí saem dos cabeçalhos) ou repassada pelo servidor de um dos sites — onde
+   * o cabeçalho traria o IP do servidor deles, e o limite de taxa passaria a contar todos os
+   * visitantes daquele site num balde só, bloqueando gente legítima.
+   */
+  ip?: string | null;
+  userAgent?: string | null;
+};
+
+export async function inscrever(dados: DadosInscricao): Promise<ResultadoInscricao> {
   const email = (dados.email ?? "").trim().toLowerCase();
   if (!emailValido(email)) return { ok: false, mensagem: "Confira o e-mail — parece estar incompleto." };
   if (!dados.aceite) return { ok: false, mensagem: "Para receber os e-mails, é preciso marcar a autorização." };
 
   const h = await headers();
-  const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || "desconhecido";
+  const ip = dados.ip?.trim() || (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || "desconhecido";
+  const userAgent = dados.userAgent ?? h.get("user-agent");
+  const origem: Origem = dados.origem && dados.origem in ORIGENS ? dados.origem : "inscricao_publica";
+
   if (excedeuLimite(ip)) {
     return { ok: false, mensagem: "Muitas tentativas seguidas. Espere alguns minutos e tente de novo." };
   }

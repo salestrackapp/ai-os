@@ -1,5 +1,6 @@
 import { SalestrackLogo } from "@/components/ds/SalestrackLogo";
 import { FormularioInscricao } from "@/components/marketing/FormularioInscricao";
+import { EMAIL_ENCARREGADO, NOME_ENCARREGADO } from "@/lib/lgpd/contato";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -51,7 +52,7 @@ export default function InscreverPage() {
         <p className="mt-5 font-montserrat text-[12.5px] leading-relaxed text-[color:var(--fg-3)]">
           Seus dados são tratados pela Salestrack AI para enviar este conteúdo, com base no seu
           consentimento. Você sai quando quiser, pelo link no rodapé de cada e-mail. Encarregado de
-          dados: André Kachan · <a href="mailto:andre.kachan@salestrack.com.br" className="text-[color:var(--brand)] hover:underline">andre.kachan@salestrack.com.br</a>.
+          dados: {NOME_ENCARREGADO} · <a href={`mailto:${EMAIL_ENCARREGADO}`} className="text-[color:var(--brand)] hover:underline">{EMAIL_ENCARREGADO}</a>.
         </p>
       </div>
     </main>

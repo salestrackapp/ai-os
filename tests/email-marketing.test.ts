@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderEmail, renderTexto, resolverVariaveis, variaveisUsadas, blocoVazio, BLOCOS_DISPONIVEIS, type Bloco } from "@/lib/marketing/blocos";
 import { TEMPLATES, templatePorSlug } from "@/lib/marketing/templates";
+import { EMAIL_ENCARREGADO } from "@/lib/lgpd/contato";
 
 /**
  * O renderizador é o mesmo no navegador (prévia) e no servidor (envio). Se ele quebrar, a prévia
@@ -74,7 +75,8 @@ describe("HTML do e-mail", () => {
     expect(html).toContain("https://x/desc");
     expect(html).toContain("Descadastrar");
     const sem = renderEmail({ assunto: "x", blocos: [{ tipo: "texto", texto: "oi" }] });
-    expect(sem).toContain("andre.kachan@salestrack.com.br");
+    // Importa a constante: se o endereço do encarregado mudar, o teste acompanha em vez de quebrar.
+    expect(sem).toContain(EMAIL_ENCARREGADO);
   });
 
   it("o preheader vai escondido, para não repetir na abertura da mensagem", () => {

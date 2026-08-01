@@ -3,6 +3,7 @@ import { Breadcrumbs } from "@/components/ds/nav";
 import { createServiceClient } from "@/lib/supabase/service";
 import { currentMembership } from "@/lib/auth";
 import { PainelLgpd, type PedidoLinha } from "@/components/admin/PainelLgpd";
+import { EMAIL_ENCARREGADO, NOME_ENCARREGADO } from "@/lib/lgpd/contato";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function LgpdPage() {
       <Card className="mb-6">
         <p className="ds-body">
           <b>Encarregado de dados (DPO):</b> André Kachan ·{" "}
-          <a className="underline" href="mailto:andre.kachan@salestrack.com.br">andre.kachan@salestrack.com.br</a>
+          <a className="underline" href={`mailto:${EMAIL_ENCARREGADO}`}>{EMAIL_ENCARREGADO}</a>
         </p>
         <p className="ds-small mt-2">
           É o contato que a LGPD exige publicar (art. 41). Todo pedido que chega por esse endereço
