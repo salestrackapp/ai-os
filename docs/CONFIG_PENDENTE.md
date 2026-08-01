@@ -416,6 +416,29 @@ históricos e conecto os projetos da Vercel, e push volta a publicar sozinho.
 
 **Nada quebra enquanto não for feito** — os dois sites seguem publicando pela CLI.
 
+## 19. 🟡 Conformidade — o que a página pública já promete, e o que falta você fazer
+
+Entraram no ar três coisas que a Salestrack não tinha: o **registro de operações de tratamento**
+(art. 37, em *Configurar › Registro de tratamento*), a **política de privacidade pública**
+(`/privacidade`, renderizada do mesmo registro) e o **registro de incidentes** com runbook
+(*Configurar › Incidentes de segurança*).
+
+**Duas coisas que só você resolve, e que a política já promete:**
+
+1. **Ligue o MFA (item 9) e a proteção contra senha vazada (item 8-B).** A política diz que "o
+   acesso é por conta individual" e o runbook nomeia "conta de admin acessada por quem não devia"
+   como o cenário mais provável. São dois cliques, e enquanto não forem dados, esse cenário é mais
+   provável do que precisaria ser.
+
+2. **Revise o texto do registro com olhos de dono.** Cada linha foi escrita a partir do que o
+   código faz, mas há afirmações que são decisão sua, não do sistema — por exemplo, o prazo de
+   guarda de contrato depois de encerrado. Editar é na tela, sem deploy, e o que você mudar aparece
+   na hora na página pública.
+
+**Quando o Docusign entrar (item 5):** ligue-o na lista de operadores e acrescente a menção no
+texto da operação "Clientes, propostas e contratos". Hoje ele está desligado de propósito — citar
+um operador que não recebe nada é tão falso quanto omitir um que recebe.
+
 ---
 
 ## Referência rápida de status dos envs (Vercel Production)
