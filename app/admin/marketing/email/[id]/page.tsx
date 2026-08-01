@@ -28,7 +28,9 @@ export default async function CampanhaPage({ params }: { params: Promise<{ id: s
   const segmento = (c.segmento ?? {}) as Segmento;
   const [audiencia, resultado] = await Promise.all([
     montarAudiencia(segmento),
-    c.status === "enviada" || c.status === "enviando" ? resultadoDaCampanha(id) : Promise.resolve(null),
+    // A automática também tem resultado — só que ele cresce a cada confirmação, e não de uma vez.
+    ["enviada", "enviando"].includes(c.status as string) || c.template_slug === "boas-vindas"
+      ? resultadoDaCampanha(id) : Promise.resolve(null),
   ]);
 
   const enviada = c.status === "enviada";
@@ -64,7 +66,31 @@ export default async function CampanhaPage({ params }: { params: Promise<{ id: s
         </Card>
       )}
 
-      {c.status === "aprovada" && (
+      {/*
+        Boas-vindas aprovado NÃO tem botão de disparar — e a ausência é a parte importante.
+        Ele já sai sozinho, um por pessoa, no instante da confirmação. Oferecer "disparar agora"
+        aqui convidaria a mandar o e-mail de boas-vindas para a lista inteira, incluindo quem já o
+        recebeu meses atrás. O botão que não existe é o que evita esse erro.
+      */}
+      {c.status === "aprovada" && c.template_slug === "boas-vindas" ? (
+        <Card bloom className="mb-5">
+          <p className="mb-1 font-montserrat text-[15px] font-semibold text-[color:var(--brand-deep)]">
+            Automática — sai a cada nova confirmação
+          </p>
+          <p className="ds-small !mt-0">
+            Enquanto estiver aprovada, é este texto que a pessoa recebe no instante em que confirma
+            a inscrição. Não há disparo manual: ele acontece um por vez, sozinho. Para mudar o que
+            ela lê, edite abaixo e aprove de novo — editar derruba a aprovação de propósito, e até
+            você aprovar volta a valer o modelo padrão.
+          </p>
+          {resultado && (
+            <p className="mt-2 font-montserrat text-[13px] text-[color:var(--fg-2)]">
+              Já saíram <b>{resultado.enviados}</b> boas-vindas
+              {resultado.abertos > 0 && <> · <b>{resultado.abertos}</b> abriram</>}.
+            </p>
+          )}
+        </Card>
+      ) : c.status === "aprovada" && (
         <DispararCampanha id={id} total={audiencia.destinatarios.length}
           amostra={audiencia.destinatarios.slice(0, 5).map((d) => d.email)} />
       )}

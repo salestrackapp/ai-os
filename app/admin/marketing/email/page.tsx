@@ -28,7 +28,7 @@ export default async function EmailMarketing() {
 
   const sb = await createClient();
   const [{ data: campanhas }, audiencia] = await Promise.all([
-    sb.from("email_campanhas").select("id, nome, assunto, status, enviada_em, created_at")
+    sb.from("email_campanhas").select("id, nome, assunto, status, enviada_em, created_at, template_slug")
       .is("deleted_at", null).order("created_at", { ascending: false }).limit(50),
     montarAudiencia(),
   ]);
@@ -111,6 +111,12 @@ export default async function EmailMarketing() {
                     <span className="block truncate font-montserrat text-[14px] font-medium text-[color:var(--fg-1)]">{c.nome}</span>
                     <span className="block truncate font-montserrat text-[13px] text-[color:var(--fg-3)]">{c.assunto || "(sem assunto)"}</span>
                   </span>
+                  {/* Uma campanha de boas-vindas aprovada deixa de ser "uma campanha" e vira o
+                      e-mail que sai sozinho a cada confirmação. Sem dizer isso na lista, ela
+                      pareceria uma campanha parada — e alguém tentaria "disparar" o que já dispara. */}
+                  {c.template_slug === "boas-vindas" && c.status === "aprovada" && (
+                    <Badge tone="success">automática · sai na confirmação</Badge>
+                  )}
                   <Badge tone={TOM[c.status as string] ?? "neutral"}>{ROTULO[c.status as string] ?? c.status}</Badge>
                   <span className="font-jbmono text-[12px] text-[color:var(--fg-4)]">
                     {new Date((c.enviada_em ?? c.created_at) as string).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}

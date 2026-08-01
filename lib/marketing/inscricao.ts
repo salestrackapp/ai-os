@@ -194,6 +194,16 @@ export async function confirmarInscricao(token: string): Promise<ResultadoConfir
     { onConflict: "org_id,canal,endereco" },
   );
 
+  /**
+   * O boas-vindas sai AGORA, no clique.
+   *
+   * Awaited de propósito, e não em segundo plano: são poucas centenas de milissegundos, e se
+   * falhar eu quero o motivo no log da mesma requisição que confirmou. `enviarBoasVindas` nunca
+   * lança — uma falha de envio não pode transformar em erro uma tela que deveria dizer "pronto".
+   */
+  const { enviarBoasVindas } = await import("./boas-vindas");
+  await enviarBoasVindas(email, (i.nome as string) ?? null);
+
   await auditService("newsletter.confirmada", "newsletter_inscricoes", i.id as string, { email });
   return { estado: "confirmado", email };
 }
