@@ -367,6 +367,29 @@ dado de prospecção (Apollo, coleta pública) **nunca** vira lista de marketing
 consentimento registrado. A lista cresce pelos formulários dos sites, onde a pessoa marca a caixa de
 aceite. Até lá, dá para montar e testar campanhas à vontade.
 
+## 17. 🟡 Direitos do titular — a porta está aberta, falta divulgar
+
+A página `ai-os.salestrack.com.br/privacidade/direitos` (hoje em
+`ai-os-sable.vercel.app/privacidade/direitos`) entrou no ar. Quem pede acesso, correção ou exclusão
+dos próprios dados agora abre o pedido sozinho, confirma pelo e-mail e o prazo de 15 dias começa a
+correr automaticamente — antes disso, o pedido só existia se alguém transcrevesse à mão um e-mail
+que chegou em `aios@salestrack.com.br`.
+
+**Duas coisas que dependem de você:**
+
+1. **Publicar o link nos dois sites.** Dentro do AI OS todas as superfícies já apontam para lá
+   (página de inscrição, tela de descadastro, rodapé de campanha, rodapé do Estúdio e o aviso de
+   transparência da prospecção). Os sites `salestrack.com.br` e `andrekachan.com.br` são
+   repositórios separados e ainda mandam escrever para o encarregado — vale colocar o link no
+   rodapé e na política de privacidade dos dois. **É um deploy em cada site; me avise que eu faço.**
+
+2. **Ler a caixa `aios@salestrack.com.br`.** Ela continua sendo canal válido, e quem escrever por
+   lá em vez de usar a página não entra no registro sozinho — é preciso abrir o pedido em
+   *Configurar › LGPD*. O registro é o que prova que foi atendido no prazo.
+
+**O que já funciona sozinho:** pedido com prazo perto de vencer vira aviso na tela de Hoje, e
+prazo vencido vira alerta crítico. O e-mail do encarregado é avisado no instante da confirmação.
+
 ## 16. 🟢 Opcionais (só se precisar)
 - **Stripe:** cobrança internacional (alternativa à ASAAS). Envs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` e `PAYMENT_PROVIDER=stripe`. Só se for cobrar fora do Brasil.
 
