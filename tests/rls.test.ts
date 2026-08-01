@@ -1255,6 +1255,57 @@ describe("LGPD · consentimento, pedidos do titular e descadastro", () => {
     expect(error, "aceitou tipo fora do vocabulário de dsr_requests").not.toBeNull();
   });
 
+  /**
+   * A lista de incidentes de uma empresa é, ela própria, informação sensível — e a ausência de
+   * policy de DELETE é escolha, não esquecimento: histórico que quem foi responsável pode apagar
+   * não prova nada. Mesma lógica de `audit_logs`.
+   */
+  it("incidente de segurança: nem cliente nem anônimo leem", async () => {
+    const { data: criado } = await admin.from("incidentes_seguranca")
+      .insert({ titulo: "ZZTESTE incidente", descricao: "fixture da suíte", severidade: "baixa" })
+      .select("id").single();
+    expect(criado?.id, "não conseguiu registrar incidente").toBeTruthy();
+
+    const { data: doCliente } = await userA.from("incidentes_seguranca").select("id");
+    expect(doCliente ?? [], "cliente leu incidentes de segurança").toHaveLength(0);
+
+    const { data: doAnon } = await anon.from("incidentes_seguranca").select("id");
+    expect(doAnon ?? [], "anônimo leu incidentes de segurança").toHaveLength(0);
+
+    await admin.from("incidentes_seguranca").delete().eq("id", criado!.id);   // limpeza
+  });
+
+  it("cliente não apaga incidente — não há policy que o alcance", async () => {
+    const { data: criado } = await admin.from("incidentes_seguranca")
+      .insert({ titulo: "ZZTESTE delete", descricao: "fixture da suíte", severidade: "baixa" })
+      .select("id").single();
+
+    // Sem policy de delete para `authenticated`, o comando não alcança linha nenhuma: não dá erro,
+    // simplesmente não apaga. É o comportamento que importa provar — a linha continua lá depois.
+    await userA.from("incidentes_seguranca").delete().eq("id", criado!.id);
+    const { data: aindaLa } = await admin.from("incidentes_seguranca").select("id").eq("id", criado!.id);
+    expect(aindaLa ?? [], "cliente apagou registro de incidente").toHaveLength(1);
+
+    await admin.from("incidentes_seguranca").delete().eq("id", criado!.id);   // limpeza
+  });
+
+  it("o registro de tratamento é público para leitura e fechado para escrita", async () => {
+    // A política de privacidade é página anônima e lê esta tabela. Se `anon` não lesse, ela teria
+    // que usar service role para exibir texto que qualquer um pode ler de qualquer forma.
+    const { data: lido } = await anon.from("tratamento_operacoes").select("chave").limit(1);
+    expect((lido ?? []).length, "anônimo não lê o registro — a política pública sairia vazia").toBeGreaterThan(0);
+
+    const { error: eCliente } = await userA.from("tratamento_operacoes").insert({
+      chave: "zzteste", nome: "x", finalidade: "x", base_legal: "consentimento",
+      titulares: "x", dados: "x", origem: "x", retencao: "x",
+    });
+    expect(eCliente, "cliente escreveu no registro — isso é o texto público da empresa").not.toBeNull();
+
+    const { error: eAnonimo } = await anon.from("tratamento_operadores")
+      .insert({ chave: "zzteste", nome: "x", papel: "x", dados: "x", pais: "x" });
+    expect(eAnonimo, "anônimo escreveu na lista de operadores").not.toBeNull();
+  });
+
   it("o token de descadastro não é legível por cliente — vazaria o e-mail de terceiro", async () => {
     const { data } = await userA.from("descadastro_tokens").select("endereco");
     expect(data ?? [], "cliente leu tokens de descadastro").toHaveLength(0);

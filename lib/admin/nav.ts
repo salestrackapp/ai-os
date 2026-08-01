@@ -114,6 +114,7 @@ export const AREAS: Area[] = [
       { label: "Sinais (config)", href: "/admin/configuracoes/sinais", icon: "target", desc: "Peso de cada gatilho no score." },
       { label: "Dados pessoais (LGPD)", href: "/admin/lgpd", icon: "shield", desc: "Pedidos do titular, consentimentos e exclusão de dados." },
       { label: "Registro de tratamento", href: "/admin/lgpd/registro", icon: "shield", desc: "O que a empresa trata e por quê — e o texto que alimenta a política pública." },
+      { label: "Incidentes de segurança", href: "/admin/lgpd/incidentes", icon: "shield", desc: "Registro e prazo de comunicação à ANPD (art. 48)." },
       { label: "Auditoria", href: "/admin/configuracoes/auditoria", icon: "shield", desc: "Registro do que aconteceu." },
       { label: "Operações", href: "/admin/operacoes", icon: "activity", desc: "FinOps interno, saúde e alertas." },
       { label: "Agentes de IA", href: "/admin/agentes", icon: "sparkles", desc: "Instruções, modelo e versões de cada agente. Teste antes de publicar." },
@@ -156,7 +157,7 @@ const ROUTE_AREA: [string, AreaKey][] = [
   // Configurar
   // RH é destino próprio: o dado vive em outro banco e o acesso é concedido lá.
   ["/admin/rh", "rh"], ["/admin/administracao", "rh"],
-  ["/admin/configuracoes", "config"], ["/admin/lgpd", "config"], ["/admin/lgpd/registro", "config"], ["/admin/agentes", "config"], ["/admin/operacoes", "config"],
+  ["/admin/configuracoes", "config"], ["/admin/lgpd", "config"], ["/admin/lgpd/registro", "config"], ["/admin/lgpd/incidentes", "config"], ["/admin/agentes", "config"], ["/admin/operacoes", "config"],
   ["/admin/design-system", "config"], ["/admin/plataforma", "config"], ["/admin/monetizacao", "config"],
   ["/admin/ajuda", "config"],
 ];
