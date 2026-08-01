@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
+import { comRegistro } from "@/lib/ops/cron";
 import { rodarRegua, sincronizarComAsaas } from "@/lib/financeiro/cobranca";
 
 /**
@@ -10,17 +11,11 @@ import { rodarRegua, sincronizarComAsaas } from "@/lib/financeiro/cobranca";
  * já pagou.
  */
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return NextResponse.json({ error: "cron_not_configured" }, { status: 503 });
-  const url = new URL(req.url);
-  const auth = req.headers.get("authorization");
-  const key = url.searchParams.get("key");
-  if (auth !== `Bearer ${secret}` && key !== secret) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-
-  if (url.searchParams.get("so_sincronizar") === "1") {
-    return NextResponse.json({ ok: true, sincronia: await sincronizarComAsaas() });
-  }
-  return NextResponse.json({ ok: true, regua: await rodarRegua() });
+  return comRegistro("cobranca", req, async () => {
+    // `?so_sincronizar=1` puxa da ASAAS sem cobrar ninguém — usado para conferir antes de agir.
+    if (new URL(req.url).searchParams.get("so_sincronizar") === "1") {
+      return { sincronia: await sincronizarComAsaas() };
+    }
+    return { regua: await rodarRegua() };
+  });
 }

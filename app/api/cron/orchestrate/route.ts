@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
+import { comRegistro } from "@/lib/ops/cron";
 import { runScheduler, runAutomatics } from "@/lib/comms/orchestrate";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +14,9 @@ export const maxDuration = 60;
  * automáticos, qualquer chamada externa acionava envios. Verificado aberto em produção em 2026-07-28.
  */
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return NextResponse.json({ error: "cron_not_configured" }, { status: 503 });
-  const auth = req.headers.get("authorization") ?? req.nextUrl.searchParams.get("secret") ?? "";
-  if (auth !== `Bearer ${secret}` && auth !== secret) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  return comRegistro("orchestrate", req, async () => {
   const evalRes = await runScheduler();
   const automatics = await runAutomatics();
-  return NextResponse.json({ ok: true, ...evalRes, automatics });
+  return { ...evalRes, automatics };
+  });
 }

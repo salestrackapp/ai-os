@@ -3,17 +3,20 @@ import { Breadcrumbs } from "@/components/ds/nav";
 import { createServiceClient } from "@/lib/supabase/service";
 import { currentMembership } from "@/lib/auth";
 import { Administracao, type FornecedorLinha, type DespesaLinha } from "@/components/admin/Administracao";
+import { SaudeDosCrons } from "@/components/admin/SaudeDosCrons";
+import { saudeDosCrons } from "@/lib/ops/cron";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdministracaoPage() {
   const m = await currentMembership();
   if (!m?.isSalestrackAdmin) {
-    return <ContentArea><PageHeader eyebrow="Administração" title="Custos e fornecedores"
+    return <ContentArea><PageHeader eyebrow="Administração" title="Custos, fornecedores e rotinas"
       subtitle="Esta tela é restrita à equipe Salestrack." /></ContentArea>;
   }
 
   const svc = createServiceClient();
+  const saude = await saudeDosCrons();
   const [{ data: forn }, { data: desp }] = await Promise.all([
     svc.from("vendors").select("id, nome, categoria, site, ativo").order("nome"),
     svc.from("despesas")
@@ -39,9 +42,12 @@ export default async function AdministracaoPage() {
       <Breadcrumbs items={[{ label: "Admin", href: "/admin/hoje" }, { label: "Administração" }]} className="mb-4" />
       <PageHeader
         eyebrow="Administração"
-        title="Custos e fornecedores"
-        subtitle="Quanto a Salestrack gasta por mês, com quem, e o que disso ainda serve. Custo recorrente é o que some da vista — aqui ele fica junto."
+        title="Custos, fornecedores e rotinas"
+        subtitle="O que roda sozinho, o que a Salestrack gasta por mês e com quem. As duas coisas somem da vista pelo mesmo motivo: funcionam até pararem de funcionar, em silêncio."
       />
+      {/* A saúde das rotinas vem ANTES dos custos: é o que pode estar quebrado agora. */}
+      <SaudeDosCrons saude={saude} />
+
       <Administracao fornecedores={(forn ?? []) as FornecedorLinha[]} despesas={despesas} />
     </ContentArea>
   );
