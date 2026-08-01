@@ -1,6 +1,6 @@
 import { SalestrackLogo } from "@/components/ds/SalestrackLogo";
 import { FormularioInscricao } from "@/components/marketing/FormularioInscricao";
-import { EMAIL_ENCARREGADO, NOME_ENCARREGADO, CAMINHO_DIREITOS } from "@/lib/lgpd/contato";
+import { EMAIL_ENCARREGADO, NOME_ENCARREGADO, CAMINHO_DIREITOS, CAMINHO_PRIVACIDADE } from "@/lib/lgpd/contato";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -58,7 +58,9 @@ export default function InscreverPage() {
           Seus dados são tratados pela Salestrack AI para enviar este conteúdo, com base no seu
           consentimento. Você sai quando quiser, pelo link no rodapé de cada e-mail. Para ver,
           corrigir ou apagar o que temos sobre você, use a{" "}
-          <a href={CAMINHO_DIREITOS} className="text-[color:var(--brand)] hover:underline">página de direitos</a>.
+          <a href={CAMINHO_DIREITOS} className="text-[color:var(--brand)] hover:underline">página de direitos</a>;
+          o detalhe do que tratamos está na{" "}
+          <a href={CAMINHO_PRIVACIDADE} className="text-[color:var(--brand)] hover:underline">política de privacidade</a>.
           Encarregado de dados: {NOME_ENCARREGADO} · <a href={`mailto:${EMAIL_ENCARREGADO}`} className="text-[color:var(--brand)] hover:underline">{EMAIL_ENCARREGADO}</a>.
         </p>
       </div>

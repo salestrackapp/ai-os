@@ -28,6 +28,9 @@ export const NOME_ENCARREGADO = "André Kachan";
  */
 export const CAMINHO_DIREITOS = "/privacidade/direitos";
 
+/** A política de privacidade — o "o que vocês fazem", ao lado do "quero mexer nos meus dados". */
+export const CAMINHO_PRIVACIDADE = "/privacidade";
+
 /** Absoluta, para quando o texto sai do domínio: e-mail, PDF, mensagem de prospecção. */
 export function urlDireitos(): string {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ai-os-sable.vercel.app";
