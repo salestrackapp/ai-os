@@ -67,6 +67,29 @@ describe("registro de operações de tratamento", () => {
     expect(soDesligado).toEqual([]);
   });
 
+  /**
+   * O defeito que este teste prende foi encontrado na verificação da primeira versão em produção.
+   *
+   * O texto da operação "clientes" dizia que o contrato é compartilhado com o Docusign. A tabela
+   * de operadores dizia o contrário, porque o Docusign está desligado (chaves pendentes) e nenhum
+   * contrato jamais passou por ele. As duas afirmações moram na MESMA página, uma embaixo da outra.
+   *
+   * Nomear um operador que não recebe nada é tão falso quanto omitir um que recebe — e é o tipo de
+   * erro que entra por boa intenção, descrevendo o sistema que se pretende ter.
+   */
+  it("nenhuma operação cita operador que está desligado", () => {
+    const desligados = OPERADORES.filter((o) => o.inativo);
+    for (const op of OPERACOES) {
+      const texto = `${op.compartilhamento ?? ""} ${op.observacao ?? ""}`;
+      for (const d of desligados) {
+        expect(
+          texto.includes(d.nome.split(" ")[0]),
+          `"${op.chave}" cita "${d.nome}", que está desligado — a tabela de operadores diria o contrário na mesma página`,
+        ).toBe(false);
+      }
+    }
+  });
+
   it("o banco de dados principal continua no Brasil", () => {
     // A afirmação está na página pública, em negrito. Se o Supabase mudasse de região e ninguém
     // atualizasse esta linha, a página passaria a mentir sobre onde os dados moram.

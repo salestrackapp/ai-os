@@ -108,7 +108,11 @@ export const OPERACOES: Operacao[] = [
     dados:
       "Nome, e-mail corporativo, cargo, dados de faturamento da empresa e o registro de quando a proposta foi aberta e lida.",
     origem: "A própria empresa cliente, durante a negociação.",
-    compartilhamento: "ASAAS, para emitir e cobrar as faturas; Docusign, quando o contrato é assinado eletronicamente.",
+    // Não cita Docusign: a integração existe no código mas está desligada, e nenhum contrato
+    // passou por ela. Nomear um operador que não recebe nada é tão falso quanto omitir um que
+    // recebe — e a lista de operadores abaixo, que é derivada do que está ligado, já diria o
+    // contrário. Quando ligar, o texto muda junto (a tela do registro faz isso sem deploy).
+    compartilhamento: "ASAAS, para emitir e cobrar as faturas.",
     retencao:
       "Durante o contrato e depois pelo prazo em que a lei manda guardar documento fiscal e prova de obrigação. Um pedido de exclusão não apaga contrato assinado — a lei ressalva expressamente essa guarda (art. 16, I e III); o que fazemos é anonimizar o que identifica pessoas além do necessário.",
     ondeNoSistema: "organizations, contacts, deals, proposals, contracts, invoices",
