@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { NOTIF_EVENTS } from "@/lib/notifications/events";
+import { exigirAdmin } from "@/lib/auth";
 
 /**
  * Grava a matriz de preferências do próprio usuário.
@@ -9,6 +10,7 @@ import { NOTIF_EVENTS } from "@/lib/notifications/events";
  * então mudar um padrão depois vale para quem nunca mexeu.
  */
 export async function salvarPreferencias(formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Sessão expirada.");

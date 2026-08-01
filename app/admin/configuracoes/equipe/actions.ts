@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit";
 import { MEMBERSHIP_ROLES } from "@/lib/types";
+import { exigirAdmin } from "@/lib/auth";
 
 async function salestrackOrgId(): Promise<string | null> {
   const supabase = await createClient();
@@ -13,6 +14,7 @@ async function salestrackOrgId(): Promise<string | null> {
 function validRole(r: string) { return Object.keys(MEMBERSHIP_ROLES).includes(r); }
 
 export async function inviteMember(formData: FormData) {
+  await exigirAdmin();
   const email = String(formData.get("email") ?? "").trim();
   const role = String(formData.get("role") ?? "colaborador");
   if (!email || !validRole(role)) throw new Error("E-mail e papel válidos são obrigatórios.");
@@ -38,6 +40,7 @@ export async function inviteMember(formData: FormData) {
 }
 
 export async function changeRole(userId: string, role: string) {
+  await exigirAdmin();
   if (!validRole(role)) return;
   const orgId = await salestrackOrgId();
   const supabase = await createClient();
@@ -48,6 +51,7 @@ export async function changeRole(userId: string, role: string) {
 }
 
 export async function removeMember(userId: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (user?.id === userId) throw new Error("Você não pode remover a si mesmo.");

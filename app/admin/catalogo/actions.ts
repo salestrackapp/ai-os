@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
+import { exigirAdmin } from "@/lib/auth";
 
 function parseItem(formData: FormData) {
   const num = (k: string) => {
@@ -26,6 +27,7 @@ function parseItem(formData: FormData) {
 }
 
 export async function createItem(formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const item = parseItem(formData);
   const { data, error } = await supabase.from("catalog_items").insert(item).select("id").single();
@@ -36,6 +38,7 @@ export async function createItem(formData: FormData) {
 }
 
 export async function updateItem(id: string, formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const item = parseItem(formData);
   const { error } = await supabase.from("catalog_items").update(item).eq("id", id);
@@ -46,6 +49,7 @@ export async function updateItem(id: string, formData: FormData) {
 }
 
 export async function deleteItem(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("catalog_items").delete().eq("id", id);
   if (error) throw new Error(error.message);
@@ -54,6 +58,7 @@ export async function deleteItem(id: string) {
 }
 
 export async function duplicateItem(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: it } = await supabase.from("catalog_items").select("*").eq("id", id).single();
   if (!it) return;
@@ -69,6 +74,7 @@ export async function duplicateItem(id: string) {
 }
 
 export async function bulkSetActive(ids: string[], active: boolean) {
+  await exigirAdmin();
   if (!ids.length) return;
   const supabase = await createClient();
   const { error } = await supabase.from("catalog_items").update({ active }).in("id", ids);
@@ -78,6 +84,7 @@ export async function bulkSetActive(ids: string[], active: boolean) {
 }
 
 export async function bulkMarkReviewed(ids: string[]) {
+  await exigirAdmin();
   if (!ids.length) return;
   const supabase = await createClient();
   const { error } = await supabase.from("catalog_items").update({ needs_review: false }).in("id", ids);

@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
+import { exigirAdmin } from "@/lib/auth";
 
 /**
  * Verifica a integridade da cadeia encadeada do audit_logs.
@@ -8,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
  * remoção, reordenação ou inserção fora da cadeia.
  */
 export async function verifyChain(): Promise<{ ok: boolean; brokenId: number | null; total: number }> {
+  await exigirAdmin();
   const supabase = await createClient();
   const rows: { id: number; prev_hash: string | null; hash: string }[] = [];
   const PAGE = 1000;

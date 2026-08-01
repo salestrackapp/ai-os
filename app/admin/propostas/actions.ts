@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { notifyAdmin, sendToContact } from "@/lib/whatsapp";
 import { sendEmail } from "@/lib/email";
 import { DEAL_STAGES } from "@/lib/types";
+import { exigirAdmin } from "@/lib/auth";
 
 export type ProposalPayload = {
   title: string; deal_id?: string | null; org_id?: string | null; client_name?: string | null; client_email?: string | null;
@@ -40,6 +41,7 @@ async function orgOfDeal(dealId: string | null): Promise<string | null> {
 }
 
 export async function createProposal(p: ProposalPayload) {
+  await exigirAdmin();
   const supabase = await createClient();
   const org_id = p.org_id || (await orgOfDeal(p.deal_id ?? null));
   const row = { ...normalize(p), org_id, version: 1, status: "rascunho" };
@@ -51,6 +53,7 @@ export async function createProposal(p: ProposalPayload) {
 }
 
 export async function updateProposal(id: string, p: ProposalPayload) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: cur } = await supabase.from("proposals").select("status").eq("id", id).single();
   if (cur?.status !== "rascunho") throw new Error("Apenas propostas em rascunho podem ser editadas.");
@@ -62,6 +65,7 @@ export async function updateProposal(id: string, p: ProposalPayload) {
 }
 
 export async function sendProposal(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: prop } = await supabase.from("proposals").select("*").eq("id", id).single();
   if (!prop) throw new Error("Proposta não encontrada.");
@@ -112,6 +116,7 @@ export async function sendProposal(id: string) {
 }
 
 export async function resendNotification(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: prop } = await supabase.from("proposals").select("title, access_token, deal_id").eq("id", id).single();
   if (!prop) return;
@@ -132,6 +137,7 @@ export async function resendNotification(id: string) {
 }
 
 export async function newVersion(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: prop } = await supabase.from("proposals").select("*").eq("id", id).single();
   if (!prop) throw new Error("Proposta não encontrada.");

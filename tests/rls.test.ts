@@ -276,6 +276,47 @@ describe("Resposta assistida · rel_sugestoes (admin-only)", () => {
 });
 
 /**
+ * As tabelas que as Server Actions do admin escrevem SEM guarda própria até hoje.
+ *
+ * A auditoria das actions mostrou que a proteção delas era só a RLS — e a RLS não estava testada
+ * justamente nestas tabelas. A defesa existia e ninguém saberia se sumisse: bastaria alguém
+ * afrouxar uma política por outro motivo ("deixar o client_admin editar os contatos da própria
+ * empresa" é um pedido razoável) para várias actions ficarem abertas de uma vez, em silêncio.
+ *
+ * As actions ganharam guarda local no mesmo commit. Este bloco fixa a SEGUNDA camada.
+ */
+describe("Escrita de cliente barrada nas tabelas do admin", () => {
+  it("cliente NÃO cria fatura nem assinatura — é dinheiro", async () => {
+    expect((await userA.from("invoices").insert({ org_id: orgA, kind: "mensalidade", amount: 1, status: "aberta" })).error).not.toBeNull();
+    expect((await userA.from("subscriptions").insert({ org_id: orgA, status: "ativa" })).error).not.toBeNull();
+  });
+
+  it("cliente NÃO cria contato nem organização", async () => {
+    expect((await userA.from("contacts").insert({ org_id: orgA, name: "hack" })).error).not.toBeNull();
+    expect((await userA.from("organizations").insert({ name: "hack", slug: `hack-${Date.now()}` })).error).not.toBeNull();
+  });
+
+  it("cliente NÃO cria tarefa nem item de catálogo", async () => {
+    expect((await userA.from("tasks").insert({ title: "hack" })).error).not.toBeNull();
+    expect((await userA.from("catalog_items").insert({ name: "hack", kind: "produto" })).error).not.toBeNull();
+  });
+
+  it("cliente NÃO escreve template da inbox — o que sai em nome da Salestrack", async () => {
+    expect((await userA.from("rel_templates").insert({ nome: "hack", corpo: "x" })).error).not.toBeNull();
+  });
+
+  /**
+   * Marcar a própria fatura como paga seria o ataque mais lucrativo do sistema, e é UPDATE, não
+   * INSERT — políticas de insert e de update são separadas aqui, e testar só uma esconde a outra.
+   */
+  it("cliente NÃO marca a própria fatura como paga", async () => {
+    const { error } = await userA.from("invoices").update({ status: "paga", paid_at: new Date().toISOString() }).eq("org_id", orgA);
+    const { data } = await userA.from("invoices").select("id").eq("status", "paga");
+    expect(error !== null || (data ?? []).length === 0).toBe(true);
+  });
+});
+
+/**
  * E-mail marketing. Três tabelas, e a mais sensível não é a campanha: é `email_envios`, que junta
  * endereço com comportamento ("abriu", "clicou"). Uma lista de quem abre o quê é exatamente o tipo
  * de dado que não pode escapar do lado da Salestrack.

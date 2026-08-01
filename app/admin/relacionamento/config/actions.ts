@@ -1,8 +1,10 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { criarTemplate, removerTemplate, criarRegra, removerRegra } from "@/lib/relacionamento/responder";
+import { exigirAdmin } from "@/lib/auth";
 
 export async function criarTemplateAction(formData: FormData) {
+  await exigirAdmin();
   const nome = String(formData.get("nome") ?? "").trim();
   const corpo = String(formData.get("corpo") ?? "").trim();
   if (!nome || !corpo) return;
@@ -10,10 +12,12 @@ export async function criarTemplateAction(formData: FormData) {
   revalidatePath("/admin/relacionamento/config");
 }
 export async function removerTemplateAction(id: string) {
+  await exigirAdmin();
   await removerTemplate(id);
   revalidatePath("/admin/relacionamento/config");
 }
 export async function criarRegraAction(formData: FormData) {
+  await exigirAdmin();
   const nome = String(formData.get("nome") ?? "").trim();
   const match_valor = String(formData.get("match_valor") ?? "").trim();
   if (!nome || !match_valor) return;
@@ -22,6 +26,7 @@ export async function criarRegraAction(formData: FormData) {
   revalidatePath("/admin/relacionamento/config");
 }
 export async function removerRegraAction(id: string) {
+  await exigirAdmin();
   await removerRegra(id);
   revalidatePath("/admin/relacionamento/config");
 }

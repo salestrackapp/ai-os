@@ -2,8 +2,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
+import { exigirAdmin } from "@/lib/auth";
 
 export async function createTask(input: { title: string; deal_id?: string | null; org_id?: string | null; due_date?: string | null }) {
+  await exigirAdmin();
   const title = input.title?.trim();
   if (!title) return;
   const supabase = await createClient();
@@ -23,6 +25,7 @@ export async function createTask(input: { title: string; deal_id?: string | null
 }
 
 export async function toggleTask(id: string, done: boolean) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("tasks")
     .update({ done, completed_at: done ? new Date().toISOString() : null }).eq("id", id);
@@ -33,6 +36,7 @@ export async function toggleTask(id: string, done: boolean) {
 }
 
 export async function deleteTask(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   if (error) throw new Error(error.message);

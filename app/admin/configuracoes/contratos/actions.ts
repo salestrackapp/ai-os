@@ -2,8 +2,10 @@
 import { revalidatePath } from "next/cache";
 import { setSetting, getContractSettings } from "@/lib/settings";
 import { audit } from "@/lib/audit";
+import { exigirAdmin } from "@/lib/auth";
 
 export async function saveContractSettings(formData: FormData) {
+  await exigirAdmin();
   const cur = await getContractSettings();
   const extras: { titulo: string; corpo: string }[] = [];
   const titulos = formData.getAll("extra_titulo").map(String);

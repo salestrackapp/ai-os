@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
 import { syncContactToMailerLite } from "@/lib/mailerlite";
 import { apolloEnrichPerson, mergePreservandoExistente } from "@/lib/apollo";
+import { exigirAdmin } from "@/lib/auth";
 
 function parse(formData: FormData) {
   return {
@@ -17,6 +18,7 @@ function parse(formData: FormData) {
 }
 
 export async function createContact(formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const c = parse(formData);
   if (!c.name) throw new Error("Nome é obrigatório.");
@@ -28,6 +30,7 @@ export async function createContact(formData: FormData) {
 }
 
 export async function updateContact(id: string, formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const c = parse(formData);
   const { error } = await supabase.from("contacts").update(c).eq("id", id);
@@ -42,6 +45,7 @@ export async function updateContact(id: string, formData: FormData) {
  * Nunca sobrescreve o que já está preenchido — dado digitado por uma pessoa sempre vence.
  */
 export async function enrichContact(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: c } = await supabase.from("contacts")
     .select("id, org_id, name, email, phone, role, linkedin_url, apollo_id").eq("id", id).single();
@@ -72,6 +76,7 @@ export async function enrichContact(id: string) {
 }
 
 export async function deleteContact(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("contacts").update({ deleted_at: new Date().toISOString() }).eq("id", id);
   if (error) throw new Error(error.message);

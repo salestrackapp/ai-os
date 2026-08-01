@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
 import { DEAL_STAGES } from "@/lib/types";
 import { notifyMany, salestrackAdminIds } from "@/lib/notifications/notify";
+import { exigirAdmin } from "@/lib/auth";
 
 const ALL_STAGES = [...DEAL_STAGES, "perdido"] as const;
 
@@ -19,6 +20,7 @@ async function logActivity(orgId: string | null, dealId: string, kind: string, p
 
 /** Move um deal para um estágio destino (drag & drop). */
 export async function moveDealToStage(id: string, stage: string) {
+  await exigirAdmin();
   if (!ALL_STAGES.includes(stage as (typeof ALL_STAGES)[number])) return;
   const supabase = await createClient();
   const { data: deal } = await supabase.from("deals").select("stage, org_id, title").eq("id", id).single();
@@ -44,6 +46,7 @@ export async function moveDealToStage(id: string, stage: string) {
 
 /** Compat: mover por direção (mantido para formulários simples). */
 export async function moveDeal(id: string, direction: "next" | "prev") {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: deal } = await supabase.from("deals").select("stage").eq("id", id).single();
   if (!deal) return;
@@ -55,6 +58,7 @@ export async function moveDeal(id: string, direction: "next" | "prev") {
 }
 
 export async function markLost(id: string, reason: string) {
+  await exigirAdmin();
   const clean = reason?.trim();
   if (!clean) throw new Error("Motivo da perda é obrigatório.");
   const supabase = await createClient();
@@ -67,6 +71,7 @@ export async function markLost(id: string, reason: string) {
 }
 
 export async function createDeal(formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const deal = {
     title: String(formData.get("title")),
@@ -85,6 +90,7 @@ export async function createDeal(formData: FormData) {
 }
 
 export async function updateDeal(id: string, formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const val = (k: string) => { const v = formData.get(k); return v === null || String(v).trim() === "" ? null : String(v); };
   const patch = {
@@ -107,6 +113,7 @@ export async function updateDeal(id: string, formData: FormData) {
 
 /** Salva a alocação por marca (multi-marca), recalcula value_estimated = soma e marca primária. */
 export async function setBrandSplit(id: string, allocs: { brand: string; value: number }[]) {
+  await exigirAdmin();
   const supabase = await createClient();
   const clean = (allocs ?? []).filter((a) => a && a.brand && Number(a.value) > 0)
     .map((a) => ({ brand: a.brand, value: Number(a.value) }));
@@ -122,6 +129,7 @@ export async function setBrandSplit(id: string, allocs: { brand: string; value: 
 
 /** Marca/desmarca sinais: grava ids em deals.signals e recalcula score = soma dos pesos. */
 export async function setDealSignals(id: string, signalIds: string[]) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: defs } = await supabase.from("signal_definitions").select("id, weight").eq("active", true);
   const weightById = new Map((defs ?? []).map((d: { id: string; weight: number }) => [d.id, d.weight]));
@@ -136,6 +144,7 @@ export async function setDealSignals(id: string, signalIds: string[]) {
 }
 
 export async function addNote(id: string, text: string) {
+  await exigirAdmin();
   const clean = text?.trim();
   if (!clean) return;
   const supabase = await createClient();
@@ -146,6 +155,7 @@ export async function addNote(id: string, text: string) {
 }
 
 export async function linkContact(id: string, contactId: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   await supabase.from("deals").update({ contact_id: contactId || null }).eq("id", id);
   await audit("deal.link_contact", "deals", id, { contact_id: contactId || null });
@@ -154,6 +164,7 @@ export async function linkContact(id: string, contactId: string) {
 
 /** Converte deal em cliente. Cria organização (onboarding) se ainda não houver org vinculada. */
 export async function convertToClient(id: string, formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { data: deal } = await supabase.from("deals").select("org_id, title").eq("id", id).single();
   let orgId = deal?.org_id ?? null;

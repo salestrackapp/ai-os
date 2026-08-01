@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
+import { exigirAdmin } from "@/lib/auth";
 
 function slugify(name: string) {
   const base = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -11,6 +12,7 @@ function slugify(name: string) {
 }
 
 export async function createOrg(formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) throw new Error("Nome é obrigatório.");
@@ -30,6 +32,7 @@ export async function createOrg(formData: FormData) {
 }
 
 export async function updateOrg(id: string, formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const org = {
     name: String(formData.get("name") ?? "").trim(),
@@ -46,6 +49,7 @@ export async function updateOrg(id: string, formData: FormData) {
 }
 
 export async function addContactToOrg(orgId: string, formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const c = {
     name: String(formData.get("name") ?? "").trim(),
@@ -63,6 +67,7 @@ export async function addContactToOrg(orgId: string, formData: FormData) {
 }
 
 export async function deleteOrg(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("organizations").delete().eq("id", id);
   if (error) throw new Error(error.message);

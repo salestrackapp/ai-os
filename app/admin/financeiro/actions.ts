@@ -2,10 +2,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
+import { exigirAdmin } from "@/lib/auth";
 
 const num = (v: FormDataEntryValue | null) => { const s = String(v ?? "").replace(/[^\d.,]/g, "").replace(",", "."); return s ? Number(s) : null; };
 
 export async function createManualInvoice(formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const row = {
     org_id: String(formData.get("org_id") ?? "") || null,
@@ -24,6 +26,7 @@ export async function createManualInvoice(formData: FormData) {
 }
 
 export async function markInvoicePaid(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("invoices").update({ status: "paga", paid_at: new Date().toISOString() }).eq("id", id);
   if (error) throw new Error(error.message);
@@ -32,6 +35,7 @@ export async function markInvoicePaid(id: string) {
 }
 
 export async function createManualSubscription(formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const row = {
     org_id: String(formData.get("org_id") ?? "") || null,
@@ -47,6 +51,7 @@ export async function createManualSubscription(formData: FormData) {
 }
 
 export async function cancelSubscription(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("subscriptions").update({ status: "cancelada" }).eq("id", id);
   if (error) throw new Error(error.message);

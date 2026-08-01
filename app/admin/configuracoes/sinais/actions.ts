@@ -2,8 +2,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
+import { exigirAdmin } from "@/lib/auth";
 
 export async function createSignal(formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const s = {
     label: String(formData.get("label") ?? "").trim(),
@@ -18,6 +20,7 @@ export async function createSignal(formData: FormData) {
 }
 
 export async function updateSignal(id: string, formData: FormData) {
+  await exigirAdmin();
   const supabase = await createClient();
   const s = {
     label: String(formData.get("label") ?? "").trim(),
@@ -32,6 +35,7 @@ export async function updateSignal(id: string, formData: FormData) {
 }
 
 export async function deleteSignal(id: string) {
+  await exigirAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("signal_definitions").delete().eq("id", id);
   if (error) throw new Error(error.message);
