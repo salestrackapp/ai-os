@@ -5,7 +5,7 @@ import { EMAIL_ENCARREGADO, NOME_ENCARREGADO } from "@/lib/lgpd/contato";
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Receber os e-mails da Salestrack AI",
-  description: "IA que opera de verdade — em vendas, marketing, operações, atendimento e backoffice. Casos reais, com número, e o que não funcionou.",
+  description: "Um e-mail a cada duas semanas com o que testamos em cliente de verdade — vendas, marketing, operações, atendimento e backoffice. Um caso, o número que ele moveu e o que não funcionou.",
 };
 
 /**
@@ -26,9 +26,14 @@ export default function InscreverPage() {
           O que aprendemos colocando IA para trabalhar dentro das empresas
         </h1>
         <p className="mb-6 font-montserrat text-[15px] leading-relaxed text-[color:var(--fg-2)]">
-          A cada duas semanas, o que testamos com cliente de verdade — em vendas, marketing,
-          operações, atendimento e backoffice. O caso, o número e o que não funcionou. Sem teoria
-          e sem novidade de LinkedIn.
+          A cada duas semanas enviamos um e-mail com o que testamos em cliente de verdade — em
+          vendas, marketing, operações, atendimento e backoffice. Cada edição traz um caso, o
+          número que ele moveu e o que não funcionou pelo caminho. Sem teoria e sem novidade de
+          LinkedIn.
+        </p>
+        <p className="mb-6 font-montserrat text-[14px] leading-relaxed text-[color:var(--fg-3)]">
+          É só isso: um e-mail quinzenal. Não vendemos sua lista, não mandamos promoção diária, e
+          você sai quando quiser — em um clique, pelo link no rodapé.
         </p>
 
         <ul className="mb-7 space-y-2">
