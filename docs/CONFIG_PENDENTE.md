@@ -302,7 +302,7 @@ depender da Z-API.
 HTML real, não uma aproximação) e **enviar teste para você mesmo** — a `RESEND_API_KEY` já está em
 produção. O disparo para a lista também funciona.
 
-**O que falta, e o que cada coisa destrava:**
+**Falta uma coisa só:**
 
 1. **`RESEND_WEBHOOK_SECRET`** — sem ele, abertura, clique, bounce e reclamação ficam em **zero** no
    painel da campanha. O e-mail sai, mas o retorno não chega. No painel do Resend: *Webhooks → Add
@@ -311,10 +311,15 @@ produção. O disparo para a lista também funciona.
    `whsec_…` para a env na Vercel.
    *Bounce e reclamação não são só métrica:* eles bloqueiam o endereço para sempre, e é isso que
    protege a reputação do domínio — a mesma que os e-mails transacionais usam.
-2. **`EMAIL_MARKETING_FROM`** (opcional) — o remetente das campanhas. Sem ele, sai como
-   `Salestrack AI <aios@salestrack.com.br>`, que é o mesmo endereço dos avisos do sistema.
-   Separar (`news@` ou `andre@`) é bom para entregabilidade: se alguém marcar a newsletter como
-   spam, o transacional não é arrastado junto.
+2. ~~**`EMAIL_MARKETING_FROM`**~~ — **decidido em 31/07/2026: não configurar.** As campanhas saem
+   de `Salestrack AI <aios@salestrack.com.br>`, o mesmo endereço dos avisos do sistema.
+
+   *O que isso significa, para não ser surpresa depois:* remetente e reputação de entrega são
+   compartilhados. Se uma campanha juntar reclamações de spam, quem sente o efeito são também os
+   e-mails transacionais — convite de acesso, aviso de proposta lida, contrato assinado. O
+   domínio `salestrack.com.br` está verificado no Resend, então trocar depois é só definir a
+   variável na Vercel; nenhum código muda. Separar de verdade (isolando reputação) pede um
+   subdomínio próprio, tipo `news.salestrack.com.br`, com DNS e verificação novos.
 
 **A lista está vazia, e isso não é um defeito.** Só entra quem **autorizou** receber marketing — e
 dado de prospecção (Apollo, coleta pública) **nunca** vira lista de marketing, mesmo com
