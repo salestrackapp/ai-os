@@ -209,8 +209,21 @@ export function EmailBuilder({ id, inicial, origens, contagem, emailDoUsuario, r
       {/* ── coluna da prévia + ações ── */}
       <div className="space-y-4">
         <div className="rounded-ds-card border border-hairline bg-[var(--bg-1)] p-3">
-          <p className="mb-2 font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]">Prévia — igual ao que sai</p>
-          <iframe title="Prévia do e-mail" srcDoc={html} className="h-[560px] w-full rounded-[10px] border border-hairline bg-white" />
+          <div className="mb-2 flex items-baseline justify-between gap-2">
+            <p className="font-montserrat text-[13px] font-medium text-[color:var(--fg-2)]">Prévia — igual ao que sai</p>
+            <span className="font-montserrat text-[11.5px] text-[color:var(--fg-4)]">600px reduzidos para caber</span>
+          </div>
+          {/*
+            O e-mail tem 600px fixos — largura que sobrevive em todo cliente de e-mail. Numa coluna
+            mais estreita ele apareceria cortado pela metade, e prévia cortada não deixa conferir o
+            que mais importa: onde a linha quebra e onde o botão cai. Por isso o iframe é renderizado
+            no tamanho real e REDUZIDO por transform, em vez de espremido — espremer mudaria a
+            quebra de linha e a prévia deixaria de corresponder ao envio.
+          */}
+          <div className="overflow-hidden rounded-[10px] border border-hairline bg-white" style={{ height: 620 }}>
+            <iframe title="Prévia do e-mail" srcDoc={html}
+              style={{ width: 640, height: 886, border: 0, transform: "scale(0.7)", transformOrigin: "top left" }} />
+          </div>
         </div>
 
         <div className="rounded-ds-card border border-hairline bg-[var(--bg-1)] p-4 space-y-3">
