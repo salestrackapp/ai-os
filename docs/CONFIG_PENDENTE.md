@@ -296,7 +296,32 @@ enviar.** A tela de Agentes mostra quantos rascunhos saíram como estavam, quant
 quantos foram descartados. O mesmo agente serve o e-mail — e no e-mail ele já pode rodar hoje, sem
 depender da Z-API.
 
-## 15. 🟢 Opcionais (só se precisar)
+## 15. 🟡 E-mail marketing — o disparo já funciona, o retorno não
+
+**O que já funciona sem configurar nada:** montar campanha, usar os modelos, ver a prévia (que é o
+HTML real, não uma aproximação) e **enviar teste para você mesmo** — a `RESEND_API_KEY` já está em
+produção. O disparo para a lista também funciona.
+
+**O que falta, e o que cada coisa destrava:**
+
+1. **`RESEND_WEBHOOK_SECRET`** — sem ele, abertura, clique, bounce e reclamação ficam em **zero** no
+   painel da campanha. O e-mail sai, mas o retorno não chega. No painel do Resend: *Webhooks → Add
+   Endpoint* → `https://ai-os.salestrack.com.br/api/resend/webhook` (ou o domínio atual), marcando
+   `email.delivered`, `email.opened`, `email.clicked`, `email.bounced` e `email.complained`. Copie o
+   `whsec_…` para a env na Vercel.
+   *Bounce e reclamação não são só métrica:* eles bloqueiam o endereço para sempre, e é isso que
+   protege a reputação do domínio — a mesma que os e-mails transacionais usam.
+2. **`EMAIL_MARKETING_FROM`** (opcional) — o remetente das campanhas. Sem ele, sai como
+   `Salestrack AI <aios@salestrack.com.br>`, que é o mesmo endereço dos avisos do sistema.
+   Separar (`news@` ou `andre@`) é bom para entregabilidade: se alguém marcar a newsletter como
+   spam, o transacional não é arrastado junto.
+
+**A lista está vazia, e isso não é um defeito.** Só entra quem **autorizou** receber marketing — e
+dado de prospecção (Apollo, coleta pública) **nunca** vira lista de marketing, mesmo com
+consentimento registrado. A lista cresce pelos formulários dos sites, onde a pessoa marca a caixa de
+aceite. Até lá, dá para montar e testar campanhas à vontade.
+
+## 16. 🟢 Opcionais (só se precisar)
 - **Stripe:** cobrança internacional (alternativa à ASAAS). Envs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` e `PAYMENT_PROVIDER=stripe`. Só se for cobrar fora do Brasil.
 
 ---

@@ -57,9 +57,11 @@ export const AREAS: Area[] = [
   {
     key: "marketing", label: "Marketing", href: "/admin/marketing", icon: "trending",
     tagline: "De onde vêm os leads e o que os faz voltar.",
-    primary: { label: "Nova campanha", href: "/admin/marketing" },
+    primary: { label: "Nova campanha de e-mail", href: "/admin/marketing/email" },
     sections: [
       { label: "Campanhas e origem", href: "/admin/marketing", icon: "trending", desc: "Quanto cada esforço trouxe de lead, a que custo, e de onde veio quem virou negócio." },
+      { label: "E-mail marketing", href: "/admin/marketing/email", icon: "chat", desc: "Monte, teste e dispare campanhas. Modelos prontos, prévia igual ao que sai, aprovação antes do envio." },
+      { label: "Lista e bloqueios", href: "/admin/marketing/email/lista", icon: "team", desc: "Quem autorizou receber, quem não entra e por quê." },
       { label: "Comunicação (régua)", href: "/admin/comunicacao", icon: "sparkles", desc: "A régua que conduz o cliente — consome ativos aprovados." },
       { label: "Relacionamento", href: "/admin/relacionamento", icon: "chat", desc: "E-mail e WhatsApp da equipe, num lugar só." },
       { label: "Relatórios da inbox", href: "/admin/relacionamento/relatorios", icon: "activity", desc: "Tempo de resposta, volume e SLA." },

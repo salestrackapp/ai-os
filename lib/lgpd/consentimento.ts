@@ -202,6 +202,17 @@ export async function linkDescadastro(email: string): Promise<string> {
 }
 
 /**
+ * O mesmo descadastro, no endereço que aceita POST — para o cabeçalho `List-Unsubscribe`.
+ *
+ * Separado do link visível de propósito: o do rodapé leva a uma página que confirma o que
+ * aconteceu, e este atende o botão nativo do Gmail/Outlook, que faz POST e não mostra nada.
+ */
+export async function linkDescadastroUmClique(email: string): Promise<string> {
+  const t = await tokenDescadastro(email);
+  return t ? `${baseUrl()}/api/descadastro/${t}` : "";
+}
+
+/**
  * Revoga o consentimento de marketing. Idempotente: sair duas vezes é sair.
  * O registro NÃO some — muda de estado. O histórico é a prova de que a revogação foi atendida.
  */

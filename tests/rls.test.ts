@@ -275,6 +275,25 @@ describe("Resposta assistida · rel_sugestoes (admin-only)", () => {
   });
 });
 
+/**
+ * E-mail marketing. Três tabelas, e a mais sensível não é a campanha: é `email_envios`, que junta
+ * endereço com comportamento ("abriu", "clicou"). Uma lista de quem abre o quê é exatamente o tipo
+ * de dado que não pode escapar do lado da Salestrack.
+ */
+describe("E-mail marketing · interno (admin-only)", () => {
+  const TAB = ["email_campanhas", "email_envios", "email_supressao"];
+  it("cliente NÃO lê campanha, envio nem supressão", async () => {
+    for (const t of TAB) expect((await userA.from(t).select("*")).data ?? [], `vazou ${t}`).toHaveLength(0);
+  });
+  it("anônimo NÃO lê nenhuma das três", async () => {
+    for (const t of TAB) expect((await anon.from(t).select("*")).data ?? [], `anon ${t}`).toHaveLength(0);
+  });
+  it("cliente NÃO cria campanha nem se autoadiciona a uma lista", async () => {
+    expect((await userA.from("email_campanhas").insert({ nome: "hack", assunto: "x" })).error).not.toBeNull();
+    expect((await userA.from("email_supressao").insert({ email: "x@y.com", motivo: "manual" })).error).not.toBeNull();
+  });
+});
+
 describe("Prospecção · isolamento interno (Fase 5.5)", () => {
   const TABELAS = ["prospect_accounts", "prospects", "cadences", "cadence_enrollments", "cadence_step_log", "outreach_messages", "timeline_events"];
   it("cliente NÃO lê nenhuma tabela de prospecção (100% interna Salestrack)", async () => {
