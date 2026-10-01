@@ -21,7 +21,7 @@ function Brand() {
     <Link href="/admin/hoje" data-tour="brand" className="ds-focus flex shrink-0 items-center gap-2.5">
       <SalestrackLogo variant="light" />
       <span className="hidden font-montserrat text-[14px] font-bold text-white sm:block">
-        AI OS <span className="text-[color:var(--brand-light)]">admin</span>
+        Salestrack OS <span className="text-[color:var(--brand-light)]">admin</span>
       </span>
     </Link>
   );
@@ -54,7 +54,7 @@ export function AdminChrome({ email, userId, tourSeen, children }: { email: stri
   const active = areaForPath(path);
   const noHoje = path === "/admin/hoje" || path === "/admin";
   const groups = [
-    { items: [{ label: "Hoje", href: "/admin/hoje", active: noHoje, icon: <Icon name="dashboard" size={18} /> }] },
+    { items: [{ label: "Central Comercial", href: "/admin/central", active: path === "/admin/central", icon: <Icon name="target" size={18} /> }, { label: "Hoje", href: "/admin/hoje", active: noHoje, icon: <Icon name="dashboard" size={18} /> }] },
     {
       /**
        * Cada destino traz as próprias telas como subitens. Sem isto, o menu mostrava só os

@@ -6,12 +6,12 @@ export default function Home() {
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="max-w-xl text-center">
         <div className="mb-8 flex justify-center"><SalestrackLogo /></div>
-        <p className="text-[13px] uppercase tracking-[.3em] text-gold mb-6">Salestrack Inteligência Digital</p>
+        <p className="text-[13px] uppercase tracking-[.3em] text-gold mb-6">Transformação digital e IA</p>
         <h1 className="font-serif text-6xl font-semibold leading-none">
-          AI Operation <em className="text-gold not-italic italic">System</em>
+          Salestrack <em className="text-gold italic">OS</em>
         </h1>
         <p className="mt-6 text-muted">
-          O sistema operacional da transformação com IA. Todas as IAs, todas as ferramentas, um único método.
+          Sua operação comercial, projetos e próximos passos em um só lugar, com inteligência artificial para apoiar a execução.
         </p>
         <p className="mt-2 text-sm text-muted2">Acesso restrito a clientes e à equipe Salestrack.</p>
         <div className="mt-10">
