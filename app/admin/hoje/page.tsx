@@ -21,7 +21,7 @@ export default async function Hoje() {
   const guide = membership?.userId && membership?.orgId ? await computeGuide("admin", membership.orgId, membership.userId, "conhecer-hoje") : null;
   const relNotifs = await countNotificacoes();
   const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(now);
   const in7 = new Date(now.getTime() + 7 * 86_400_000);
 
   const [{ data: deals }, { data: tasks }, { data: alerts }, { data: sessions }, { data: revisao }, { data: roiPend }, { data: orgs }] = await Promise.all([
@@ -89,6 +89,8 @@ export default async function Hoje() {
         subtitle="O cockpit do sistema: cobrança, entregas, caixa, prazos e o funil — tudo o que precisa de você, num lugar só."
         comoUsar={<HelpButton routeKey="/admin/hoje" />}
         actions={<Link href="/admin/jornadas" className={botaoClasses()}><Icon name="rocket" size={15} /> Painel de jornadas</Link>} />
+
+      <Link href="/admin/central" className="card mb-5 block p-5"><b>Central Comercial Salestrack OS</b><p className="mt-2 text-sm">Seu roteiro de vendas, pendências de integração, agentes e passos manuais no momento certo.</p></Link>
 
       {guide && <FirstSteps surface="admin" guide={guide} />}
 

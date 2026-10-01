@@ -55,12 +55,13 @@ export async function getContractSettings(): Promise<ContractSettings> {
 
 /** Posicionamento comercial / o que a Salestrack entrega — embasa os agentes de prospecção e conteúdo.
  *  Editável em /admin/configuracoes (chave app_settings 'sales_offer'). */
-export const DEFAULT_SALES_OFFER = `A Salestrack (marca pessoal André Kachan) implanta **IA em toda a empresa** — não uma ferramenta isolada, mas um método de transformação. Entregas:
-- **Programa de IA** por frentes (Comercial, Marketing, Operações, Financeiro, RH, Atendimento), com evolução por fases.
-- **Playbook** de Receitas prontas (o time aplica IA no dia a dia no próprio Claude) — do operacional ao C-level.
-- **Sessões ao vivo**: mentorias, workshops, treinamentos e formação (AI Academy / AI Labs).
-- **Consultoria executiva** de estratégia com IA para a liderança.
-Posicionamento: IA aplicada ao negócio, com adoção real e ROI mensurável — o decisor no comando, o time capacitado.`;
+export const DEFAULT_SALES_OFFER = `Ajudamos sua empresa a gerar mais resultados com transformação digital e IA.
+Transformamos prioridades empresariais em processos, tecnologias e capacidades que funcionam na operação.
+Atuamos em Operações, Atendimento, Comercial, Marketing, Financeiro, Pessoas/RH e Gestão.
+O escopo é construído após compreender resultado, processo, dados, sistemas e equipe.
+O trabalho pode combinar consultoria, implementação guiada, mentoria, capacitação e acompanhamento.
+Não oferecer produtos prontos, preço fixo, prazo padrão ou ganhos não comprovados. Separar hipótese de fato.
+Método ROTA: Resultado, Operação, Tecnologia e Aceleração`;
 
 export async function getSalesOffer(): Promise<string> {
   return getSetting<string>("sales_offer", DEFAULT_SALES_OFFER);

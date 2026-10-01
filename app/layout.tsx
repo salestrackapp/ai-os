@@ -4,8 +4,8 @@ import "../styles/ds-tokens.css";
 import "../styles/academy.css";
 
 export const metadata: Metadata = {
-  title: "AI Operation System — AI OS · Salestrack",
-  description: "O sistema operacional da transformação com IA.",
+  title: "Salestrack OS · Gestão comercial e transformação digital",
+  description: "A central de vendas, projetos e agentes da Salestrack.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

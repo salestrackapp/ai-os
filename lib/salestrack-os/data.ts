@@ -1,0 +1,119 @@
+import "server-only";
+import { createServiceClient } from "@/lib/supabase/service";
+import { getSecret } from "@/lib/settings/secrets";
+import {
+  buildRoutine,
+  brasiliaDay,
+  type DealInput,
+  type TaskInput,
+  type Progress,
+} from "./model";
+const PREFIX = "salestrack_os:progress:";
+export async function loadCentral() {
+  const sb = createServiceClient();
+  const day = brasiliaDay();
+  const [d, t, s, apolloSecret] = await Promise.all([
+    sb
+      .from("deals")
+      .select("id,title,stage,score,last_activity_at")
+      .is("deleted_at", null)
+      .not("stage", "in", "(cliente,perdido)")
+      .order("last_activity_at", { ascending: true, nullsFirst: true })
+      .limit(100),
+    sb
+      .from("tasks")
+      .select("id,title,due_date")
+      .eq("done", false)
+      .not("due_date", "is", null)
+      .order("due_date")
+      .limit(100),
+    sb
+      .from("app_settings")
+      .select("key,value")
+      .or(`key.like.${PREFIX}backlog:%,key.like.${PREFIX}day:${day}:%`)
+      .limit(1000),
+    getSecret("apollo"),
+  ]);
+  for (const r of [d, t, s])
+    if (r.error)
+      throw new Error(
+        "Não foi possível ler a base. Nenhum resultado foi presumido.",
+      );
+  const progress: Record<string, Progress> = {};
+  for (const row of s.data || [])
+    progress[row.key.slice(PREFIX.length)] = row.value as Progress;
+  const integrations = [
+    {
+      name: "Apollo",
+      configured: !!apolloSecret,
+      manual: "/admin/crm/importar",
+    },
+    {
+      name: "Claude",
+      configured: !!process.env.ANTHROPIC_API_KEY,
+      manual: "/admin/configuracoes/parametros",
+    },
+    {
+      name: "Gmail",
+      configured: !!process.env.GOOGLE_OAUTH_REFRESH_TOKEN,
+      manual: "/admin/relacionamento",
+    },
+    {
+      name: "Resend",
+      configured: !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM,
+      manual: "/admin/configuracoes/parametros",
+    },
+    {
+      name: "DocuSign",
+      configured:
+        !!process.env.DOCUSIGN_INTEGRATION_KEY &&
+        !!process.env.DOCUSIGN_PRIVATE_KEY,
+      manual: "/admin/contratos",
+    },
+    {
+      name: "WhatsApp",
+      configured: !!process.env.META_ACCESS_TOKEN || !!process.env.ZAPI_TOKEN,
+      manual: "/admin/configuracoes/parametros",
+    },
+  ];
+  const items = buildRoutine(
+    day,
+    (d.data || []) as DealInput[],
+    (t.data || []) as TaskInput[],
+    progress,
+  );
+  return {
+    day,
+    items,
+    progress,
+    integrations,
+    coverage: {
+      deals: d.data?.length || 0,
+      tasks: t.data?.length || 0,
+      limit: 100,
+    },
+    loadedAt: new Date().toISOString(),
+  };
+}
+export async function saveDailyPlan() {
+  const central = await loadCentral(),
+    sb = createServiceClient();
+  const key = `salestrack_os:plan:${central.day}`;
+  const r = await sb
+    .from("app_settings")
+    .upsert(
+      {
+        key,
+        value: {
+          day: central.day,
+          items: central.items,
+          generatedAt: central.loadedAt,
+        },
+        updated_at: central.loadedAt,
+      },
+      { onConflict: "key", ignoreDuplicates: true },
+    );
+  if (r.error) throw Error("Plano não foi salvo.");
+  return { day: central.day, items: central.items.length, sends: 0 };
+}
+export { PREFIX };

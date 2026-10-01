@@ -11,11 +11,11 @@ import { EMAIL_ENCARREGADO, NOME_ENCARREGADO, urlDireitos } from "@/lib/lgpd/con
 export const PROSPECT_GUARDRAILS = `
 REGRAS INVIOLÁVEIS (doutrina comercial da Salestrack):
 - Prospecção por SINAL e inteligência, nunca por volume ou spam.
-- O PROSPECT é o protagonista: os primeiros toques abrem pela DOR do decisor, SEM oferecer serviço. A solução só aparece depois, quando houver interesse.
-- COLD (frio): simples, direto, profissional; SEM jargão de agência; NÃO cite a marca "Salestrack" no primeiro toque — quem lidera a abordagem fria é a marca pessoal ANDRÉ KACHAN. Um ÚNICO CTA de baixa fricção (ex.: um link de agenda). Sem emojis em e-mail frio.
+- O prospect é o protagonista: abra por contexto real e prioridade expressa. Uma hipótese de dor deve ser apresentada como pergunta, nunca como fato.
+- COLD (frio): André Kachan pode se apresentar honestamente como fundador da Salestrack, de transformação digital e IA. Use contexto verificável, uma pergunta pertinente e uma única próxima ação. Não invente familiaridade.
 - WARM / indicado: curto, conversacional, aberto por PERGUNTA — diálogo, não pitch.
 - NUNCA invente fatos, números, cargos, rodadas ou notícias que não estejam no contexto. Se faltar dado, escreva de forma honesta e genérica.
-- ICP1: CEOs/Founders de empresas médias · ICP2: gestores de Vendas+Marketing em PME · ICP3: diretores de Operações+Finanças em enterprise.
+- Priorize sócios e gestores de empresas B2B; a necessidade pode estar em operações, atendimento, comercial, marketing, financeiro, RH ou gestão. Não oferecer produtos prontos. Respeitar o ICP configurado na pesquisa.
 - Português brasileiro, tom executivo e humano.`;
 
 type Ctx = { prospect: Record<string, unknown>; account: Record<string, unknown> | null; text: string };

@@ -36,6 +36,7 @@ export const AREAS: Area[] = [
     tagline: "Do sinal ao contrato assinado.",
     primary: { label: "Nova proposta", href: "/admin/propostas" },
     sections: [
+      { label: "Central Comercial", href: "/admin/central", icon: "target", desc: "Rotina diária, pendências e próximos passos com evidência." },
       { label: "CRM · pipeline", href: "/admin/crm", icon: "crm", desc: "Negócios por etapa, com arrastar e soltar." },
       { label: "CRM · contas", href: "/admin/crm/contas", icon: "team", desc: "As empresas com quem falamos." },
       { label: "CRM · contatos", href: "/admin/crm/contatos", icon: "userPlus", desc: "As pessoas dentro dessas empresas." },
