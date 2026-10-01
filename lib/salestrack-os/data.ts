@@ -7,6 +7,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { getSecret } from "@/lib/settings/secrets";
 import {
   buildRoutine,
+  prioritizeItems,
   brasiliaDay,
   type DealInput,
   type TaskInput,
@@ -99,7 +100,7 @@ export async function loadCentral() {
     steps:[`Confirmar com o cliente: ${r.missing[0].label}.`,"Registrar a fonte e distinguir informação confirmada de hipótese.","Salvar o diagnóstico e combinar próximo passo com responsável e data."],
     proof:"Diagnóstico salvo com evidência e próximo passo combinado.",
   });
-  items.sort((a,b)=>a.priority-b.priority);
+  prioritizeItems(items);
   return {
     rota,
     day,

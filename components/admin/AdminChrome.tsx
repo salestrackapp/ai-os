@@ -7,13 +7,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell, Sidebar, SalestrackLogo } from "@/components/ds";
 import { Icon } from "@/components/ui/icons";
-import { AREAS, areaForPath } from "@/lib/admin/nav";
+import { WORKSPACES, workspaceForPath } from "@/lib/admin/workspaces";
+import { WorkspaceNav } from "./WorkspaceNav";
+import { QuickSearch } from "./QuickSearch";
 import { TourProvider } from "@/components/tour/TourProvider";
 import { TourLink } from "@/components/tour/TourLink";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 // Alvos do tour nos itens de menu (por destino — 4 destinos U5).
-const NAV_TOUR: Record<string, string> = { jornadas: "nav-jornadas", comercial: "nav-comercial", estudio: "nav-estudio" };
+const NAV_TOUR: Record<string, string> = { projetos: "nav-jornadas", crm: "nav-comercial", conteudo: "nav-estudio" };
 
 /** Marca na barra superior navy — por isso a variante clara do logo. */
 function Brand() {
@@ -51,28 +53,23 @@ function UserMenu({ email }: { email: string }) {
 
 export function AdminChrome({ email, userId, tourSeen, children }: { email: string; userId: string; tourSeen: boolean; children: React.ReactNode }) {
   const path = usePathname();
-  const active = areaForPath(path);
+  const active = workspaceForPath(path);
   const groups = [
-    { items: [
-      { label: "Meu dia", href: "/admin/central", active: path === "/admin/central", icon: <Icon name="dashboard" size={18} /> },
-      { label: "Método ROTA", href: "/admin/rota", active: path === "/admin/rota", icon: <Icon name="target" size={18} /> },
-      { label: "Todas as ferramentas", href: "/admin/ferramentas", active: path === "/admin/ferramentas", icon: <Icon name="layers" size={18} /> },
-    ] },
-    { items: AREAS.map(a => ({
-      label:a.label, href:a.href, active:a.key === active,
-      icon:<Icon name={a.icon} size={18}/>, dataTour:NAV_TOUR[a.key],
-      children:a.key === active ? a.sections.map(sub=>({label:sub.label,href:sub.href,active:path===sub.href||path.startsWith(sub.href+"/")})) : [],
-    })) },
+    {title:"Trabalho",items:WORKSPACES.filter(w=>!["config","gestao"].includes(w.key)).map(w=>({label:w.label,href:w.href,active:active?.key===w.key,icon:<Icon name={w.icon} size={18}/>,dataTour:NAV_TOUR[w.key]}))},
+    {title:"Organização",items:WORKSPACES.filter(w=>["gestao","config"].includes(w.key)).map(w=>({label:w.label,href:w.href,active:active?.key===w.key,icon:<Icon name={w.icon} size={18}/>}))},
+    {items:[{label:"Todas as ferramentas",href:"/admin/ferramentas",active:path==="/admin/ferramentas",icon:<Icon name="layers" size={18}/>} ]},
   ];
   const sidebar = <Sidebar groups={groups} brand={<Brand />} footer={<UserMenu email={email} />} />;
   return (
     <AppShell sidebar={sidebar} brand={<Brand />}
       topbarRight={<>
+        <QuickSearch />
         <NotificationBell userId={userId} />
         <TourLink surface="admin" entryPath="/admin/hoje"
           className="ds-focus hidden items-center gap-1.5 rounded-[10px] border border-white/15 px-3 py-1.5 font-montserrat text-[14px] font-medium text-white/75 transition-colors hover:bg-white/10 sm:flex" />
       </>}>
       <TourProvider surface="admin" entryPath="/admin/hoje" autoStart={!tourSeen} />
+      <WorkspaceNav />
       {children}
     </AppShell>
   );

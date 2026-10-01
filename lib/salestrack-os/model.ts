@@ -367,12 +367,12 @@ export function buildRoutine(
   const backlog = BACKLOG.filter(
     (b) => progress[`backlog:${b.id}`]?.status !== "concluido",
   ).sort((a, b) => b.priority - a.priority);
-  return [...result, ...backlog.slice(0, 2)].sort(
-    (a, b) => b.priority - a.priority || a.id.localeCompare(b.id),
-  );
+  return prioritizeItems([...result, ...backlog.slice(0, 2)]);
 }
 export function progressKey(day: string, item: Item) {
   return item.area === "evolucao"
     ? `backlog:${item.id}`
     : `day:${day}:${item.id}`;
 }
+
+export function prioritizeItems(items:Item[]) { return items.sort((a,b)=>b.priority-a.priority||a.id.localeCompare(b.id)); }

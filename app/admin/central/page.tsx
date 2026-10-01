@@ -6,10 +6,8 @@ import {
   AGENTS,
   BACKLOG,
   POSITIONING,
-  progressKey,
-  type Item,
 } from "@/lib/salestrack-os/model";
-import { ProgressEditor } from "@/components/salestrack-os/ProgressEditor";
+import { RoutineBoard } from "@/components/salestrack-os/RoutineBoard";
 import { DailyActions } from "@/components/salestrack-os/DailyActions";
 export const dynamic = "force-dynamic";
 export default async function Central() {
@@ -45,49 +43,12 @@ export default async function Central() {
     .select("value")
     .eq("key", `salestrack_os:briefing:${data.day}`)
     .maybeSingle();
-  const render = (item: Item) => (
-    <article key={item.id} className="card p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <span className="text-xs uppercase tracking-widest text-muted">
-            {item.agent} · {item.minutes} min
-          </span>
-          <h3 className="mt-2 text-lg font-semibold">{item.title}</h3>
-        </div>
-        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-900">
-          {item.area === "evolucao" ? "Evolução" : "Comercial"}
-        </span>
-      </div>
-      <p className="mt-3 text-sm text-muted">Quando: {item.trigger}</p>
-      <ol className="my-4 list-decimal space-y-2 pl-5 text-sm leading-6">
-        {item.steps.map((s) => (
-          <li key={s}>{s}</li>
-        ))}
-      </ol>
-      <p className="text-sm">
-        <b>Concluir quando:</b> {item.proof}
-      </p>
-      <a
-        className="mt-4 inline-block text-sm font-semibold underline"
-        href={item.href}
-        target={item.href.startsWith("https") ? "_blank" : undefined}
-        rel="noopener noreferrer"
-      >
-        Abrir etapa
-      </a>
-      <ProgressEditor
-        day={data.day}
-        id={item.id}
-        initial={data.progress[progressKey(data.day, item)]}
-      />
-    </article>
-  );
   return (
     <main className="mx-auto max-w-7xl p-5 md:p-8">
       <p className="text-xs uppercase tracking-widest text-muted">
         Salestrack OS · {data.day} · Brasília
       </p>
-      <h1 className="mt-3 text-3xl font-bold">
+      <h1 className="mt-3 text-2xl font-bold md:text-3xl">
         O que precisa de você para vender.
       </h1>
       <p className="my-4 max-w-4xl text-sm leading-7 text-muted">
@@ -115,9 +76,7 @@ export default async function Central() {
         <h2 className="mb-4 text-xl font-semibold">
           Rotina do dia e duas melhorias prioritárias
         </h2>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {data.items.map(render)}
-        </div>
+        <RoutineBoard day={data.day} items={data.items} progress={data.progress}/>
       </section>
       <section id="evolucao" className="mt-10">
         <h2 className="text-xl font-semibold">Pendências e próximos passos</h2>
@@ -126,11 +85,7 @@ export default async function Central() {
           como concluída exige evidência; configuração não equivale a teste
           aprovado.
         </p>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {BACKLOG.filter((b) => !data.items.some((i) => i.id === b.id)).map(
-            render,
-          )}
-        </div>
+        <RoutineBoard day={data.day} items={BACKLOG.filter(b=>!data.items.some(i=>i.id===b.id))} progress={data.progress}/>
       </section>
       <section id="agentes" className="mt-10">
         <h2 className="mb-4 text-xl font-semibold">

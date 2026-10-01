@@ -102,3 +102,9 @@ describe("ROTA",()=>{
   expect(text).toContain("Reduzir retrabalho");expect(text).toContain("PENDENTE — confirmar com o cliente");
  });
 });
+
+import {prioritizeItems,type Item} from "../lib/salestrack-os/model";
+it("preserva fechamento antes de diagnóstico e encerramento do dia",()=>{
+ const item=(id:string,priority:number)=>({id,priority} as Item);
+ expect(prioritizeItems([item("fechar-dia",10),item("rota",35),item("negociacao",92)]).map(i=>i.id)).toEqual(["negociacao","rota","fechar-dia"]);
+});

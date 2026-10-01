@@ -6,10 +6,12 @@ export function ProgressEditor({
   day,
   id,
   initial,
+  onSaved,
 }: {
   day: string;
   id: string;
   initial?: Progress;
+  onSaved?: (status:Progress["status"])=>void;
 }) {
   const [status, setStatus] = useState<Progress["status"]>(
       initial?.status || "pendente",
@@ -26,6 +28,7 @@ export function ProgressEditor({
         try {
           await updateProgress({ day, id, status, evidence });
           setMessage("Salvo.");
+          onSaved?.(status);
         } catch (e) {
           setMessage(e instanceof Error ? e.message : "Falha ao salvar.");
         } finally {
