@@ -112,3 +112,20 @@ Habilitar apenas uma função por vez. Não habilitar todos os crons ao restaura
 
 Nenhum teste local substitui a validação com o banco ativo. Os módulos legados precisam de revisão
 de segurança e funcionalidade antes de prometer operação comercial autônoma.
+
+
+## Revisão de navegação e método ROTA
+
+Entrada `/admin` abre Meu dia. A barra expande apenas a área atual; Todas as ferramentas oferece busca por nome e descrição.
+
+ROTA conserva os nomes oficiais: Resultado, Operação, Tecnologia e Aceleração. Os 12 campos operacionais são uma implementação proposta para conduzir o diagnóstico. Cada negócio possui registro próprio no banco, protegido por permissão administrativa e controle de concorrência: uma aba desatualizada não sobrescreve outra silenciosamente. Nenhuma nova tabela foi necessária.
+
+1. Abrir negócio → Diagnóstico e escopo pelo método ROTA.
+2. Registrar prioridade, indicador e decisor; processo e evidência; dados, sistemas e piloto; implementação, adoção e mensuração.
+3. Salvar antes de sair. Preenchimento não equivale a validação pelo cliente.
+4. Revisar e copiar o resumo para o escopo da proposta. Preço, prazo, envio e assinatura continuam exigindo revisão.
+5. Após contratação, usar o mesmo resumo na passagem para projetos e combinar responsáveis e medição.
+
+A central identifica até três diagnósticos incompletos entre os 100 negócios abertos lidos, inclui a primeira pergunta pendente na rotina e fornece essas lacunas ao briefing de IA. A montagem é automática ao abrir a central. O cron continua dependente da habilitação de SALESTRACK_DAILY_ENABLED; não foi ativado nesta revisão. Não há envio externo novo.
+
+Indicadores de Gmail, WhatsApp Z-API e DocuSign passam a consultar as mesmas verificações de configuração usadas pela operação. Isso não constitui teste de conectividade. Meta Cloud, Sales Navigator e assinatura efetiva seguem dependentes de configuração/validação. A passagem ROTA para proposta/projeto é assistida por resumo, não sincronização automática.

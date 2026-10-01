@@ -85,3 +85,20 @@ describe("Cron Salestrack sem envio", () => {
     expect((await GET(request("Bearer test-only"))).status).toBe(503);
   });
 });
+
+import {rotaSchema,rotaNextSteps,rotaHandoff} from "../lib/salestrack-os/rota";
+describe("ROTA",()=>{
+ it("recusa campos arbitrários e IDs inválidos",()=>{
+  expect(rotaSchema.safeParse({dealId:"x",revision:null,answers:{}}).success).toBe(false);
+  expect(rotaSchema.safeParse({dealId:"11111111-1111-4111-8111-111111111111",revision:null,answers:{secret:"x"}}).success).toBe(false);
+ });
+ it("limita a fila e não confunde espaço em branco com resposta",()=>{
+  const rows=Array.from({length:8},(_,i)=>({id:String(i),title:"Negócio"}));
+  const result=rotaNextSteps(rows,{"0":{prioridade:"   "}});
+  expect(result).toHaveLength(3);expect(result[0].missing).toHaveLength(12);
+ });
+ it("não inventa dados no resumo",()=>{
+  const text=rotaHandoff("Empresa",{prioridade:"Reduzir retrabalho"});
+  expect(text).toContain("Reduzir retrabalho");expect(text).toContain("PENDENTE — confirmar com o cliente");
+ });
+});
