@@ -8,7 +8,8 @@
  * A marca vive na barra SUPERIOR (não na lateral, como no v5), porque é assim na Academy.
  */
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/ds/cn";
 import { Eyebrow } from "../primitives";
 
@@ -47,15 +48,16 @@ function Chevron({ aberto }: { aberto: boolean }) {
 function ItemComFilhos({ item }: { item: NavItem }) {
   const temFilhoAtivo = item.children!.some((c) => c.active);
   const [aberto, setAberto] = useState(item.active || temFilhoAtivo);
+  useEffect(()=>{if(item.active||temFilhoAtivo)setAberto(true);},[item.active,temFilhoAtivo]);
 
   return (
     <div>
       <div className={cn(LINHA, "pr-2", item.active && !temFilhoAtivo ? ATIVO : INATIVO)}>
-        <a href={item.href} aria-current={item.active ? "page" : undefined} data-tour={item.dataTour}
+        <Link href={item.href} aria-current={item.active ? "page" : undefined} data-tour={item.dataTour}
           className="ds-focus flex min-w-0 flex-1 items-center gap-3">
           {item.icon && <span className={item.active || temFilhoAtivo ? "text-[color:var(--brand-light)]" : "text-white/45"}>{item.icon}</span>}
           <span className="truncate">{item.label}</span>
-        </a>
+        </Link>
         <button type="button" onClick={() => setAberto((v) => !v)}
           aria-expanded={aberto} aria-label={`${aberto ? "Fechar" : "Abrir"} ${item.label}`}
           className="ds-focus rounded p-1 text-white/45 hover:text-white">
@@ -66,14 +68,14 @@ function ItemComFilhos({ item }: { item: NavItem }) {
       {aberto && (
         <div className="pb-1">
           {item.children!.map((c) => (
-            <a key={c.href} href={c.href} aria-current={c.active ? "page" : undefined}
+            <Link key={c.href} href={c.href} aria-current={c.active ? "page" : undefined}
               className={cn(
                 "ds-focus flex items-center gap-2 border-l-[3px] py-2 pl-[52px] pr-5 font-montserrat text-[13px] transition-colors",
                 c.active
                   ? "border-l-[color:var(--brand-light)] bg-[rgba(0,180,216,.10)] font-semibold text-white"
                   : "border-l-transparent text-white/50 hover:bg-white/[.05] hover:text-white/90")}>
               <span className="truncate">{c.label}</span>
-            </a>
+            </Link>
           ))}
         </div>
       )}
@@ -94,11 +96,11 @@ export function Sidebar({ groups, brand, footer }: { groups: NavGroup[]; brand?:
               it.children?.length
                 ? <ItemComFilhos key={it.href} item={it} />
                 : (
-                  <a key={it.href} href={it.href} aria-current={it.active ? "page" : undefined} data-tour={it.dataTour}
+                  <Link key={it.href} href={it.href} aria-current={it.active ? "page" : undefined} data-tour={it.dataTour}
                     className={cn(LINHA, it.active ? ATIVO : INATIVO)}>
                     {it.icon && <span className={it.active ? "text-[color:var(--brand-light)]" : "text-white/45"}>{it.icon}</span>}
                     <span className="truncate">{it.label}</span>
-                  </a>
+                  </Link>
                 )
             ))}
           </div>
@@ -113,11 +115,19 @@ export function AppShell({ sidebar, brand, topbarRight, children }: {
   sidebar: React.ReactNode; brand?: React.ReactNode; topbarRight?: React.ReactNode; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [mobile,setMobile]=useState(false);
+  const drawer=useRef<HTMLElement>(null),menuButton=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{const media=window.matchMedia("(max-width: 1023px)");const change=()=>{setMobile(media.matches);if(!media.matches)setOpen(false);};change();media.addEventListener("change",change);return()=>media.removeEventListener("change",change);},[]);
+  useEffect(()=>{if(!open||!mobile)return;const before=document.body.style.overflow;document.body.style.overflow="hidden";drawer.current?.querySelector<HTMLElement>("a,button")?.focus();
+    const key=(e:KeyboardEvent)=>{if(e.key==="Escape"){setOpen(false);menuButton.current?.focus();}if(e.key==="Tab"){const nodes=Array.from(drawer.current?.querySelectorAll<HTMLElement>("a,button,input,select,[tabindex='0']")||[]);const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}};
+    document.addEventListener("keydown",key);return()=>{document.body.style.overflow=before;document.removeEventListener("keydown",key);};
+  },[open,mobile]);
   return (
     <div className="ds min-h-screen bg-[var(--bg-2)]">
+      <a href="#workspace-content" className="fixed left-4 top-2 z-[500] -translate-y-20 rounded bg-white p-3 text-slate-900 focus:translate-y-0">Pular para o conteúdo</a>
       <header className="fixed inset-x-0 top-0 z-[300] flex h-[60px] items-center gap-3 px-4 sm:px-5"
         style={{ background: "var(--ink)", borderBottom: "3px solid var(--brand-light)" }}>
-        <button onClick={() => setOpen((v) => !v)} aria-label="Abrir menu" className="ds-focus text-white/70 lg:hidden">
+        <button ref={menuButton} onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="app-sidebar" aria-label={open?"Fechar menu":"Abrir menu"} className="ds-focus text-white/70 lg:hidden">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
             <line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" />
           </svg>
@@ -127,13 +137,13 @@ export function AppShell({ sidebar, brand, topbarRight, children }: {
       </header>
 
       {open && <div className="fixed inset-0 z-[290] bg-ink/50 lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
-      <aside onClick={() => setOpen(false)}
+      <aside id="app-sidebar" ref={drawer} inert={mobile&&!open} aria-label="Menu principal" onClick={e => {if((e.target as HTMLElement).closest("a"))setOpen(false);}}
         className={cn("fixed bottom-0 left-0 top-[60px] z-[295] w-[260px] overflow-y-auto transition-transform duration-200",
           open ? "translate-x-0" : "-translate-x-full lg:translate-x-0")}>
         {sidebar}
       </aside>
 
-      <main className="min-w-0 pt-[60px] lg:ml-[260px]">{children}</main>
+      <main id="workspace-content" tabIndex={-1} className="min-w-0 pt-[60px] lg:ml-[260px]">{children}</main>
     </div>
   );
 }
@@ -170,7 +180,7 @@ export function PageHeader({ eyebrow, title, subtitle, actions, configurar, como
         {subtitle && <p className="ds-lead mt-1.5 max-w-2xl">{subtitle}</p>}
       </div>
       {(actions || configurar || comoUsar) && (
-        <div className="flex items-center gap-2">{comoUsar}{configurar}{actions}</div>
+        <div className="flex flex-wrap items-center gap-2">{comoUsar}{configurar}{actions}</div>
       )}
     </header>
   );

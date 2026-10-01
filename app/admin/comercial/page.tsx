@@ -1,3 +1,2 @@
-import { AreaIndex } from "@/components/admin/AreaIndex";
-export const dynamic = "force-dynamic";
-export default function Page() { return <AreaIndex area="comercial" />; }
+import {redirect} from "next/navigation";
+export default function Page(){redirect("/admin/crm");}

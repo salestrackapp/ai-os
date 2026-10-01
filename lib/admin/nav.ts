@@ -146,7 +146,7 @@ const ROUTE_AREA: [string, AreaKey][] = [
   ["/admin/programas", "jornadas"], ["/admin/onboarding", "jornadas"], ["/admin/consultor", "jornadas"],
   ["/admin/roi", "jornadas"], ["/admin/financeiro", "jornadas"],
   // Comercial: do sinal ao contrato
-  ["/admin/comercial", "comercial"], ["/admin/crm", "comercial"], ["/admin/prospeccao", "comercial"],
+  ["/admin/central", "comercial"], ["/admin/rota", "comercial"], ["/admin/ferramentas", "config"], ["/admin/comercial", "comercial"], ["/admin/crm", "comercial"], ["/admin/prospeccao", "comercial"],
   ["/admin/propostas", "comercial"], ["/admin/contratos", "comercial"], ["/admin/tarefas", "comercial"],
   ["/admin/ofertas", "comercial"], ["/admin/catalogo", "comercial"], ["/admin/juridico", "comercial"],
   // Marketing é destino próprio (antes vivia dentro de Comercial e se perdia lá)
@@ -172,6 +172,5 @@ export function areaForPath(path: string): AreaKey {
 
 /** Rótulo curto da subseção legada atual (breadcrumb). */
 export function sectionLabelForPath(path: string): string | null {
-  for (const a of AREAS) for (const s of a.sections) if (path === s.href || path.startsWith(s.href + "/")) return s.label;
-  return null;
+  return AREAS.flatMap(a=>a.sections).filter(s=>path===s.href||path.startsWith(s.href+"/")).sort((a,b)=>b.href.length-a.href.length)[0]?.label ?? null;
 }
