@@ -18,7 +18,7 @@ const NAV_TOUR: Record<string, string> = { jornadas: "nav-jornadas", comercial: 
 /** Marca na barra superior navy — por isso a variante clara do logo. */
 function Brand() {
   return (
-    <Link href="/admin/hoje" data-tour="brand" className="ds-focus flex shrink-0 items-center gap-2.5">
+    <Link href="/admin/central" data-tour="brand" className="ds-focus flex shrink-0 items-center gap-2.5">
       <SalestrackLogo variant="light" />
       <span className="hidden font-montserrat text-[14px] font-bold text-white sm:block">
         Salestrack OS <span className="text-[color:var(--brand-light)]">admin</span>
@@ -52,27 +52,17 @@ function UserMenu({ email }: { email: string }) {
 export function AdminChrome({ email, userId, tourSeen, children }: { email: string; userId: string; tourSeen: boolean; children: React.ReactNode }) {
   const path = usePathname();
   const active = areaForPath(path);
-  const noHoje = path === "/admin/hoje" || path === "/admin";
   const groups = [
-    { items: [{ label: "Central Comercial", href: "/admin/central", active: path === "/admin/central", icon: <Icon name="target" size={18} /> }, { label: "Hoje", href: "/admin/hoje", active: noHoje, icon: <Icon name="dashboard" size={18} /> }] },
-    {
-      /**
-       * Cada destino traz as próprias telas como subitens. Sem isto, o menu mostrava só os
-       * destinos e tudo o que foi construído ficava acessível apenas por URL — que é o mesmo que
-       * não existir para quem usa.
-       *
-       * A subseção ativa é marcada por prefixo, não por igualdade: estando em
-       * `/admin/crm/contas/[id]`, quem tem de acender é "CRM · contas".
-       */
-      items: AREAS.map((a) => ({
-        label: a.label, href: a.href, active: !noHoje && a.key === active,
-        icon: <Icon name={a.icon} size={18} />, dataTour: NAV_TOUR[a.key],
-        children: a.sections.map((sub) => ({
-          label: sub.label, href: sub.href,
-          active: path === sub.href || path.startsWith(sub.href + "/"),
-        })),
-      })),
-    },
+    { items: [
+      { label: "Meu dia", href: "/admin/central", active: path === "/admin/central", icon: <Icon name="dashboard" size={18} /> },
+      { label: "Método ROTA", href: "/admin/rota", active: path === "/admin/rota", icon: <Icon name="target" size={18} /> },
+      { label: "Todas as ferramentas", href: "/admin/ferramentas", active: path === "/admin/ferramentas", icon: <Icon name="layers" size={18} /> },
+    ] },
+    { items: AREAS.map(a => ({
+      label:a.label, href:a.href, active:a.key === active,
+      icon:<Icon name={a.icon} size={18}/>, dataTour:NAV_TOUR[a.key],
+      children:a.key === active ? a.sections.map(sub=>({label:sub.label,href:sub.href,active:path===sub.href||path.startsWith(sub.href+"/")})) : [],
+    })) },
   ];
   const sidebar = <Sidebar groups={groups} brand={<Brand />} footer={<UserMenu email={email} />} />;
   return (

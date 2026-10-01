@@ -36,6 +36,8 @@ export const AREAS: Area[] = [
     tagline: "Do sinal ao contrato assinado.",
     primary: { label: "Nova proposta", href: "/admin/propostas" },
     sections: [
+      { label: "Método ROTA", href: "/admin/rota", icon: "target", desc: "Diagnóstico por negócio: Resultado, Operação, Tecnologia e Aceleração." },
+      { label: "Todas as ferramentas", href: "/admin/ferramentas", icon: "layers", desc: "Busca rápida em todas as áreas." },
       { label: "Central Comercial", href: "/admin/central", icon: "target", desc: "Rotina diária, pendências e próximos passos com evidência." },
       { label: "CRM · pipeline", href: "/admin/crm", icon: "crm", desc: "Negócios por etapa, com arrastar e soltar." },
       { label: "CRM · contas", href: "/admin/crm/contas", icon: "team", desc: "As empresas com quem falamos." },
@@ -43,7 +45,7 @@ export const AREAS: Area[] = [
       { label: "CRM · importar", href: "/admin/crm/importar", icon: "layers", desc: "Trazer contas e contatos de planilha." },
       { label: "Prospecção", href: "/admin/prospeccao", icon: "target", desc: "A base de quem vale abordar, com dossiê e score." },
       { label: "Buscas automáticas", href: "/admin/prospeccao/buscas", icon: "target", desc: "O Apollo traz gente nova todo dia, com o perfil que você definir." },
-      { label: "Sinais do LinkedIn", href: "/admin/prospeccao/sinais-linkedin", icon: "trending", desc: "Quem curte e comenta seus posts sobre IA — já está dentro do assunto." },
+      { label: "Sinais do LinkedIn", href: "/admin/prospeccao/sinais-linkedin", icon: "trending", desc: "Posts e comentários substanciais com autor, data e evidência verificáveis." },
       { label: "Coleta externa", href: "/admin/prospeccao/coleta-externa", icon: "target", desc: "Raspagem via Apify: atividade em posts de terceiros." },
       { label: "Suas mensagens", href: "/admin/prospeccao/mensagens", icon: "chat", desc: "Quem escreveu para você sobre IA, pela exportação do LinkedIn." },
       { label: "Cadências", href: "/admin/prospeccao/cadencias", icon: "sparkles", desc: "As sequências de toque, passo a passo." },

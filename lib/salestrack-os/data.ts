@@ -1,4 +1,8 @@
 import "server-only";
+import { rotaNextSteps, type RotaAnswers } from "./rota";
+import { googleConfigured } from "@/lib/google";
+import { zapiConfigured } from "@/lib/whatsapp";
+import { docusignConfigured } from "@/lib/docusign";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getSecret } from "@/lib/settings/secrets";
 import {
@@ -55,7 +59,7 @@ export async function loadCentral() {
     },
     {
       name: "Gmail",
-      configured: !!process.env.GOOGLE_OAUTH_REFRESH_TOKEN,
+      configured: await googleConfigured(),
       manual: "/admin/relacionamento",
     },
     {
@@ -66,23 +70,38 @@ export async function loadCentral() {
     {
       name: "DocuSign",
       configured:
-        !!process.env.DOCUSIGN_INTEGRATION_KEY &&
-        !!process.env.DOCUSIGN_PRIVATE_KEY,
+        docusignConfigured(),
       manual: "/admin/contratos",
     },
     {
       name: "WhatsApp",
-      configured: !!process.env.META_ACCESS_TOKEN || !!process.env.ZAPI_TOKEN,
+      configured: await zapiConfigured(),
       manual: "/admin/configuracoes/parametros",
     },
   ];
+  const rotaRecords: Record<string,RotaAnswers> = {};
+  if(d.data?.length){
+    const r=await sb.from("app_settings").select("key,value").in("key",d.data.map(x=>`salestrack_os:rota:${x.id}`));
+    if(r.error) throw Error("Falha ao ler diagnósticos ROTA.");
+    for(const row of r.data||[]) rotaRecords[row.key.replace("salestrack_os:rota:","")]=row.value?.answers||{};
+  }
+  const rota=rotaNextSteps(d.data||[],rotaRecords);
   const items = buildRoutine(
     day,
     (d.data || []) as DealInput[],
     (t.data || []) as TaskInput[],
     progress,
   );
+  for(const r of rota) items.push({
+    id:`rota-${r.deal.id}`, title:`ROTA · ${r.deal.title}`, area:"vendas",priority:35,
+    agent:"Diagnóstico ROTA",minutes:15,href:`/admin/rota?deal=${r.deal.id}`,
+    trigger:`${r.missing.length} campos ainda sem registro.`,
+    steps:[`Confirmar com o cliente: ${r.missing[0].label}.`,"Registrar a fonte e distinguir informação confirmada de hipótese.","Salvar o diagnóstico e combinar próximo passo com responsável e data."],
+    proof:"Diagnóstico salvo com evidência e próximo passo combinado.",
+  });
+  items.sort((a,b)=>a.priority-b.priority);
   return {
+    rota,
     day,
     items,
     progress,

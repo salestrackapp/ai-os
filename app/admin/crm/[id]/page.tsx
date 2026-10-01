@@ -52,6 +52,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           <Link href="/admin/crm" className="text-muted2 hover:text-gold text-sm">← CRM</Link>
         </div>
         <CrmNav />
+        <Link className="my-4 inline-block underline" href={`/admin/rota?deal=${id}`}>Diagnóstico e escopo pelo método ROTA</Link>
         <div className="mb-5">
           <AiAssist context={aiContext} title="Copiloto do deal" actions={[
             { label: "Analisar o deal", task: "Analise este deal: risco de perda, o que provavelmente está travando e a próxima melhor ação. Bullets curtos e acionáveis." },

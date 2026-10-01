@@ -99,6 +99,7 @@ export default async function Central() {
         <a href="#agentes">Agentes</a>
         <a href="#integracoes">Integrações</a>
         <Link href="/admin/crm">Funil</Link>
+        <Link href="/admin/rota">Diagnóstico ROTA</Link>
         <Link href="/admin/propostas">Propostas</Link>
         <Link href="/admin/entregas">Projetos e entregas</Link>
       </nav>
